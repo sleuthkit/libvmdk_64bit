@@ -1,11 +1,11 @@
-Last Updated 1.27.2016
+Last Updated 1.28.2016
 
 This file describes how to build 32-bit and 64-bit Visual Studio 2010 libvmdk library for use with TSK. This process should be followed when new release of libvmdk comes out.
 ----------------------------------------------------------------
 
 Download source code tag.gz file from https://github.com/libyal/libvmdk/releases, make sure it has all libraries like libcstring etc. Do not download just git repository or "sorce code" link, they don't include all libraries and require executing multiple scripts, some of which don't run on Windows.
 
-Delete everything in libvmdk_64bit git folder on local drive except .git subfolder, .gitignore, and.gitattributes
+If you are upgrading from a previous version of libvmdk, delete all contents of libvmdk_64bit git folder (i.e. the previous version of libvmdk) on local drive except .git subfolder, .gitignore, and.gitattributes (if using git).
 
 libvmdk Visual Studio project requires zlib source code in order to build. More so, zlib source code must be located in a very specific location in relation to libvmdk source code. Specifically, zlib source package must be located in the directory containing the libvmdk directory. 
 
