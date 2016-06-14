@@ -8,6 +8,7 @@
 # IntelliSense data
 /libvmdk/libvmdk/msvscpp/*.ncb
 /libvmdk/msvscpp/*.sdf
+libvmdk/msvscpp/libvmdk.VC.db
 
 # Visual Studio user options
 /libvmdk/msvscpp/*.suo
