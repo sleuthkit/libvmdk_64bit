@@ -23,7 +23,7 @@
 #define _CONFIG_WINAPI_H
 
 /* Define the earliest supported WINAPI version */
-#define WINVER				0x0601
+#define WINVER				0x0501
 
 
 /* If necessary make sure WINAPI is defined
