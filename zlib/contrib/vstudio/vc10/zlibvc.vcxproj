@@ -228,6 +228,7 @@
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention>
       </DataExecutionPrevention>
+    <SubSystem>Windows</SubSystem>
     </Link>
     <PreBuildEvent>
       <Command>cd ..\..\masmx86
@@ -276,6 +277,7 @@ bld_ml32.bat</Command>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention>
       </DataExecutionPrevention>
+    <SubSystem>Windows</SubSystem>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -321,6 +323,7 @@ bld_ml32.bat</Command>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention>
       </DataExecutionPrevention>
+    <SubSystem>Windows</SubSystem>
     </Link>
     <PreBuildEvent>
       <Command>cd ..\..\masmx86
@@ -365,6 +368,7 @@ bld_ml32.bat</Command>
       <GenerateMapFile>true</GenerateMapFile>
       <SubSystem>Windows</SubSystem>
       <TargetMachine>MachineX64</TargetMachine>
+    <SubSystem>Windows</SubSystem>
     </Link>
     <PreBuildEvent>
       <Command>cd ..\..\masmx64
@@ -412,6 +416,7 @@ bld_ml64.bat</Command>
       <SubSystem>Windows</SubSystem>
       <ImportLibrary>$(OutDir)zlibwapi.lib</ImportLibrary>
       <TargetMachine>MachineIA64</TargetMachine>
+    <SubSystem>Windows</SubSystem>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseWithoutAsm|x64'">
@@ -453,6 +458,7 @@ bld_ml64.bat</Command>
       <GenerateMapFile>true</GenerateMapFile>
       <SubSystem>Windows</SubSystem>
       <TargetMachine>MachineX64</TargetMachine>
+    <SubSystem>Windows</SubSystem>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseWithoutAsm|Itanium'">
@@ -498,6 +504,7 @@ bld_ml64.bat</Command>
       <SubSystem>Windows</SubSystem>
       <ImportLibrary>$(OutDir)zlibwapi.lib</ImportLibrary>
       <TargetMachine>MachineIA64</TargetMachine>
+    <SubSystem>Windows</SubSystem>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -540,6 +547,7 @@ bld_ml64.bat</Command>
       <GenerateMapFile>true</GenerateMapFile>
       <SubSystem>Windows</SubSystem>
       <TargetMachine>MachineX64</TargetMachine>
+    <SubSystem>Windows</SubSystem>
     </Link>
     <PreBuildEvent>
       <Command>cd ..\..\masmx64
@@ -589,6 +597,7 @@ bld_ml64.bat</Command>
       <SubSystem>Windows</SubSystem>
       <ImportLibrary>$(OutDir)zlibwapi.lib</ImportLibrary>
       <TargetMachine>MachineIA64</TargetMachine>
+    <SubSystem>Windows</SubSystem>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

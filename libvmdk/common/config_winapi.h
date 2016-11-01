@@ -22,9 +22,9 @@
 #if !defined( _CONFIG_WINAPI_H )
 #define _CONFIG_WINAPI_H
 
-/* Define the earliest supported WINAPI version
+/* Define the earliest supported WINAPI version */
 #define WINVER				0x0501
- */
+
 
 /* If necessary make sure WINAPI is defined
  */
