@@ -11,7 +11,7 @@ libvmdk Visual Studio project requires zlib source code in order to build. More 
 
 For example, if this repository is checked out into C:\cygwin64\home\user_name\libvmdk_64bit then the libvmdk_64bit folder must contain 2 sub-folders: libvmdk (containing livmdk source code) and zlib (containing zlib source code).
 
-Extract contents of the archve containg source code into top level git libvmdk_64bit/libvmdk folder
+Extract contents of the archive containg source code into top level git libvmdk_64bit/libvmdk folder
 
 Open project in VS2010 and let it convert the solution
 
