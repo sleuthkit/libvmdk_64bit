@@ -1,22 +1,22 @@
 /*
  * Cache value functions
  *
- * Copyright (C) 2010-2016, Joachim Metz <joachim.metz@gmail.com>
+ * Copyright (C) 2010-2020, Joachim Metz <joachim.metz@gmail.com>
  *
  * Refer to AUTHORS for acknowledgements.
  *
- * This software is free software: you can redistribute it and/or modify
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This software is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
- * along with this software.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #include <common.h>
@@ -24,7 +24,6 @@
 #include <types.h>
 
 #include "libfcache_cache_value.h"
-#include "libfcache_date_time.h"
 #include "libfcache_definitions.h"
 #include "libfcache_libcerror.h"
 #include "libfcache_types.h"
@@ -137,18 +136,18 @@ int libfcache_cache_value_free(
 		{
 			if( ( internal_cache_value->flags & LIBFCACHE_CACHE_VALUE_FLAG_MANAGED ) != 0 )
 			{
-				if( internal_cache_value->free_value == NULL )
+				if( internal_cache_value->value_free_function == NULL )
 				{
 					libcerror_error_set(
 					 error,
 					 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 					 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
-					 "%s: invalid cache value - missing free value function.",
+					 "%s: invalid cache value - missing value free function.",
 					 function );
 
 					result = -1;
 				}
-				else if( internal_cache_value->free_value(
+				else if( internal_cache_value->value_free_function(
 					  &( internal_cache_value->value ),
 					  error ) != 1 )
 				{
@@ -220,7 +219,7 @@ int libfcache_cache_value_get_identifier(
      libfcache_cache_value_t *cache_value,
      int *file_index,
      off64_t *offset,
-     time_t *timestamp,
+     int64_t *timestamp,
      libcerror_error_t **error )
 {
 	libfcache_internal_cache_value_t *internal_cache_value = NULL;
@@ -279,6 +278,46 @@ int libfcache_cache_value_get_identifier(
 	return( 1 );
 }
 
+/* Retrieves the cache value cache index
+ * Returns 1 if successful or -1 on error
+ */
+int libfcache_cache_value_get_cache_index(
+     libfcache_cache_value_t *cache_value,
+     int *cache_index,
+     libcerror_error_t **error )
+{
+	libfcache_internal_cache_value_t *internal_cache_value = NULL;
+	static char *function                                  = "libfcache_cache_value_get_cache_index";
+
+	if( cache_value == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid cache value.",
+		 function );
+
+		return( -1 );
+	}
+	internal_cache_value = (libfcache_internal_cache_value_t *) cache_value;
+
+	if( cache_index == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid cache index.",
+		 function );
+
+		return( -1 );
+	}
+	*cache_index = internal_cache_value->cache_index;
+
+	return( 1 );
+}
+
 /* Sets the cache value identifier
  * Returns 1 if successful or -1 on error
  */
@@ -286,7 +325,7 @@ int libfcache_cache_value_set_identifier(
      libfcache_cache_value_t *cache_value,
      int file_index,
      off64_t offset,
-     time_t timestamp,
+     int64_t timestamp,
      libcerror_error_t **error )
 {
 	libfcache_internal_cache_value_t *internal_cache_value = NULL;
@@ -308,6 +347,35 @@ int libfcache_cache_value_set_identifier(
 	internal_cache_value->file_index = file_index;
 	internal_cache_value->offset     = offset;
 	internal_cache_value->timestamp  = timestamp;
+
+	return( 1 );
+}
+
+/* Sets the cache value cache index
+ * Returns 1 if successful or -1 on error
+ */
+int libfcache_cache_value_set_cache_index(
+     libfcache_cache_value_t *cache_value,
+     int cache_index,
+     libcerror_error_t **error )
+{
+	libfcache_internal_cache_value_t *internal_cache_value = NULL;
+	static char *function                                  = "libfcache_cache_value_set_cache_index";
+
+	if( cache_value == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid cache value.",
+		 function );
+
+		return( -1 );
+	}
+	internal_cache_value = (libfcache_internal_cache_value_t *) cache_value;
+
+	internal_cache_value->cache_index = cache_index;
 
 	return( 1 );
 }
@@ -358,7 +426,7 @@ int libfcache_cache_value_get_value(
 int libfcache_cache_value_set_value(
      libfcache_cache_value_t *cache_value,
      intptr_t *value,
-     int (*free_value)(
+     int (*value_free_function)(
             intptr_t **value,
             libcerror_error_t **error ),
      uint8_t flags,
@@ -380,22 +448,25 @@ int libfcache_cache_value_set_value(
 	}
 	internal_cache_value = (libfcache_internal_cache_value_t *) cache_value;
 
-	if( free_value == NULL )
+	if( ( flags & LIBFCACHE_CACHE_VALUE_FLAG_MANAGED ) != 0 )
 	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
-		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
-		 "%s: invalid free value function.",
-		 function );
+		if( value_free_function == NULL )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+			 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+			 "%s: invalid value free function.",
+			 function );
 
-		return( -1 );
+			return( -1 );
+		}
 	}
 	if( ( internal_cache_value->flags & LIBFCACHE_CACHE_VALUE_FLAG_MANAGED ) != 0 )
 	{
 		if( internal_cache_value->value != NULL )
 		{
-			if( internal_cache_value->free_value == NULL )
+			if( internal_cache_value->value_free_function == NULL )
 			{
 				libcerror_error_set(
 				 error,
@@ -406,7 +477,7 @@ int libfcache_cache_value_set_value(
 
 				return( -1 );
 			}
-			if( internal_cache_value->free_value(
+			if( internal_cache_value->value_free_function(
 			     &( internal_cache_value->value ),
 			     error ) != 1 )
 			{
@@ -422,9 +493,9 @@ int libfcache_cache_value_set_value(
 		}
 		internal_cache_value->flags &= ~( LIBFCACHE_CACHE_VALUE_FLAG_MANAGED );
 	}
-	internal_cache_value->value      = value;
-	internal_cache_value->free_value = free_value;
-	internal_cache_value->flags     |= flags;
+	internal_cache_value->value               = value;
+	internal_cache_value->value_free_function = value_free_function;
+	internal_cache_value->flags              |= flags;
 
 	return( 1 );
 }

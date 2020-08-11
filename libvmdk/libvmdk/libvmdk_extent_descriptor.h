@@ -1,22 +1,22 @@
 /*
  * Extent descriptor functions
  *
- * Copyright (C) 2009-2016, Joachim Metz <joachim.metz@gmail.com>
+ * Copyright (C) 2009-2020, Joachim Metz <joachim.metz@gmail.com>
  *
  * Refer to AUTHORS for acknowledgements.
  *
- * This software is free software: you can redistribute it and/or modify
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This software is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
- * along with this software.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #if !defined( _LIBVMDK_INTERNAL_EXTENT_DESCRIPTOR_H )
@@ -28,7 +28,6 @@
 #include "libvmdk_extern.h"
 #include "libvmdk_libcerror.h"
 #include "libvmdk_libcsplit.h"
-#include "libvmdk_libcstring.h"
 #include "libvmdk_types.h"
 
 #if defined( __cplusplus )
@@ -41,11 +40,19 @@ struct libvmdk_internal_extent_descriptor
 {
 	/* The filename
 	 */
-	libcstring_system_character_t *filename;
+	system_character_t *filename;
 
 	/* The filename size
 	 */
 	size_t filename_size;
+
+	/* The alternate filename
+	 */
+	system_character_t *alternate_filename;
+
+	/* The alternate filename size
+	 */
+	size_t alternate_filename_size;
 
 	/* The extent offset
 	 */
@@ -65,7 +72,7 @@ struct libvmdk_internal_extent_descriptor
 };
 
 int libvmdk_extent_descriptor_initialize(
-     libvmdk_internal_extent_descriptor_t **extent_descriptor,
+     libvmdk_extent_descriptor_t **extent_descriptor,
      libcerror_error_t **error );
 
 LIBVMDK_EXTERN \
@@ -74,11 +81,11 @@ int libvmdk_extent_descriptor_free(
      libcerror_error_t **error );
 
 int libvmdk_internal_extent_descriptor_free(
-     libvmdk_internal_extent_descriptor_t **extent_descriptor,
+     libvmdk_internal_extent_descriptor_t **internal_extent_descriptor,
      libcerror_error_t **error );
 
 int libvmdk_extent_descriptor_read(
-     libvmdk_internal_extent_descriptor_t *extent_descriptor,
+     libvmdk_extent_descriptor_t *extent_descriptor,
      char *value_string,
      size_t value_string_size,
      int encoding,
@@ -127,5 +134,5 @@ int libvmdk_extent_descriptor_get_utf16_filename(
 }
 #endif
 
-#endif
+#endif /* !defined( _LIBVMDK_INTERNAL_EXTENT_DESCRIPTOR_H ) */
 

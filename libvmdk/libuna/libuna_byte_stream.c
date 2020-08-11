@@ -1,22 +1,22 @@
 /*
  * Byte stream functions
  *
- * Copyright (C) 2008-2016, Joachim Metz <joachim.metz@gmail.com>
+ * Copyright (C) 2008-2020, Joachim Metz <joachim.metz@gmail.com>
  *
  * Refer to AUTHORS for acknowledgements.
  *
- * This software is free software: you can redistribute it and/or modify
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This software is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
- * along with this software.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #include <common.h>
@@ -79,7 +79,7 @@ int libuna_byte_stream_size_from_utf8(
 
 	while( utf8_string_index < utf8_string_size )
 	{
-		/* Convert the UTF-8 character bytes into a Unicode character
+		/* Convert the UTF-8 character bytes into an Unicode character
 		 */
 		if( libuna_unicode_character_copy_from_utf8(
 		     &unicode_character,
@@ -113,6 +113,10 @@ int libuna_byte_stream_size_from_utf8(
 			 function );
 
 			return( -1 );
+		}
+		if( unicode_character == 0 )
+		{
+			break;
 		}
 	}
 	return( 1 );
@@ -180,7 +184,7 @@ int libuna_byte_stream_copy_from_utf8(
 	}
 	while( utf8_string_index < utf8_string_size )
 	{
-		/* Convert the UTF-8 string bytes into a Unicode character
+		/* Convert the UTF-8 string bytes into an Unicode character
 		 */
 		if( libuna_unicode_character_copy_from_utf8(
 		     &unicode_character,
@@ -216,6 +220,10 @@ int libuna_byte_stream_copy_from_utf8(
 			 function );
 
 			return( -1 );
+		}
+		if( unicode_character == 0 )
+		{
+			break;
 		}
 	}
 	return( 1 );
@@ -272,7 +280,7 @@ int libuna_byte_stream_size_from_utf16(
 
 	while( utf16_string_index < utf16_string_size )
 	{
-		/* Convert the UTF-16 character bytes into a Unicode character
+		/* Convert the UTF-16 character bytes into an Unicode character
 		 */
 		if( libuna_unicode_character_copy_from_utf16(
 		     &unicode_character,
@@ -306,6 +314,10 @@ int libuna_byte_stream_size_from_utf16(
 			 function );
 
 			return( -1 );
+		}
+		if( unicode_character == 0 )
+		{
+			break;
 		}
 	}
 	return( 1 );
@@ -373,7 +385,7 @@ int libuna_byte_stream_copy_from_utf16(
 	}
 	while( utf16_string_index < utf16_string_size )
 	{
-		/* Convert the UTF-16 string bytes into a Unicode character
+		/* Convert the UTF-16 string bytes into an Unicode character
 		 */
 		if( libuna_unicode_character_copy_from_utf16(
 		     &unicode_character,
@@ -409,6 +421,10 @@ int libuna_byte_stream_copy_from_utf16(
 			 function );
 
 			return( -1 );
+		}
+		if( unicode_character == 0 )
+		{
+			break;
 		}
 	}
 	return( 1 );
@@ -465,7 +481,7 @@ int libuna_byte_stream_size_from_utf32(
 
 	while( utf32_string_index < utf32_string_size )
 	{
-		/* Convert the UTF-32 character bytes into a Unicode character
+		/* Convert the UTF-32 character bytes into an Unicode character
 		 */
 		if( libuna_unicode_character_copy_from_utf32(
 		     &unicode_character,
@@ -499,6 +515,10 @@ int libuna_byte_stream_size_from_utf32(
 			 function );
 
 			return( -1 );
+		}
+		if( unicode_character == 0 )
+		{
+			break;
 		}
 	}
 	return( 1 );
@@ -566,7 +586,7 @@ int libuna_byte_stream_copy_from_utf32(
 	}
 	while( utf32_string_index < utf32_string_size )
 	{
-		/* Convert the UTF-32 string bytes into a Unicode character
+		/* Convert the UTF-32 string bytes into an Unicode character
 		 */
 		if( libuna_unicode_character_copy_from_utf32(
 		     &unicode_character,
@@ -602,6 +622,10 @@ int libuna_byte_stream_copy_from_utf32(
 			 function );
 
 			return( -1 );
+		}
+		if( unicode_character == 0 )
+		{
+			break;
 		}
 	}
 	return( 1 );

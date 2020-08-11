@@ -1,22 +1,22 @@
 /*
  * The list element functions
  *
- * Copyright (C) 2010-2016, Joachim Metz <joachim.metz@gmail.com>
+ * Copyright (C) 2010-2020, Joachim Metz <joachim.metz@gmail.com>
  *
  * Refer to AUTHORS for acknowledgements.
  *
- * This software is free software: you can redistribute it and/or modify
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This software is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
- * along with this software.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #include <common.h>
@@ -220,8 +220,6 @@ int libfdata_list_element_free(
 int libfdata_list_element_clone(
      libfdata_list_element_t **destination_element,
      libfdata_list_element_t *source_element,
-     libfdata_list_t *list,
-     int element_index,
      libcerror_error_t **error )
 {
 	libfdata_internal_list_element_t *internal_destination_element = NULL;
@@ -246,28 +244,6 @@ int libfdata_list_element_clone(
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 		 LIBCERROR_RUNTIME_ERROR_VALUE_ALREADY_SET,
 		 "%s: destination element already set.",
-		 function );
-
-		return( -1 );
-	}
-	if( list == NULL )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
-		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
-		 "%s: invalid list.",
-		 function );
-
-		return( -1 );
-	}
-	if( element_index < 0 )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
-		 LIBCERROR_ARGUMENT_ERROR_VALUE_LESS_THAN_ZERO,
-		 "%s: invalid element index value less than zero.",
 		 function );
 
 		return( -1 );
@@ -338,8 +314,8 @@ int libfdata_list_element_clone(
 
 		goto on_error;
 	}
-	internal_destination_element->list          = list;
-	internal_destination_element->element_index = element_index;
+	internal_destination_element->list          = internal_source_element->list;
+	internal_destination_element->element_index = internal_source_element->element_index;
 	internal_destination_element->mapped_size   = internal_source_element->mapped_size;
 
 	*destination_element = (libfdata_list_element_t *) internal_destination_element;
@@ -446,7 +422,7 @@ int libfdata_list_element_set_element_index(
  */
 int libfdata_list_element_get_timestamp(
      libfdata_list_element_t *element,
-     time_t *timestamp,
+     int64_t *timestamp,
      libcerror_error_t **error )
 {
 	libfdata_internal_list_element_t *internal_element = NULL;
@@ -747,7 +723,7 @@ int libfdata_list_element_set_mapped_size(
 int libfdata_list_element_get_element_value(
      libfdata_list_element_t *element,
      intptr_t *file_io_handle,
-     libfcache_cache_t *cache,
+     libfdata_cache_t *cache,
      intptr_t **element_value,
      uint8_t read_flags,
      libcerror_error_t **error )
@@ -800,7 +776,7 @@ int libfdata_list_element_get_element_value(
 int libfdata_list_element_set_element_value(
      libfdata_list_element_t *element,
      intptr_t *file_io_handle,
-     libfcache_cache_t *cache,
+     libfdata_cache_t *cache,
      intptr_t *element_value,
      int (*free_element_value)(
             intptr_t **element_value,

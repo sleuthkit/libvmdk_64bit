@@ -1,22 +1,22 @@
 /*
  * Condition functions
  *
- * Copyright (C) 2012-2016, Joachim Metz <joachim.metz@gmail.com>
+ * Copyright (C) 2012-2020, Joachim Metz <joachim.metz@gmail.com>
  *
  * Refer to AUTHORS for acknowledgements.
  *
- * This software is free software: you can redistribute it and/or modify
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This software is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
- * along with this software.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #include <common.h>
@@ -106,7 +106,10 @@ int libcthreads_condition_initialize(
 		 "%s: unable to clear condition.",
 		 function );
 
-		goto on_error;
+		memory_free(
+		 internal_condition );
+
+		return( -1 );
 	}
 #if defined( WINAPI ) && ( WINVER >= 0x0600 )
 	InitializeConditionVariable(
@@ -159,20 +162,34 @@ int libcthreads_condition_initialize(
 
 #elif defined( HAVE_PTHREAD_H )
 	pthread_result = pthread_cond_init(
-		          &( internal_condition->condition ),
+	                  &( internal_condition->condition ),
 	                  NULL );
 
-	if( pthread_result != 0 )
+	switch( pthread_result )
 	{
-		libcerror_system_set_error(
-		 error,
-		 pthread_result,
-		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-		 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
-		 "%s: unable to initialize condition.",
-		 function );
+		case 0:
+			break;
 
-		goto on_error;
+		case EAGAIN:
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_FINALIZE_FAILED,
+			 "%s: unable to initialize condition with error: Insufficient resources.",
+			 function );
+
+			goto on_error;
+
+		default:
+			libcerror_system_set_error(
+			 error,
+			 pthread_result,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_FINALIZE_FAILED,
+			 "%s: unable to initialize condition.",
+			 function );
+
+			goto on_error;
 	}
 #endif
 	*condition = (libcthreads_condition_t *) internal_condition;
@@ -271,32 +288,44 @@ int libcthreads_condition_free(
 		pthread_result = pthread_cond_destroy(
 		                  &( internal_condition->condition ) );
 
-		if( pthread_result != 0 )
+		switch( pthread_result )
 		{
-			switch( pthread_result )
-			{
-				case EBUSY:
-					libcerror_error_set(
-					 error,
-					 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-					 LIBCERROR_RUNTIME_ERROR_FINALIZE_FAILED,
-					 "%s: unable to destroy condition with error: Resource busy.",
-					 function );
+			case 0:
+				break;
 
-					break;
+			case EAGAIN:
+				libcerror_error_set(
+				 error,
+				 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+				 LIBCERROR_RUNTIME_ERROR_FINALIZE_FAILED,
+				 "%s: unable to destroy condition with error: Insufficient resources.",
+				 function );
 
-				default:
-					libcerror_system_set_error(
-					 error,
-					 pthread_result,
-					 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-					 LIBCERROR_RUNTIME_ERROR_FINALIZE_FAILED,
-					 "%s: unable to destroy condition.",
-					 function );
+				result = -1;
+				break;
 
-					break;
-			}
-			result = -1;
+			case EBUSY:
+				libcerror_error_set(
+				 error,
+				 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+				 LIBCERROR_RUNTIME_ERROR_FINALIZE_FAILED,
+				 "%s: unable to destroy condition with error: Resource busy.",
+				 function );
+
+				result = -1;
+				break;
+
+			default:
+				libcerror_system_set_error(
+				 error,
+				 pthread_result,
+				 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+				 LIBCERROR_RUNTIME_ERROR_FINALIZE_FAILED,
+				 "%s: unable to destroy condition.",
+				 function );
+
+				result = -1;
+				break;
 		}
 #endif
 		memory_free(
@@ -593,7 +622,7 @@ int libcthreads_condition_wait(
 	EnterCriticalSection(
 	 &( internal_condition->wait_critical_section ) );
 
-	internal_condition->number_of_waiting_threads += 1;
+	internal_condition->number_of_waiting_threads++;
 
 	LeaveCriticalSection(
 	 &( internal_condition->wait_critical_section ) );
@@ -621,7 +650,7 @@ int libcthreads_condition_wait(
 	EnterCriticalSection(
 	 &( internal_condition->wait_critical_section ) );
 
-	internal_condition->number_of_waiting_threads -= 1;
+	internal_condition->number_of_waiting_threads--;
 
 	if( ( internal_condition->number_of_waiting_threads == 0 )
 	 && ( internal_condition->signal_is_broadcast != 0 ) )
@@ -657,8 +686,8 @@ int libcthreads_condition_wait(
 	else
 	{
 		wait_status = WaitForSingleObject(
-			       internal_mutex->mutex_handle,
-			       INFINITE );
+		               internal_mutex->mutex_handle,
+		               INFINITE );
 
 		if( wait_status == WAIT_FAILED )
 		{

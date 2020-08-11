@@ -1,26 +1,26 @@
 /*
  * List functions
  *
- * Copyright (C) 2006-2016, Joachim Metz <joachim.metz@gmail.com>
+ * Copyright (C) 2006-2020, Joachim Metz <joachim.metz@gmail.com>
  *
  * Refer to AUTHORS for acknowledgements.
  *
- * This software is free software: you can redistribute it and/or modify
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This software is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
- * along with this software.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#if !defined( _LIBCDATA_INTERNAL_LIST_H )
-#define _LIBCDATA_INTERNAL_LIST_H
+#if !defined( _LIBCDATA_LIST_H )
+#define _LIBCDATA_LIST_H
 
 #include <common.h>
 #include <types.h>
@@ -70,13 +70,6 @@ int libcdata_list_free(
             libcerror_error_t **error ),
      libcerror_error_t **error );
 
-int libcdata_internal_list_empty(
-     libcdata_internal_list_t *internal_list,
-     int (*value_free_function)(
-            intptr_t **value,
-            libcerror_error_t **error ),
-     libcerror_error_t **error );
-
 LIBCDATA_EXTERN \
 int libcdata_list_empty(
      libcdata_list_t *list,
@@ -115,11 +108,6 @@ int libcdata_internal_list_set_first_element(
      libcdata_list_element_t *element,
      libcerror_error_t **error );
 
-int libcdata_list_set_first_element(
-     libcdata_list_t *list,
-     libcdata_list_element_t *element,
-     libcerror_error_t **error );
-
 LIBCDATA_EXTERN \
 int libcdata_list_get_last_element(
      libcdata_list_t *list,
@@ -128,11 +116,6 @@ int libcdata_list_get_last_element(
 
 int libcdata_internal_list_set_last_element(
      libcdata_internal_list_t *internal_list,
-     libcdata_list_element_t *element,
-     libcerror_error_t **error );
-
-int libcdata_list_set_last_element(
-     libcdata_list_t *list,
      libcdata_list_element_t *element,
      libcerror_error_t **error );
 
@@ -174,10 +157,28 @@ int libcdata_list_append_value(
      intptr_t *value,
      libcerror_error_t **error );
 
+int libcdata_internal_list_insert_element_find_element(
+     libcdata_internal_list_t *internal_list,
+     intptr_t *value_to_insert,
+     int (*value_compare_function)(
+            intptr_t *first_value,
+            intptr_t *second_value,
+            libcerror_error_t **error ),
+     uint8_t insert_flags,
+     int *element_index,
+     libcdata_list_element_t **element,
+     libcerror_error_t **error );
+
+int libcdata_internal_list_insert_element_before_element(
+     libcdata_internal_list_t *internal_list,
+     libcdata_list_element_t *list_element,
+     libcdata_list_element_t *element_to_insert,
+     libcerror_error_t **error );
+
 LIBCDATA_EXTERN \
 int libcdata_list_insert_element(
      libcdata_list_t *list,
-     libcdata_list_element_t *element,
+     libcdata_list_element_t *element_to_insert,
      int (*value_compare_function)(
             intptr_t *first,
             intptr_t *second,
@@ -199,12 +200,12 @@ int libcdata_list_insert_value(
 LIBCDATA_EXTERN \
 int libcdata_list_remove_element(
      libcdata_list_t *list,
-     libcdata_list_element_t *element,
+     libcdata_list_element_t *element_to_remove,
      libcerror_error_t **error );
 
 #if defined( __cplusplus )
 }
 #endif
 
-#endif
+#endif /* !defined( _LIBCDATA_LIST_H ) */
 

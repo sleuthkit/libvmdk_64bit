@@ -1,35 +1,37 @@
 /*
  * Value functions
  *
- * Copyright (C) 2010-2016, Joachim Metz <joachim.metz@gmail.com>
+ * Copyright (C) 2010-2020, Joachim Metz <joachim.metz@gmail.com>
  *
  * Refer to AUTHORS for acknowledgements.
  *
- * This software is free software: you can redistribute it and/or modify
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This software is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
- * along with this software.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #include <common.h>
 #include <file_stream.h>
 #include <memory.h>
+#include <narrow_string.h>
+#include <system_string.h>
 #include <types.h>
+#include <wide_string.h>
 
 #include "libfvalue_data_handle.h"
 #include "libfvalue_definitions.h"
 #include "libfvalue_libcdata.h"
 #include "libfvalue_libcerror.h"
 #include "libfvalue_libcnotify.h"
-#include "libfvalue_libcstring.h"
 #include "libfvalue_types.h"
 #include "libfvalue_value.h"
 
@@ -341,6 +343,23 @@ int libfvalue_value_free(
 		internal_value = (libfvalue_internal_value_t *) *value;
 		*value         = NULL;
 
+		if( internal_value->value_instances != NULL )
+		{
+			if( libcdata_array_free(
+			     &( internal_value->value_instances ),
+			     internal_value->free_instance,
+			     error ) != 1 )
+			{
+				libcerror_error_set(
+				 error,
+				 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+				 LIBCERROR_RUNTIME_ERROR_FINALIZE_FAILED,
+				 "%s: unable to free value instances array.",
+				 function );
+
+				result = -1;
+			}
+		}
 		if( ( internal_value->flags & LIBFVALUE_VALUE_FLAG_DATA_HANDLE_MANAGED ) != 0 )
 		{
 			if( libfvalue_data_handle_free(
@@ -539,6 +558,19 @@ int libfvalue_value_clear(
 		}
 		internal_value->flags &= ~( LIBFVALUE_VALUE_FLAG_IDENTIFIER_MANAGED );
 	}
+	if( libfvalue_data_handle_clear(
+	     internal_value->data_handle,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_FINALIZE_FAILED,
+		 "%s: unable to clear data handle.",
+		 function );
+
+		return( -1 );
+	}
 	if( internal_value->value_instances != NULL )
 	{
 		if( internal_value->free_instance == NULL )
@@ -552,8 +584,8 @@ int libfvalue_value_clear(
 
 			return( -1 );
 		}
-		if( libcdata_array_free(
-		     &( internal_value->value_instances ),
+		if( libcdata_array_empty(
+		     internal_value->value_instances,
 		     internal_value->free_instance,
 		     error ) != 1 )
 		{
@@ -561,7 +593,7 @@ int libfvalue_value_clear(
 			 error,
 			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 			 LIBCERROR_RUNTIME_ERROR_FINALIZE_FAILED,
-			 "%s: unable to free value instances array.",
+			 "%s: unable to empty value instances array.",
 			 function );
 
 			return( -1 );
@@ -1329,6 +1361,17 @@ int libfvalue_value_copy_data(
 
 		return( -1 );
 	}
+	if( data_size > (size_t) SSIZE_MAX )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_VALUE_EXCEEDS_MAXIMUM,
+		 "%s: invalid data size value exceeds maximum.",
+		 function );
+
+		return( -1 );
+	}
 	if( libfvalue_data_handle_get_data(
 	     internal_value->data_handle,
 	     &data_handle_data,
@@ -1661,6 +1704,7 @@ int libfvalue_value_get_number_of_value_entries(
 {
 	libfvalue_internal_value_t *internal_value = NULL;
 	static char *function                      = "libfvalue_value_get_number_of_value_entries";
+	int safe_number_of_value_entries           = 0;
 	int result                                 = 0;
 
 	if( value == NULL )
@@ -1706,7 +1750,7 @@ int libfvalue_value_get_number_of_value_entries(
 	{
 		if( libfvalue_data_handle_get_number_of_value_entries(
 		     internal_value->data_handle,
-		     number_of_value_entries,
+		     &safe_number_of_value_entries,
 		     error ) != 1 )
 		{
 			libcerror_error_set(
@@ -1719,11 +1763,11 @@ int libfvalue_value_get_number_of_value_entries(
 			return( -1 );
 		}
 	}
-	else
+	else if( internal_value->value_instances != NULL )
 	{
 		if( libcdata_array_get_number_of_entries(
 		     internal_value->value_instances,
-		     number_of_value_entries,
+		     &safe_number_of_value_entries,
 		     error ) != 1 )
 		{
 			libcerror_error_set(
@@ -1736,7 +1780,7 @@ int libfvalue_value_get_number_of_value_entries(
 			return( -1 );
 		}
 	}
-	if( *number_of_value_entries <= 0 )
+	if( safe_number_of_value_entries < 0 )
 	{
 		libcerror_error_set(
 		 error,
@@ -1747,6 +1791,8 @@ int libfvalue_value_get_number_of_value_entries(
 
 		return( -1 );
 	}
+	*number_of_value_entries = safe_number_of_value_entries;
+
 	return( 1 );
 }
 
@@ -1777,6 +1823,28 @@ int libfvalue_value_get_entry(
 	}
 	internal_value = (libfvalue_internal_value_t *) value;
 
+	if( entry_data_offset == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid entry data offset.",
+		 function );
+
+		return( -1 );
+	}
+	if( entry_data_size == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid entry data size.",
+		 function );
+
+		return( -1 );
+	}
 	result = libfvalue_value_has_data(
 	          value,
 	          error );
@@ -1944,6 +2012,7 @@ int libfvalue_value_append_entry(
 	libfvalue_internal_value_t *internal_value = NULL;
 	intptr_t *value_instance                   = NULL;
 	static char *function                      = "libfvalue_value_append_entry";
+	int entry_index                            = 0;
 	int number_of_value_entries                = 0;
 
 	if( value == NULL )
@@ -1999,13 +2068,13 @@ int libfvalue_value_append_entry(
 	 * and the value instances reference this data make sure that no stale
 	 * value instances are kept around.
 	 */
-	for( *value_entry_index = 0;
-	     *value_entry_index < number_of_value_entries;
-	     *value_entry_index += 1 )
+	for( entry_index = 0;
+	     entry_index < number_of_value_entries;
+	     entry_index += 1 )
 	{
 		if( libcdata_array_get_entry_by_index(
 		     internal_value->value_instances,
-		     *value_entry_index,
+		     entry_index,
 		     &value_instance,
 		     error ) != 1 )
 		{
@@ -2015,7 +2084,7 @@ int libfvalue_value_append_entry(
 			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
 			 "%s: unable to retrieve entry: %d from values instances array.",
 			 function,
-			 *value_entry_index );
+			 entry_index );
 
 			return( -1 );
 		}
@@ -2023,7 +2092,7 @@ int libfvalue_value_append_entry(
 		{
 			if( libcdata_array_set_entry_by_index(
 			     internal_value->value_instances,
-			     *value_entry_index,
+			     entry_index,
 			     NULL,
 			     error ) != 1 )
 			{
@@ -2033,7 +2102,7 @@ int libfvalue_value_append_entry(
 				 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
 				 "%s: unable to set entry: %d in values instances array.",
 				 function,
-				 *value_entry_index );
+				 entry_index );
 
 				return( -1 );
 			}
@@ -2047,7 +2116,7 @@ int libfvalue_value_append_entry(
 				 LIBCERROR_RUNTIME_ERROR_FINALIZE_FAILED,
 				 "%s: unable to free value instance: %d.",
 				 function,
-				 *value_entry_index );
+				 entry_index );
 
 				return( -1 );
 			}
@@ -2115,6 +2184,39 @@ int libfvalue_value_get_entry_data(
 	}
 	internal_value = (libfvalue_internal_value_t *) value;
 
+	if( entry_data == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid entry data.",
+		 function );
+
+		return( -1 );
+	}
+	if( entry_data_size == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid entry data size.",
+		 function );
+
+		return( -1 );
+	}
+	if( encoding == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid encoding.",
+		 function );
+
+		return( -1 );
+	}
 	result = libfvalue_value_has_data(
 	          value,
 	          error );
@@ -4927,13 +5029,13 @@ int libfvalue_value_print(
      uint8_t flags,
      libcerror_error_t **error )
 {
-	libfvalue_internal_value_t *internal_value  = NULL;
-	libcstring_system_character_t *value_string = NULL;
-	intptr_t *value_instance                    = NULL;
-	static char *function                       = "libfvalue_value_print";
-	size_t value_string_index                   = 0;
-	size_t value_string_size                    = 0;
-	int result                                  = 0;
+	libfvalue_internal_value_t *internal_value = NULL;
+	system_character_t *value_string           = NULL;
+	intptr_t *value_instance                   = NULL;
+	static char *function                      = "libfvalue_value_print";
+	size_t value_string_index                  = 0;
+	size_t value_string_size                   = 0;
+	int result                                 = 0;
 
 	if( value == NULL )
 	{
@@ -4959,7 +5061,7 @@ int libfvalue_value_print(
 
 		return( -1 );
 	}
-#if defined( LIBCSTRING_HAVE_WIDE_SYSTEM_CHARACTER )
+#if defined( HAVE_WIDE_SYSTEM_CHARACTER )
 	if( internal_value->get_utf16_string_size == NULL )
 #else
 	if( internal_value->get_utf8_string_size == NULL )
@@ -4974,7 +5076,7 @@ int libfvalue_value_print(
 
 		return( -1 );
 	}
-#if defined( LIBCSTRING_HAVE_WIDE_SYSTEM_CHARACTER )
+#if defined( HAVE_WIDE_SYSTEM_CHARACTER )
 	if( internal_value->copy_to_utf16_string_with_index == NULL )
 #else
 	if( internal_value->copy_to_utf8_string_with_index == NULL )
@@ -5042,7 +5144,7 @@ int libfvalue_value_print(
 		}
 		if( value_instance != NULL )
 		{
-#if defined( LIBCSTRING_HAVE_WIDE_SYSTEM_CHARACTER )
+#if defined( HAVE_WIDE_SYSTEM_CHARACTER )
 			result = internal_value->get_utf16_string_size(
 				  value_instance,
 				  &value_string_size,
@@ -5068,7 +5170,7 @@ int libfvalue_value_print(
 			}
 			if( value_string_size > 0 )
 			{
-				value_string = libcstring_system_string_allocate(
+				value_string = system_string_allocate(
 				                value_string_size );
 
 				if( value_string == NULL )
@@ -5082,7 +5184,7 @@ int libfvalue_value_print(
 
 					goto on_error;
 				}
-#if defined( LIBCSTRING_HAVE_WIDE_SYSTEM_CHARACTER )
+#if defined( HAVE_WIDE_SYSTEM_CHARACTER )
 				result = internal_value->copy_to_utf16_string_with_index(
 					  value_instance,
 					  (uint16_t *) value_string,
@@ -5111,7 +5213,7 @@ int libfvalue_value_print(
 					goto on_error;
 				}
 				libcnotify_printf(
-				 "%" PRIs_LIBCSTRING_SYSTEM "",
+				 "%" PRIs_SYSTEM "",
 				 value_string );
 
 				memory_free(

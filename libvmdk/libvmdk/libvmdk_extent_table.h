@@ -1,22 +1,22 @@
 /*
  * Extent table functions
  *
- * Copyright (C) 2009-2016, Joachim Metz <joachim.metz@gmail.com>
+ * Copyright (C) 2009-2020, Joachim Metz <joachim.metz@gmail.com>
  *
  * Refer to AUTHORS for acknowledgements.
  *
- * This software is free software: you can redistribute it and/or modify
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This software is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
- * along with this software.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #if !defined( _LIBVMDK_EXTENT_TABLE_H )
@@ -29,8 +29,7 @@
 #include "libvmdk_extent_file.h"
 #include "libvmdk_io_handle.h"
 #include "libvmdk_libbfio.h"
-#include "libvmdk_libcstring.h"
-#include "libvmdk_libcstring.h"
+#include "libvmdk_libcerror.h"
 #include "libvmdk_libfcache.h"
 #include "libvmdk_libfdata.h"
 
@@ -46,13 +45,13 @@ struct libvmdk_extent_table
 	 */
 	libvmdk_io_handle_t *io_handle;
 
-	/* The basename
+	/* The data files path
 	 */
-	libcstring_system_character_t *basename;
+	system_character_t *data_files_path;
 
-	/* The basename size
+	/* The data files path size
 	 */
-	size_t basename_size;
+	size_t data_files_path_size;
 
 	/* The disk type
 	 */
@@ -101,41 +100,43 @@ int libvmdk_extent_table_clone(
      libvmdk_extent_table_t *source_extent_table,
      libcerror_error_t **error );
 
-int libvmdk_extent_table_get_basename_size(
+int libvmdk_extent_table_get_data_files_path_size(
      libvmdk_extent_table_t *extent_table,
-     size_t *basename_size,
+     size_t *path,
      libcerror_error_t **error );
 
-int libvmdk_extent_table_get_basename(
+int libvmdk_extent_table_get_data_files_path(
      libvmdk_extent_table_t *extent_table,
-     char *basename,
-     size_t basename_size,
+     char *path,
+     size_t path_size,
      libcerror_error_t **error );
 
-int libvmdk_extent_table_set_basename(
+int libvmdk_extent_table_set_data_files_path(
      libvmdk_extent_table_t *extent_table,
-     const char *basename,
-     size_t basename_length,
+     const char *path,
+     size_t path_length,
      libcerror_error_t **error );
 
 #if defined( HAVE_WIDE_CHARACTER_TYPE )
-int libvmdk_extent_table_get_basename_size_wide(
+
+int libvmdk_extent_table_get_data_files_path_size_wide(
      libvmdk_extent_table_t *extent_table,
-     size_t *basename_size,
+     size_t *path_size,
      libcerror_error_t **error );
 
-int libvmdk_extent_table_get_basename_wide(
+int libvmdk_extent_table_get_data_files_path_wide(
      libvmdk_extent_table_t *extent_table,
-     wchar_t *basename,
-     size_t basename_size,
+     wchar_t *path,
+     size_t path_size,
      libcerror_error_t **error );
 
-int libvmdk_extent_table_set_basename_wide(
+int libvmdk_extent_table_set_data_files_path_wide(
      libvmdk_extent_table_t *extent_table,
-     const wchar_t *basename,
-     size_t basename_length,
+     const wchar_t *path,
+     size_t path_length,
      libcerror_error_t **error );
-#endif
+
+#endif /* defined( HAVE_WIDE_CHARACTER_TYPE ) */
 
 int libvmdk_extent_table_initialize_extents(
      libvmdk_extent_table_t *extent_table,
@@ -205,5 +206,5 @@ int libvmdk_extent_table_set_extent_by_extent_descriptor(
 }
 #endif
 
-#endif
+#endif /* !defined( _LIBVMDK_EXTENT_TABLE_H ) */
 

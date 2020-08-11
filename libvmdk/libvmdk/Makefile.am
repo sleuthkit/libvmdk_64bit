@@ -2,7 +2,6 @@ AM_CPPFLAGS = \
 	-DLOCALEDIR=\"$(datadir)/locale\" \
 	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/common \
-	@LIBCSTRING_CPPFLAGS@ \
 	@LIBCERROR_CPPFLAGS@ \
 	@LIBCTHREADS_CPPFLAGS@ \
 	@LIBCDATA_CPPFLAGS@ \
@@ -17,7 +16,8 @@ AM_CPPFLAGS = \
 	@LIBFDATA_CPPFLAGS@ \
 	@LIBFVALUE_CPPFLAGS@ \
 	@ZLIB_CPPFLAGS@ \
-	@PTHREAD_CPPFLAGS@
+	@PTHREAD_CPPFLAGS@ \
+	@LIBVMDK_DLL_EXPORT@
 
 lib_LTLIBRARIES = libvmdk.la
 
@@ -45,22 +45,20 @@ libvmdk_la_SOURCES = \
 	libvmdk_libcnotify.h \
 	libvmdk_libcpath.h \
 	libvmdk_libcsplit.h \
-	libvmdk_libcstring.h \
 	libvmdk_libcthreads.h \
 	libvmdk_libfcache.h \
 	libvmdk_libfdata.h \
 	libvmdk_libfvalue.h \
 	libvmdk_libuna.h \
-	libvmdk_metadata.c libvmdk_metadata.h \
 	libvmdk_notify.c libvmdk_notify.h \
 	libvmdk_support.c libvmdk_support.h \
+	libvmdk_system_string.c libvmdk_system_string.h \
 	libvmdk_types.h \
 	libvmdk_unused.h \
 	cowd_sparse_file_header.h \
 	vmdk_sparse_file_header.h
 
 libvmdk_la_LIBADD = \
-	@LIBCSTRING_LIBADD@ \
 	@LIBCERROR_LIBADD@ \
 	@LIBCTHREADS_LIBADD@ \
 	@LIBCDATA_LIBADD@ \

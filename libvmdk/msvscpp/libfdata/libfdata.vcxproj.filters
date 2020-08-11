@@ -18,15 +18,6 @@
     <ClCompile Include="..\..\libfdata\libfdata_area.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\libfdata\libfdata_btree.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\libfdata\libfdata_btree_node.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\libfdata\libfdata_btree_range.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\libfdata\libfdata_cache.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -74,15 +65,6 @@
     <ClInclude Include="..\..\libfdata\libfdata_area.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\libfdata\libfdata_btree.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\libfdata\libfdata_btree_node.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\libfdata\libfdata_btree_range.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\libfdata\libfdata_cache.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -93,9 +75,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\libfdata\libfdata_extern.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\libfdata\libfdata_inline.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\libfdata\libfdata_libcdata.h">

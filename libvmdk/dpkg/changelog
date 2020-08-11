@@ -1,5 +1,5 @@
-libvmdk (20160119-1) unstable; urgency=low
+libvmdk (20200810-1) unstable; urgency=low
 
   * Auto-generated
 
- -- Joachim Metz <joachim.metz@gmail.com>  Tue, 19 Jan 2016 09:07:27 +0100
+ -- Joachim Metz <joachim.metz@gmail.com>  Mon, 10 Aug 2020 17:31:39 +0200

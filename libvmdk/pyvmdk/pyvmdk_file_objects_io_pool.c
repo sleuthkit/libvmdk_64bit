@@ -1,22 +1,22 @@
 /*
  * Python file objects IO pool functions
  *
- * Copyright (C) 2009-2016, Joachim Metz <joachim.metz@gmail.com>
+ * Copyright (C) 2009-2020, Joachim Metz <joachim.metz@gmail.com>
  *
  * Refer to AUTHORS for acknowledgements.
  *
- * This software is free software: you can redistribute it and/or modify
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This software is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
- * along with this software.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #include <common.h>
@@ -27,7 +27,6 @@
 #include "pyvmdk_integer.h"
 #include "pyvmdk_libbfio.h"
 #include "pyvmdk_libcerror.h"
-#include "pyvmdk_libcstring.h"
 #include "pyvmdk_python.h"
 
 /* Initializes the file objects IO pool
@@ -39,13 +38,14 @@ int pyvmdk_file_objects_pool_initialize(
      int access_flags,
      libcerror_error_t **error )
 {
-	libbfio_handle_t *file_io_handle = NULL;
 	PyObject *file_object            = NULL;
+	libbfio_handle_t *file_io_handle = NULL;
 	static char *function            = "pyvmdk_file_objects_pool_initialize";
 	Py_ssize_t sequence_size         = 0;
 	int element_index                = 0;
 	int file_io_pool_entry           = 0;
 	int number_of_elements           = 0;
+	int result                       = 0;
 
 	if( pool == NULL )
 	{
@@ -115,6 +115,40 @@ int pyvmdk_file_objects_pool_initialize(
 			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 			 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
 			 "%s: missing file object IO handle.",
+			 function );
+
+			goto on_error;
+		}
+		PyErr_Clear();
+
+		result = PyObject_HasAttrString(
+		          file_object,
+		          "read" );
+
+		if( result != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
+			 "%s: unsupported file object - missing read attribute.",
+			 function );
+
+			goto on_error;
+		}
+		PyErr_Clear();
+
+		result = PyObject_HasAttrString(
+		          file_object,
+		          "seek" );
+
+		if( result != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
+			 "%s: unsupported file object - missing seek attribute.",
 			 function );
 
 			goto on_error;

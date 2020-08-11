@@ -1,22 +1,22 @@
 /*
  * The internal definitions
  *
- * Copyright (C) 2006-2016, Joachim Metz <joachim.metz@gmail.com>
+ * Copyright (C) 2006-2020, Joachim Metz <joachim.metz@gmail.com>
  *
  * Refer to AUTHORS for acknowledgements.
  *
- * This software is free software: you can redistribute it and/or modify
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This software is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
- * along with this software.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #if !defined( LIBCDATA_INTERNAL_DEFINITIONS_H )
@@ -35,11 +35,11 @@
  */
 #else
 
-#define LIBCDATA_VERSION				20160108
+#define LIBCDATA_VERSION				20200509
 
-/* The libcstring version string
+/* The libcdata version string
  */
-#define LIBCDATA_VERSION_STRING				"20160108"
+#define LIBCDATA_VERSION_STRING				"20200509"
 
 /* The comparison function definitions
  */
@@ -68,10 +68,14 @@ enum LIBCDATA_INSERT_FLAGS
 
 	/* Only allow unique entries, no duplicates
 	 */
-	LIBCDATA_INSERT_FLAG_UNIQUE_ENTRIES	= 0x01,
+	LIBCDATA_INSERT_FLAG_UNIQUE_ENTRIES	= 0x01
 };
 
 #endif /* !defined( HAVE_LOCAL_LIBCDATA ) */
 
-#endif
+/* Limiting the maximum size of the array entries to 128 MiB
+ */
+#define LIBCDATA_ARRAY_ENTRIES_MEMORY_LIMIT	128 * 1024 * 1024
+
+#endif /* !defined( LIBCDATA_INTERNAL_DEFINITIONS_H ) */
 

@@ -21,10 +21,16 @@
     <ClCompile Include="..\..\libbfio\libbfio_file.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\libbfio\libbfio_file_io_handle.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\libbfio\libbfio_file_pool.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\libbfio\libbfio_file_range.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libbfio\libbfio_file_range_io_handle.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\libbfio\libbfio_handle.c">
@@ -33,10 +39,16 @@
     <ClCompile Include="..\..\libbfio\libbfio_memory_range.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\libbfio\libbfio_memory_range_io_handle.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\libbfio\libbfio_pool.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\libbfio\libbfio_support.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libbfio\libbfio_system_string.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -56,10 +68,16 @@
     <ClInclude Include="..\..\libbfio\libbfio_file.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\libbfio\libbfio_file_io_handle.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\libbfio\libbfio_file_pool.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\libbfio\libbfio_file_range.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libbfio\libbfio_file_range_io_handle.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\libbfio\libbfio_handle.h">
@@ -80,9 +98,6 @@
     <ClInclude Include="..\..\libbfio\libbfio_libcpath.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\libbfio\libbfio_libcstring.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\libbfio\libbfio_libcthreads.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -92,10 +107,16 @@
     <ClInclude Include="..\..\libbfio\libbfio_memory_range.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\libbfio\libbfio_memory_range_io_handle.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\libbfio\libbfio_pool.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\libbfio\libbfio_support.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libbfio\libbfio_system_string.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\libbfio\libbfio_types.h">

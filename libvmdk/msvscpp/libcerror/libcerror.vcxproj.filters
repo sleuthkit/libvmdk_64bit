@@ -35,9 +35,6 @@
     <ClInclude Include="..\..\libcerror\libcerror_extern.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\libcerror\libcerror_libcstring.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\libcerror\libcerror_support.h">
       <Filter>Header Files</Filter>
     </ClInclude>

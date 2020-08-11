@@ -1,33 +1,36 @@
 /*
  * Info handle
  *
- * Copyright (C) 2009-2016, Joachim Metz <joachim.metz@gmail.com>
+ * Copyright (C) 2009-2020, Joachim Metz <joachim.metz@gmail.com>
  *
  * Refer to AUTHORS for acknowledgements.
  *
- * This software is free software: you can redistribute it and/or modify
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This software is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
- * along with this software.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #include <common.h>
 #include <byte_stream.h>
 #include <memory.h>
+#include <narrow_string.h>
+#include <system_string.h>
 #include <types.h>
+#include <wide_string.h>
 
+#include "byte_size_string.h"
 #include "info_handle.h"
 #include "vmdktools_libcerror.h"
 #include "vmdktools_libcnotify.h"
-#include "vmdktools_libcstring.h"
 #include "vmdktools_libvmdk.h"
 
 #define INFO_HANDLE_NOTIFY_STREAM		stdout
@@ -211,7 +214,7 @@ int info_handle_signal_abort(
  */
 int info_handle_open_input(
      info_handle_t *info_handle,
-     libcstring_system_character_t * const * filenames,
+     system_character_t * const * filenames,
      int number_of_filenames,
      libcerror_error_t **error )
 {
@@ -250,7 +253,7 @@ int info_handle_open_input(
 
 		return( -1 );
 	}
-#if defined( LIBCSTRING_HAVE_WIDE_SYSTEM_CHARACTER )
+#if defined( HAVE_WIDE_SYSTEM_CHARACTER )
 	if( libvmdk_handle_open_wide(
 	     info_handle->input_handle,
 	     filenames[ 0 ],
@@ -330,13 +333,15 @@ int info_handle_file_fprint(
      info_handle_t *info_handle,
      libcerror_error_t **error )
 {
-	libcstring_system_character_t *filename        = NULL;
+	system_character_t byte_size_string[ 16 ];
+
 	libvmdk_extent_descriptor_t *extent_descriptor = NULL;
+	system_character_t *filename                   = NULL;
 	static char *function                          = "info_handle_file_fprint";
 	size64_t extent_size                           = 0;
 	size64_t media_size                            = 0;
-	off64_t extent_offset                          = 0;
 	size_t filename_size                           = 0;
+	off64_t extent_offset                          = 0;
 	uint32_t content_identifier                    = 0;
 	int disk_type                                  = 0;
 	int extent_index                               = 0;
@@ -499,11 +504,28 @@ int info_handle_file_fprint(
 
 		goto on_error;
 	}
-	fprintf(
-	 info_handle->notify_stream,
-	 "\tMedia size:\t\t\t%" PRIu64 " bytes\n",
-	 media_size );
+	result = byte_size_string_create(
+	          byte_size_string,
+	          16,
+	          media_size,
+	          BYTE_SIZE_STRING_UNIT_MEBIBYTE,
+	          NULL );
 
+	if( result == 1 )
+	{
+		fprintf(
+		 info_handle->notify_stream,
+		 "\tMedia size:\t\t\t%" PRIs_SYSTEM " (%" PRIu64 " bytes)\n",
+		 byte_size_string,
+		 media_size );
+	}
+	else
+	{
+		fprintf(
+		 info_handle->notify_stream,
+		 "\tMedia size:\t\t\t%" PRIu64 " bytes\n",
+		 media_size );
+	}
 	if( libvmdk_handle_get_content_identifier(
 	     info_handle->input_handle,
 	     &content_identifier,
@@ -546,7 +568,7 @@ int info_handle_file_fprint(
 		 "\tParent content identifier:\t0x%08" PRIx32 "\n",
 		 content_identifier );
 	}
-#if defined( LIBCSTRING_HAVE_WIDE_SYSTEM_CHARACTER )
+#if defined( HAVE_WIDE_SYSTEM_CHARACTER )
 	result = libvmdk_handle_get_utf16_parent_filename_size(
 	          info_handle->input_handle,
 	          &filename_size,
@@ -582,7 +604,7 @@ int info_handle_file_fprint(
 			goto on_error;
 		}
 		if( ( filename_size > (size_t) SSIZE_MAX )
-		 || ( ( sizeof( libcstring_system_character_t ) * filename_size ) > (size_t) SSIZE_MAX ) )
+		 || ( ( sizeof( system_character_t ) * filename_size ) > (size_t) SSIZE_MAX ) )
 		{
 			libcerror_error_set(
 			 error,
@@ -593,7 +615,7 @@ int info_handle_file_fprint(
 
 			goto on_error;
 		}
-		filename = libcstring_system_string_allocate(
+		filename = system_string_allocate(
 		            filename_size );
 
 		if( filename == NULL )
@@ -607,7 +629,7 @@ int info_handle_file_fprint(
 
 			goto on_error;
 		}
-#if defined( LIBCSTRING_HAVE_WIDE_SYSTEM_CHARACTER )
+#if defined( HAVE_WIDE_SYSTEM_CHARACTER )
 		result = libvmdk_handle_get_utf16_parent_filename(
 		          info_handle->input_handle,
 		          (uint16_t *) filename,
@@ -633,7 +655,7 @@ int info_handle_file_fprint(
 		}
 		fprintf(
 		 info_handle->notify_stream,
-		 "\tParent filename:\t\t%" PRIs_LIBCSTRING_SYSTEM "\n",
+		 "\tParent filename:\t\t%" PRIs_SYSTEM "\n",
 		 filename );
 
 		memory_free(
@@ -689,7 +711,7 @@ int info_handle_file_fprint(
 
 			goto on_error;
 		}
-#if defined( LIBCSTRING_HAVE_WIDE_SYSTEM_CHARACTER )
+#if defined( HAVE_WIDE_SYSTEM_CHARACTER )
 		result = libvmdk_extent_descriptor_get_utf16_filename_size(
 		          extent_descriptor,
 		          &filename_size,
@@ -726,7 +748,7 @@ int info_handle_file_fprint(
 				goto on_error;
 			}
 			if( ( filename_size > (size_t) SSIZE_MAX )
-			 || ( ( sizeof( libcstring_system_character_t ) * filename_size ) > (size_t) SSIZE_MAX ) )
+			 || ( ( sizeof( system_character_t ) * filename_size ) > (size_t) SSIZE_MAX ) )
 			{
 				libcerror_error_set(
 				 error,
@@ -737,7 +759,7 @@ int info_handle_file_fprint(
 
 				goto on_error;
 			}
-			filename = libcstring_system_string_allocate(
+			filename = system_string_allocate(
 			            filename_size );
 
 			if( filename == NULL )
@@ -751,7 +773,7 @@ int info_handle_file_fprint(
 
 				goto on_error;
 			}
-#if defined( LIBCSTRING_HAVE_WIDE_SYSTEM_CHARACTER )
+#if defined( HAVE_WIDE_SYSTEM_CHARACTER )
 			result = libvmdk_extent_descriptor_get_utf16_filename(
 			          extent_descriptor,
 				  (uint16_t *) filename,
@@ -778,7 +800,7 @@ int info_handle_file_fprint(
 			}
 			fprintf(
 			 info_handle->notify_stream,
-			 "\tFilename:\t\t\t%" PRIs_LIBCSTRING_SYSTEM "\n",
+			 "\tFilename:\t\t\t%" PRIs_SYSTEM "\n",
 			 filename );
 
 			memory_free(
@@ -880,11 +902,28 @@ int info_handle_file_fprint(
 		 "\tStart offset:\t\t\t%" PRIi64 "\n",
 		 extent_offset );
 
-		fprintf(
-		 info_handle->notify_stream,
-		 "\tSize:\t\t\t\t%" PRIu64 " bytes\n",
-		 extent_size );
+		result = byte_size_string_create(
+		          byte_size_string,
+		          16,
+		          extent_size,
+		          BYTE_SIZE_STRING_UNIT_MEBIBYTE,
+		          NULL );
 
+		if( result == 1 )
+		{
+			fprintf(
+			 info_handle->notify_stream,
+			 "\tSize:\t\t\t\t%" PRIs_SYSTEM " (%" PRIu64 " bytes)\n",
+			 byte_size_string,
+			 extent_size );
+		}
+		else
+		{
+			fprintf(
+			 info_handle->notify_stream,
+			 "\tSize:\t\t\t\t%" PRIu64 " bytes\n",
+			 extent_size );
+		}
 		if( libvmdk_extent_descriptor_free(
 		     &extent_descriptor,
 		     error ) != 1 )

@@ -1,30 +1,61 @@
 #!/usr/bin/env python
 #
 # Script to build and install Python-bindings.
-# Version: 20160119
+# Version: 20191025
 
 from __future__ import print_function
+
+import copy
 import glob
+import gzip
 import platform
 import os
 import shlex
 import shutil
 import subprocess
 import sys
+import tarfile
 
 from distutils import sysconfig
-from distutils import util
 from distutils.ccompiler import new_compiler
-from distutils.command.build_ext import build_ext
 from distutils.command.bdist import bdist
-from distutils.command.sdist import sdist
-from distutils.core import Command, Extension, setup
+from setuptools import dist
+from setuptools import Extension
+from setuptools import setup
+from setuptools.command.build_ext import build_ext
+from setuptools.command.sdist import sdist
+
+try:
+  from distutils.command.bdist_msi import bdist_msi
+except ImportError:
+  bdist_msi = None
+
+
+if not bdist_msi:
+  custom_bdist_msi = None
+else:
+  class custom_bdist_msi(bdist_msi):
+    """Custom handler for the bdist_msi command."""
+
+    def run(self):
+      """Builds an MSI."""
+      # Make a deepcopy of distribution so the following version changes
+      # only apply to bdist_msi.
+      self.distribution = copy.deepcopy(self.distribution)
+
+      # bdist_msi does not support the library version so we add ".1"
+      # as a work around.
+      self.distribution.metadata.version = "{0:s}.1".format(
+          self.distribution.metadata.version)
+
+      bdist_msi.run(self)
 
 
 class custom_bdist_rpm(bdist):
   """Custom handler for the bdist_rpm command."""
 
   def run(self):
+    """Builds a RPM."""
     print("'setup.py bdist_rpm' command not supported use 'rpmbuild' instead.")
     sys.exit(1)
 
@@ -36,26 +67,26 @@ class custom_build_ext(build_ext):
     """Runs the command."""
     arguments = shlex.split(command)
     process = subprocess.Popen(
-        arguments, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+        arguments, stderr=subprocess.PIPE, stdout=subprocess.PIPE,
+        universal_newlines=True)
     if not process:
       raise RuntimeError("Running: {0:s} failed.".format(command))
 
     output, error = process.communicate()
     if process.returncode != 0:
-      error = "\n".join(error.split(b"\n")[-5:])
-      if sys.version_info[0] >= 3:
-        error = error.decode("ascii", errors="replace")
-      raise RuntimeError(
-          "Running: {0:s} failed with error:\n{1:s}.".format(
-              command, error))
+      error = "\n".join(error.split("\n")[-5:])
+      raise RuntimeError("Running: {0:s} failed with error:\n{1:s}.".format(
+          command, error))
 
     return output
 
   def build_extensions(self):
+    """Set up the build extensions."""
     # TODO: move build customization here?
     build_ext.build_extensions(self)
 
   def run(self):
+    """Runs the build extension."""
     compiler = new_compiler(compiler=self.compiler)
     if compiler.compiler_type == "msvc":
       self.define = [
@@ -63,38 +94,16 @@ class custom_build_ext(build_ext):
       ]
 
     else:
-      # We need to run "configure" to make sure config.h is generated
-      # properly. We invoke "configure" with "sh" here to make sure
-      # that it works on mingw32 with the standard python.org binaries.
-      command = "sh configure --help"
-      output = self._RunCommand(command)
-
-      # We want to build as much as possible self contained Python binding.
-      configure_arguments = []
-      for line in output.split(b"\n"):
-        line = line.strip()
-        line, _, _ = line.rpartition(b"[=DIR]")
-        if line.startswith(b"--with-lib") and not line.endswith(b"-prefix"):
-          if sys.version_info[0] >= 3:
-            line = line.decode("ascii")
-          configure_arguments.append("{0:s}=no".format(line))
-        elif line == b"--with-openssl":
-          configure_arguments.append("--with-openssl=no")
-        elif line == b"--with-zlib":
-          configure_arguments.append("--with-zlib=no")
-
-      command = "sh configure {0:s}".format(" ".join(configure_arguments))
+      command = "sh configure --disable-shared-libs"
       output = self._RunCommand(command)
 
       print_line = False
-      for line in output.split(b"\n"):
+      for line in output.split("\n"):
         line = line.rstrip()
-        if line == b"configure:":
+        if line == "configure:":
           print_line = True
 
         if print_line:
-          if sys.version_info[0] >= 3:
-            line = line.decode("ascii")
           print(line)
 
       self.define = [
@@ -109,12 +118,14 @@ class custom_sdist(sdist):
   """Custom handler for the sdist command."""
 
   def run(self):
+    """Builds a source distribution (sdist) package."""
     if self.formats != ["gztar"]:
       print("'setup.py sdist' unsupported format.")
       sys.exit(1)
 
     if glob.glob("*.tar.gz"):
-      print("'setup.py sdist' remove existing *.tar.gz files from source directory.")
+      print("'setup.py sdist' remove existing *.tar.gz files from "
+            "source directory.")
       sys.exit(1)
 
     command = "make dist"
@@ -133,16 +144,34 @@ class custom_sdist(sdist):
     sdist_package_file = os.path.join("dist", sdist_package_file)
     os.rename(source_package_file, sdist_package_file)
 
+    # Create and add the PKG-INFO file to the source package.
+    with gzip.open(sdist_package_file, 'rb') as input_file:
+      with open(sdist_package_file[:-3], 'wb') as output_file:
+        shutil.copyfileobj(input_file, output_file)
+    os.remove(sdist_package_file)
+
+    self.distribution.metadata.write_pkg_info(".")
+    pkg_info_path = "{0:s}-{1:s}/PKG-INFO".format(
+        source_package_prefix, source_package_suffix[:-7])
+    with tarfile.open(sdist_package_file[:-3], "a:") as tar_file:
+      tar_file.add("PKG-INFO", arcname=pkg_info_path)
+    os.remove("PKG-INFO")
+
+    with open(sdist_package_file[:-3], 'rb') as input_file:
+      with gzip.open(sdist_package_file, 'wb') as output_file:
+        shutil.copyfileobj(input_file, output_file)
+    os.remove(sdist_package_file[:-3])
+
     # Inform distutils what files were created.
     dist_files = getattr(self.distribution, "dist_files", [])
     dist_files.append(("sdist", "", sdist_package_file))
 
 
 class ProjectInformation(object):
-  """Class to define the project information."""
+  """Project information."""
 
   def __init__(self):
-    """Initializes a project information object."""
+    """Initializes project information."""
     super(ProjectInformation, self).__init__()
     self.include_directories = []
     self.library_name = None
@@ -151,11 +180,6 @@ class ProjectInformation(object):
 
     self._ReadConfigureAc()
     self._ReadMakefileAm()
-
-  @property
-  def dll_filename(self):
-    """The DLL filename."""
-    return "{0:s}.dll".format(self.library_name)
 
   @property
   def module_name(self):
@@ -246,26 +270,7 @@ class ProjectInformation(object):
           "Makefile.am")
 
 
-def GetPythonLibraryDirectoryPath():
-  """Retrieves the Python library directory path."""
-  path = sysconfig.get_python_lib(True)
-  _, _, path = path.rpartition(sysconfig.PREFIX)
-
-  if path.startswith(os.sep):
-    path = path[1:]
-
-  return path
-
-
 project_information = ProjectInformation()
-
-MODULE_VERSION = project_information.library_version
-if "bdist_msi" in sys.argv:
-  # bdist_msi does not support the library version so we add ".1"
-  # as a work around.
-  MODULE_VERSION = "{0:s}.1".format(MODULE_VERSION)
-
-PYTHON_LIBRARY_DIRECTORY = GetPythonLibraryDirectoryPath()
 
 SOURCES = []
 
@@ -284,18 +289,17 @@ if platform.system() == "Windows":
 # shared libaries since pip does not integrate well with the system package
 # management.
 for library_name in project_information.library_names:
+  for source_file in glob.glob(os.path.join(library_name, "*.[ly]")):
+    generated_source_file = "{0:s}.c".format(source_file[:-2])
+    if not os.path.exists(generated_source_file):
+      raise RuntimeError("Missing generated source file: {0:s}".format(
+          generated_source_file))
+
   source_files = glob.glob(os.path.join(library_name, "*.c"))
   SOURCES.extend(source_files)
 
 source_files = glob.glob(os.path.join(project_information.module_name, "*.c"))
 SOURCES.extend(source_files)
-
-# Add the LICENSE file to the distribution.
-copying_file = os.path.join("COPYING")
-license_file = "LICENSE.{0:s}".format(project_information.module_name)
-shutil.copyfile(copying_file, license_file)
-
-LIBRARY_DATA_FILES = [license_file]
 
 # TODO: find a way to detect missing python.h
 # e.g. on Ubuntu python-dev is not installed by python-pip
@@ -305,7 +309,7 @@ LIBRARY_DATA_FILES = [license_file]
 setup(
     name=project_information.package_name,
     url=project_information.project_url,
-    version=MODULE_VERSION,
+    version=project_information.library_version,
     description=project_information.package_description,
     long_description=project_information.package_description,
     author="Joachim Metz",
@@ -313,6 +317,7 @@ setup(
     license="GNU Lesser General Public License v3 or later (LGPLv3+)",
     cmdclass={
         "build_ext": custom_build_ext,
+        "bdist_msi": custom_bdist_msi,
         "bdist_rpm": custom_bdist_rpm,
         "sdist": custom_sdist,
     },
@@ -326,8 +331,5 @@ setup(
             sources=SOURCES,
         ),
     ],
-    data_files=[(PYTHON_LIBRARY_DIRECTORY, LIBRARY_DATA_FILES)],
 )
-
-os.remove(license_file)
 

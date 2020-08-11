@@ -1,22 +1,22 @@
 /*
  * The list element functions
  *
- * Copyright (C) 2010-2016, Joachim Metz <joachim.metz@gmail.com>
+ * Copyright (C) 2010-2020, Joachim Metz <joachim.metz@gmail.com>
  *
  * Refer to AUTHORS for acknowledgements.
  *
- * This software is free software: you can redistribute it and/or modify
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This software is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
- * along with this software.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #if !defined( _LIBFDATA_INTERNAL_LIST_ELEMENT_H )
@@ -55,9 +55,9 @@ struct libfdata_internal_list_element
 	 */
 	size64_t mapped_size;
 
-	/* The time stamp
+	/* The timestamp
 	 */
-	time_t timestamp;
+	int64_t timestamp;
 
 	/* The flags
 	 */
@@ -77,8 +77,6 @@ int libfdata_list_element_free(
 int libfdata_list_element_clone(
      libfdata_list_element_t **destination_element,
      libfdata_list_element_t *source_element,
-     libfdata_list_t *list,
-     int element_index,
      libcerror_error_t **error );
 
 int libfdata_list_element_get_element_index(
@@ -93,7 +91,7 @@ int libfdata_list_element_set_element_index(
 
 int libfdata_list_element_get_timestamp(
      libfdata_list_element_t *element,
-     time_t *timestamp,
+     int64_t *timestamp,
      libcerror_error_t **error );
 
 /* Data range functions
@@ -134,7 +132,7 @@ LIBFDATA_EXTERN \
 int libfdata_list_element_get_element_value(
      libfdata_list_element_t *element,
      intptr_t *file_io_handle,
-     libfcache_cache_t *cache,
+     libfdata_cache_t *cache,
      intptr_t **element_value,
      uint8_t read_flags,
      libcerror_error_t **error );
@@ -143,7 +141,7 @@ LIBFDATA_EXTERN \
 int libfdata_list_element_set_element_value(
      libfdata_list_element_t *element,
      intptr_t *file_io_handle,
-     libfcache_cache_t *cache,
+     libfdata_cache_t *cache,
      intptr_t *element_value,
      int (*free_element_value)(
             intptr_t **element_value,
@@ -155,5 +153,5 @@ int libfdata_list_element_set_element_value(
 }
 #endif
 
-#endif
+#endif /* !defined( _LIBFDATA_INTERNAL_LIST_ELEMENT_H ) */
 

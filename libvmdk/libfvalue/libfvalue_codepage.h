@@ -1,22 +1,22 @@
 /*
  * Codepage functions
  *
- * Copyright (C) 2010-2016, Joachim Metz <joachim.metz@gmail.com>
+ * Copyright (C) 2010-2020, Joachim Metz <joachim.metz@gmail.com>
  *
  * Refer to AUTHORS for acknowledgements.
  *
- * This software is free software: you can redistribute it and/or modify
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This software is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
- * along with this software.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #if !defined( _LIBFVALUE_INTERNAL_CODEPAGE_H )
@@ -70,6 +70,7 @@ enum LIBFVALUE_CODEPAGES
 	LIBFVALUE_CODEPAGE_UTF32_BIG_ENDIAN		= 12001,
 	LIBFVALUE_CODEPAGE_UTF7				= 65000,
 	LIBFVALUE_CODEPAGE_UTF8				= 65001,
+	LIBFVALUE_CODEPAGE_SCSU				= 65002,
 
 	LIBFVALUE_CODEPAGE_WINDOWS_874			= 874,
 	LIBFVALUE_CODEPAGE_WINDOWS_932			= 932,
@@ -87,16 +88,16 @@ enum LIBFVALUE_CODEPAGES
 	LIBFVALUE_CODEPAGE_WINDOWS_1258			= 1258,
 
 	/* A special codepage to indicate codepage 1200 that uses ASCII strings as well.
-	 * This has primarily been seen in the ESE database format and could be SCSU.
+	 * This has primarily been seen in the ESE database format.
 	 */
 	LIBFVALUE_CODEPAGE_1200_MIXED			= (int) 0x800004b0
 };
 
-#endif
+#endif /* !defined( HAVE_LOCAL_LIBFVALUE ) */
 
 #if defined( __cplusplus )
 }
 #endif
 
-#endif
+#endif /* !defined( _LIBFVALUE_INTERNAL_CODEPAGE_H ) */
 

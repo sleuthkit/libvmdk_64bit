@@ -1,22 +1,22 @@
 /*
  * The range list functions
  *
- * Copyright (C) 2010-2016, Joachim Metz <joachim.metz@gmail.com>
+ * Copyright (C) 2010-2020, Joachim Metz <joachim.metz@gmail.com>
  *
  * Refer to AUTHORS for acknowledgements.
  *
- * This software is free software: you can redistribute it and/or modify
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This software is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
- * along with this software.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #include <common.h>
@@ -56,7 +56,7 @@ int libfdata_range_list_initialize(
             intptr_t *data_handle,
             intptr_t *file_io_handle,
             libfdata_list_element_t *list_element,
-            libfcache_cache_t *cache,
+            libfdata_cache_t *cache,
             int element_file_index,
             off64_t element_offset,
             size64_t element_size,
@@ -67,7 +67,7 @@ int libfdata_range_list_initialize(
             intptr_t *data_handle,
             intptr_t *file_io_handle,
             libfdata_list_element_t *list_element,
-            libfcache_cache_t *cache,
+            libfdata_cache_t *cache,
             int element_file_index,
             off64_t element_offset,
             size64_t element_size,
@@ -906,14 +906,16 @@ int libfdata_range_list_insert_element(
 
 			return( -1 );
 		}
-		if( libcdata_range_list_insert_range(
-		     internal_range_list->elements_range_list,
-		     (uint64_t) offset,
-		     (uint64_t) size,
-		     (intptr_t *) list,
-		     (int (*)(intptr_t **, libcerror_error_t **)) &libfdata_list_free,
-		     (int (*)(intptr_t *, intptr_t *, libcerror_error_t **)) &libfdata_list_append_list,
-		     error ) != 1 )
+		result = libcdata_range_list_insert_range(
+		          internal_range_list->elements_range_list,
+		          (uint64_t) offset,
+		          (uint64_t) size,
+		          (intptr_t *) list,
+		          (int (*)(intptr_t **, libcerror_error_t **)) &libfdata_list_free,
+		          (int (*)(intptr_t *, intptr_t *, libcerror_error_t **)) &libfdata_list_append_list,
+		          error );
+
+		if( result == -1 )
 		{
 			libcerror_error_set(
 			 error,
@@ -949,7 +951,7 @@ int libfdata_range_list_insert_element(
 int libfdata_range_list_get_element_value_at_offset(
      libfdata_range_list_t *range_list,
      intptr_t *file_io_handle,
-     libfcache_cache_t *cache,
+     libfdata_cache_t *cache,
      off64_t offset,
      off64_t *element_data_offset,
      intptr_t **element_value,
@@ -1076,7 +1078,7 @@ int libfdata_range_list_get_element_value_at_offset(
 int libfdata_range_list_set_element_value_at_offset(
      libfdata_range_list_t *range_list,
      intptr_t *file_io_handle,
-     libfcache_cache_t *cache,
+     libfdata_cache_t *cache,
      off64_t offset,
      intptr_t *element_value,
      int (*free_element_value)(

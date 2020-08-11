@@ -57,13 +57,13 @@
     <ClCompile Include="..\..\libvmdk\libvmdk_io_handle.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\libvmdk\libvmdk_metadata.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\libvmdk\libvmdk_notify.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\libvmdk\libvmdk_support.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libvmdk\libvmdk_system_string.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -137,9 +137,6 @@
     <ClInclude Include="..\..\libvmdk\libvmdk_libcsplit.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\libvmdk\libvmdk_libcstring.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\libvmdk\libvmdk_libcthreads.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -155,13 +152,13 @@
     <ClInclude Include="..\..\libvmdk\libvmdk_libuna.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\libvmdk\libvmdk_metadata.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\libvmdk\libvmdk_notify.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\libvmdk\libvmdk_support.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libvmdk\libvmdk_system_string.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\libvmdk\libvmdk_types.h">

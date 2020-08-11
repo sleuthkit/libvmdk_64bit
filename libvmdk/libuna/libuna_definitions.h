@@ -1,22 +1,22 @@
 /*
  * The internal definitions
  *
- * Copyright (C) 2008-2016, Joachim Metz <joachim.metz@gmail.com>
+ * Copyright (C) 2008-2020, Joachim Metz <joachim.metz@gmail.com>
  *
  * Refer to AUTHORS for acknowledgements.
  *
- * This software is free software: you can redistribute it and/or modify
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This software is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
- * along with this software.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #if !defined( _LIBUNA_INTERNAL_DEFINITIONS_H )
@@ -35,11 +35,11 @@
 #else
 #include <byte_stream.h>
 
-#define LIBUNA_VERSION						20160105
+#define LIBUNA_VERSION						20200711
 
 /* The libuna version string
  */
-#define LIBUNA_VERSION_STRING					"20160105"
+#define LIBUNA_VERSION_STRING					"20200711"
 
 /* The endian definitions
  */
@@ -172,6 +172,23 @@ enum LIBUNA_CODEPAGES
 #define LIBUNA_CODEPAGE_SHIFT_JIS				LIBUNA_CODEPAGE_WINDOWS_932
 #define LIBUNA_CODEPAGE_GB2312					LIBUNA_CODEPAGE_WINDOWS_936
 
+/* The comparison function definitions
+ */
+enum LIBUNA_COMPARE_DEFINITIONS
+{
+	/* The first string is less than the second string
+	 */
+	LIBUNA_COMPARE_LESS,
+
+	/* The first and second strings are equal
+	 */
+	LIBUNA_COMPARE_EQUAL,
+
+	/* The first string is greater than the second string
+	 */
+	LIBUNA_COMPARE_GREATER
+};
+
 /* Base16 variants
  * Byte:
  * 0 - 1	Character limit
@@ -195,6 +212,8 @@ enum LIBUNA_BASE16_VARIANTS
 	LIBUNA_BASE16_VARIANT_ENCODING_UTF32_BIG_ENDIAN		= 0x30000000UL,
 	LIBUNA_BASE16_VARIANT_ENCODING_UTF32_LITTLE_ENDIAN	= 0x40000000UL
 };
+
+#define LIBUNA_BASE16_VARIANT_ENCODING_BYTE_STREAM		0
 
 #define LIBUNA_BASE16_VARIANT_RFC4648 \
 	LIBUNA_BASE16_VARIANT_CASE_MIXED | LIBUNA_BASE16_VARIANT_CHARACTER_LIMIT_NONE
@@ -264,9 +283,14 @@ enum LIBUNA_BASE64_VARIANTS
 	LIBUNA_BASE64_VARIANT_CHARACTER_LIMIT_64		= 0x00000040UL,
 	LIBUNA_BASE64_VARIANT_CHARACTER_LIMIT_76		= 0x0000004cUL,
 
+	/* No padding */
 	LIBUNA_BASE64_VARIANT_PADDING_NONE			= 0x01000000UL,
+	/* Padding is optional */
 	LIBUNA_BASE64_VARIANT_PADDING_OPTIONAL			= 0x02000000UL,
+	/* Padding is required */
 	LIBUNA_BASE64_VARIANT_PADDING_REQUIRED			= 0x03000000UL,
+	/* Invalid base64 characters are considered padding */
+	LIBUNA_BASE64_VARIANT_PADDING_INVALID			= 0x04000000UL,
 
 	LIBUNA_BASE64_VARIANT_ENCODING_UTF16_BIG_ENDIAN		= 0x10000000UL,
 	LIBUNA_BASE64_VARIANT_ENCODING_UTF16_LITTLE_ENDIAN	= 0x20000000UL,
@@ -284,7 +308,7 @@ enum LIBUNA_BASE64_VARIANTS
 	LIBUNA_BASE64_VARIANT_ALPHABET_NORMAL | LIBUNA_BASE64_VARIANT_CHARACTER_LIMIT_NONE | LIBUNA_BASE64_VARIANT_PADDING_NONE
 
 #define LIBUNA_BASE64_VARIANT_UTF7 \
-	LIBUNA_BASE64_VARIANT_RFC1642
+	LIBUNA_BASE64_VARIANT_ALPHABET_NORMAL | LIBUNA_BASE64_VARIANT_CHARACTER_LIMIT_NONE | LIBUNA_BASE64_VARIANT_PADDING_INVALID
 
 #define LIBUNA_BASE64_VARIANT_RFC2045 \
 	LIBUNA_BASE64_VARIANT_ALPHABET_NORMAL | LIBUNA_BASE64_VARIANT_CHARACTER_LIMIT_76 | LIBUNA_BASE64_VARIANT_PADDING_REQUIRED
@@ -307,9 +331,8 @@ enum LIBUNA_BASE64_FLAGS
 	LIBUNA_BASE64_FLAG_STRIP_WHITESPACE			= 0x01
 };
 
-#endif
+#endif /* !defined( HAVE_LOCAL_LIBUNA ) */
 
-#define LIBUNA_BASE16_VARIANT_ENCODING_BYTE_STREAM		0
 #define LIBUNA_BASE32_VARIANT_ENCODING_BYTE_STREAM		0
 #define LIBUNA_BASE64_VARIANT_ENCODING_BYTE_STREAM		0
 
@@ -351,5 +374,5 @@ enum LIBUNA_STRIP_MODES
  */
 #define	LIBUNA_UTF7_IS_BASE64_ENCODED				0x80000000UL
 
-#endif
+#endif /* !defined( _LIBUNA_INTERNAL_DEFINITIONS_H ) */
 

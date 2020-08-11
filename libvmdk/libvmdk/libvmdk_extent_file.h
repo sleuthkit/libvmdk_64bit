@@ -1,22 +1,22 @@
 /*
  * Extent file functions
  *
- * Copyright (C) 2009-2016, Joachim Metz <joachim.metz@gmail.com>
+ * Copyright (C) 2009-2020, Joachim Metz <joachim.metz@gmail.com>
  *
  * Refer to AUTHORS for acknowledgements.
  *
- * This software is free software: you can redistribute it and/or modify
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This software is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
- * along with this software.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #if !defined( _LIBVMDK_EXTENT_FILE_H )
@@ -193,7 +193,7 @@ int libvmdk_extent_file_read_element_data(
      libvmdk_io_handle_t *io_handle,
      libbfio_pool_t *file_io_pool,
      libfdata_list_element_t *element,
-     libfcache_cache_t *cache,
+     libfdata_cache_t *cache,
      int file_io_pool_entry,
      off64_t element_offset,
      size64_t extent_file_size,
@@ -205,7 +205,7 @@ int libvmdk_extent_file_read_grain_group_element_data(
      libvmdk_extent_file_t *extent_file,
      libbfio_pool_t *file_io_pool,
      libfdata_list_element_t *element,
-     libfcache_cache_t *cache,
+     libfdata_cache_t *cache,
      int file_io_pool_entry,
      off64_t grain_group_data_offset,
      size64_t grain_group_data_size,
@@ -252,5 +252,5 @@ off64_t libvmdk_extent_file_seek_segment_offset(
 }
 #endif
 
-#endif
+#endif /* !defined( _LIBVMDK_EXTENT_FILE_H ) */
 

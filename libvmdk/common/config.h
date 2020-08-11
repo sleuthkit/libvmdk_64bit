@@ -19,6 +19,9 @@
 /* Define to 1 if you have the `chdir' function. */
 #define HAVE_CHDIR 1
 
+/* Define to 1 if you have the `clock_gettime' function. */
+#define HAVE_CLOCK_GETTIME 1
+
 /* Define to 1 if you have the `close' function. */
 #define HAVE_CLOSE 1
 
@@ -30,7 +33,7 @@
 #define HAVE_DCGETTEXT 1
 
 /* Define to 1 if debug output should be used. */
-/* #undef HAVE_DEBUG_OUTPUT */
+#define HAVE_DEBUG_OUTPUT 1
 
 /* Define to 1 if you have the declaration of `memrchr', and to 0 if you
    don't. */
@@ -64,8 +67,8 @@
 /* Define to 1 if you have the `fgetws' function. */
 /* #undef HAVE_FGETWS */
 
-/* Define to 1 if you have the `fileno' function. */
-#define HAVE_FILENO 1
+/* Define to 1 if you have the `fmemopen' function. */
+#define HAVE_FMEMOPEN 1
 
 /* Define to 1 if you have the `fopen' function. */
 #define HAVE_FOPEN 1
@@ -84,12 +87,6 @@
 
 /* Define to 1 if you have the `fstat' function. */
 #define HAVE_FSTAT 1
-
-/* Define to 1 if you have the `ftello' function. */
-#define HAVE_FTELLO 1
-
-/* Define to 1 if you have the `ftello64' function. */
-#define HAVE_FTELLO64 1
 
 /* Define to 1 if you have the `ftruncate' function. */
 #define HAVE_FTRUNCATE 1
@@ -118,8 +115,8 @@
 /* Define if the GNU gettext() function is already present or preinstalled. */
 #define HAVE_GETTEXT 1
 
-/* Define to 1 if you have the <glob.h> header file. */
-#define HAVE_GLOB_H 1
+/* Define to 1 if dlsym function is available in GNU dl. */
+#define HAVE_GNU_DL_DLSYM 1
 
 /* Define if you have the iconv() function and it works. */
 /* #undef HAVE_ICONV */
@@ -129,9 +126,6 @@
 
 /* Define to 1 if you have the `ioctl' function. */
 #define HAVE_IOCTL 1
-
-/* Define to 1 if you have the <io.h> header file. */
-/* #undef HAVE_IO_H */
 
 /* Define if nl_langinfo has CODESET support. */
 #define HAVE_LANGINFO_CODESET 1
@@ -187,23 +181,14 @@
 /* Define to 1 if you have the <libcsplit.h> header file. */
 /* #undef HAVE_LIBCSPLIT_H */
 
-/* Define to 1 if you have the `cstring' library (-lcstring). */
-/* #undef HAVE_LIBCSTRING */
-
-/* Define to 1 if you have the <libcstring.h> header file. */
-/* #undef HAVE_LIBCSTRING_H */
-
-/* Define to 1 if you have the `csystem' library (-lcsystem). */
-/* #undef HAVE_LIBCSYSTEM */
-
-/* Define to 1 if you have the <libcsystem.h> header file. */
-/* #undef HAVE_LIBCSYSTEM_H */
-
 /* Define to 1 if you have the `cthreads' library (-lcthreads). */
 /* #undef HAVE_LIBCTHREADS */
 
 /* Define to 1 if you have the <libcthreads.h> header file. */
 /* #undef HAVE_LIBCTHREADS_H */
+
+/* Define to 1 if you have the `dl' library (-ldl). */
+#define HAVE_LIBDL 1
 
 /* Define to 1 if you have the `fcache' library (-lfcache). */
 /* #undef HAVE_LIBFCACHE */
@@ -277,12 +262,6 @@
 /* Define to 1 if the local version of libcsplit is used. */
 #define HAVE_LOCAL_LIBCSPLIT 1
 
-/* Define to 1 if the local version of libcstring is used. */
-#define HAVE_LOCAL_LIBCSTRING 1
-
-/* Define to 1 if the local version of libcsystem is used. */
-#define HAVE_LOCAL_LIBCSYSTEM 1
-
 /* Define to 1 if the local version of libcthreads is used. */
 #define HAVE_LOCAL_LIBCTHREADS 1
 
@@ -328,6 +307,9 @@
 /* Define to 1 if you have the mkdir function with a second mode argument. */
 #define HAVE_MKDIR_MODE 1
 
+/* Define to 1 if you have the `mkstemp' function. */
+#define HAVE_MKSTEMP 1
+
 /* Define to 1 if multi thread support should be used. */
 #define HAVE_MULTI_THREAD_SUPPORT 1
 
@@ -355,15 +337,6 @@
 /* Define to 1 if you have the <pthread.h> header file. */
 #define HAVE_PTHREAD_H 1
 
-/* Define to 1 if you have Python */
-/* #undef HAVE_PYTHON */
-
-/* Define to 1 if you have Python 2 */
-/* #undef HAVE_PYTHON2 */
-
-/* Define to 1 if you have Python 3 */
-/* #undef HAVE_PYTHON3 */
-
 /* Define to 1 if you have the <Python.h> header file. */
 /* #undef HAVE_PYTHON_H */
 
@@ -372,6 +345,9 @@
 
 /* Define to 1 if you have the `realloc' function. */
 #define HAVE_REALLOC 1
+
+/* Define to 1 if you have the `setenv' function. */
+#define HAVE_SETENV 1
 
 /* Define to 1 if you have the `setlocale' function. */
 #define HAVE_SETLOCALE 1
@@ -466,23 +442,26 @@
 /* Define to 1 if you have the <sys/types.h> header file. */
 #define HAVE_SYS_TYPES_H 1
 
-/* Define to 1 if you have the `textdomain' function. */
-#define HAVE_TEXTDOMAIN 1
-
 /* Define to 1 if you have the `time' function. */
 #define HAVE_TIME 1
 
 /* Define to 1 if you have the `towlower' function. */
 /* #undef HAVE_TOWLOWER */
 
+/* Define to 1 if you have the `tzset' function. */
+#define HAVE_TZSET 1
+
 /* Define to 1 if you have the <unistd.h> header file. */
 #define HAVE_UNISTD_H 1
+
+/* Define to 1 if you have the `unlink' function. */
+#define HAVE_UNLINK 1
 
 /* Define to 1 if you have the <varargs.h> header file. */
 /* #undef HAVE_VARARGS_H */
 
 /* Define to 1 if verbose output should be used. */
-/* #undef HAVE_VERBOSE_OUTPUT */
+#define HAVE_VERBOSE_OUTPUT 1
 
 /* Define to 1 if you have the `vfprintf' function. */
 #define HAVE_VFPRINTF 1
@@ -556,8 +535,7 @@
 /* Define to 1 if you have the `uncompress' function. */
 #define HAVE_ZLIB_UNCOMPRESS 1
 
-/* Define to the sub-directory in which libtool stores uninstalled libraries.
-   */
+/* Define to the sub-directory where libtool stores uninstalled libraries. */
 #define LT_OBJDIR ".libs/"
 
 /* Name of package */
@@ -570,7 +548,7 @@
 #define PACKAGE_NAME "libvmdk"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "libvmdk 20160119"
+#define PACKAGE_STRING "libvmdk 20200810"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "libvmdk"
@@ -579,10 +557,13 @@
 #define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "20160119"
+#define PACKAGE_VERSION "20200810"
 
 /* The size of `int', as computed by sizeof. */
 #define SIZEOF_INT 4
+
+/* The size of `long', as computed by sizeof. */
+#define SIZEOF_LONG 8
 
 /* The size of `off_t', as computed by sizeof. */
 #define SIZEOF_OFF_T 8
@@ -591,7 +572,7 @@
 #define SIZEOF_SIZE_T 8
 
 /* The size of `wchar_t', as computed by sizeof. */
-/* #undef SIZEOF_WCHAR_T */
+#define SIZEOF_WCHAR_T 4
 
 /* Define to 1 if you have the ANSI C header files. */
 #define STDC_HEADERS 1
@@ -606,7 +587,7 @@
 /* #undef TM_IN_SYS_TIME */
 
 /* Version number of package */
-#define VERSION "20160119"
+#define VERSION "20200810"
 
 /* Enable large inode numbers on Mac OS X 10.5.  */
 #ifndef _DARWIN_USE_64_BIT_INODE

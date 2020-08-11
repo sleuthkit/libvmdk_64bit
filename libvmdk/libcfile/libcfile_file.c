@@ -1,27 +1,30 @@
 /*
  * File functions
  *
- * Copyright (C) 2008-2016, Joachim Metz <joachim.metz@gmail.com>
+ * Copyright (C) 2008-2020, Joachim Metz <joachim.metz@gmail.com>
  *
  * Refer to AUTHORS for acknowledgements.
  *
- * This software is free software: you can redistribute it and/or modify
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This software is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
- * along with this software.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #include <common.h>
 #include <memory.h>
+#include <narrow_string.h>
+#include <system_string.h>
 #include <types.h>
+#include <wide_string.h>
 
 #if defined( HAVE_SYS_STAT_H )
 #include <sys/stat.h>
@@ -87,56 +90,10 @@ typedef size_t u64;
 #include "libcfile_definitions.h"
 #include "libcfile_file.h"
 #include "libcfile_libcerror.h"
-#include "libcfile_libclocale.h"
 #include "libcfile_libcnotify.h"
-#include "libcfile_libcstring.h"
-#include "libcfile_libuna.h"
+#include "libcfile_system_string.h"
 #include "libcfile_types.h"
-
-#if defined( WINAPI ) && ( WINVER <= 0x0500 )
-
-/* Cross Windows safe version of CloseHandle
- * Returns TRUE if successful or FALSE on error
- */
-BOOL libcfile_CloseHandle(
-      HANDLE file_handle )
-{
-	FARPROC function       = NULL;
-	HMODULE library_handle = NULL;
-	BOOL result            = FALSE;
-
-	if( file_handle == NULL )
-	{
-		return( FALSE );
-	}
-	library_handle = LoadLibrary(
-	                  _LIBCSTRING_SYSTEM_STRING( "kernel32.dll" ) );
-
-	if( library_handle == NULL )
-	{
-		return( FALSE );
-	}
-	function = GetProcAddress(
-		    library_handle,
-		    (LPCSTR) "CloseHandle" );
-
-	if( function != NULL )
-	{
-		result = function(
-			  file_handle );
-	}
-	/* This call should be after using the function
-	 * in most cases kernel32.dll will still be available after free
-	 */
-	if( FreeLibrary(
-	     library_handle ) != TRUE )
-	{
-		result = FALSE;
-	}
-	return( result );
-}
-
-#endif /* defined( WINAPI ) && ( WINVER <= 0x0500 ) */
+#include "libcfile_winapi.h"
 
 /* Creates a file
  * Make sure the value file is referencing, is set to NULL
@@ -265,76 +222,11 @@ int libcfile_file_free(
 		}
 		*file = NULL;
 
-		if( internal_file->block_data != NULL )
-		{
-			memory_free(
-			 internal_file->block_data );
-		}
 		memory_free(
 		 internal_file );
 	}
 	return( result );
 }
-
-#if defined( WINAPI ) && ( WINVER <= 0x0500 )
-
-/* Cross Windows safe version of CreateFileA
- * Returns a handle if successful or INVALID_HANDLE_VALUE on error
- */
-HANDLE libcfile_CreateFileA(
-        LPCSTR filename,
-        DWORD desired_access,
-        DWORD share_mode,
-        SECURITY_ATTRIBUTES *security_attributes,
-        DWORD creation_disposition,
-        DWORD flags_and_attributes,
-        HANDLE template_file )
-{
-	FARPROC function       = NULL;
-	HANDLE result          = INVALID_HANDLE_VALUE;
-	HMODULE library_handle = NULL;
-
-	if( filename == NULL )
-	{
-		return( INVALID_HANDLE_VALUE );
-	}
-	library_handle = LoadLibrary(
-	                  _LIBCSTRING_SYSTEM_STRING( "kernel32.dll" ) );
-
-	if( library_handle == NULL )
-	{
-		return( INVALID_HANDLE_VALUE );
-	}
-	function = GetProcAddress(
-		    library_handle,
-		    (LPCSTR) "CreateFileA" );
-
-	if( function != NULL )
-	{
-		result = (HANDLE) function(
-		                   filename,
-		                   desired_access,
-		                   share_mode,
-		                   security_attributes,
-		                   creation_disposition,
-		                   flags_and_attributes,
-		                   template_file );
-	}
-	/* This call should be after using the function
-	 * in most cases kernel32.dll will still be available after free
-	 */
-	if( FreeLibrary(
-	     library_handle ) != TRUE )
-	{
-		libcfile_CloseHandle(
-		 result );
-
-		return( INVALID_HANDLE_VALUE );
-	}
-	return( result );
-}
-
-#endif /* defined( WINAPI ) && ( WINVER <= 0x0500 ) */
 
 /* Opens a file
  * Returns 1 if successful or -1 on error
@@ -369,6 +261,18 @@ int libcfile_file_open(
 
 #if defined( WINAPI )
 
+#if ( WINVER >= 0x0600 ) && ( WINVER < 0x0602 )
+
+#define FileAlignmentInfo 0x11
+
+typedef struct _FILE_ALIGNMENT_INFO FILE_ALIGNMENT_INFO;
+
+struct _FILE_ALIGNMENT_INFO {
+	ULONG AlignmentRequirement;
+};
+
+#endif
+
 /* Opens a file
  * This function uses the WINAPI function for Windows XP (0x0501) or later,
  * or tries to dynamically call the function for Windows 2000 (0x0500) or earlier
@@ -381,13 +285,20 @@ int libcfile_file_open_with_error_code(
      uint32_t *error_code,
      libcerror_error_t **error )
 {
+#if ( WINVER >= 0x0600 )
+	FILE_ALIGNMENT_INFO file_alignment_information;
+
+	BOOL result                             = 0;
+#endif
+
 	libcfile_internal_file_t *internal_file = NULL;
 	static char *function                   = "libcfile_file_open_with_error_code";
-	size_t filename_length                  = 0;
 	DWORD file_io_access_flags              = 0;
 	DWORD file_io_creation_flags            = 0;
 	DWORD file_io_shared_flags              = 0;
 	DWORD flags_and_attributes              = 0;
+	size_t filename_length                  = 0;
+	ssize_t read_count                      = 0;
 
 	if( file == NULL )
 	{
@@ -475,7 +386,7 @@ int libcfile_file_open_with_error_code(
 
 		return( -1 );
 	}
-	filename_length = libcstring_narrow_string_length(
+	filename_length = narrow_string_length(
 	                   filename );
 
 	if( filename_length > 4 )
@@ -532,7 +443,7 @@ int libcfile_file_open_with_error_code(
 				 error,
 				 LIBCERROR_ERROR_DOMAIN_IO,
 				 LIBCERROR_IO_ERROR_ACCESS_DENIED,
-				 "%s: access denied to file: %" PRIs_LIBCSTRING_SYSTEM ".",
+				 "%s: access denied to file: %" PRIs_SYSTEM ".",
 				 function,
 				 filename );
 
@@ -544,7 +455,7 @@ int libcfile_file_open_with_error_code(
 				 error,
 				 LIBCERROR_ERROR_DOMAIN_IO,
 				 LIBCERROR_IO_ERROR_INVALID_RESOURCE,
-				 "%s: no such file: %" PRIs_LIBCSTRING_SYSTEM ".",
+				 "%s: no such file: %" PRIs_SYSTEM ".",
 				 function,
 				 filename );
 
@@ -556,12 +467,113 @@ int libcfile_file_open_with_error_code(
 				 LIBCERROR_ERROR_DOMAIN_IO,
 				 LIBCERROR_IO_ERROR_OPEN_FAILED,
 				 *error_code,
-				 "%s: unable to open file: %" PRIs_LIBCSTRING_SYSTEM ".",
+				 "%s: unable to open file: %" PRIs_SYSTEM ".",
 				 function,
 				 filename );
 
 				break;
 		}
+		return( -1 );
+	}
+	if( internal_file->is_device_filename != 0 )
+	{
+		read_count = libcfile_internal_file_io_control_read_with_error_code(
+		              internal_file,
+		              FSCTL_ALLOW_EXTENDED_DASD_IO,
+		              NULL,
+		              0,
+		              NULL,
+		              0,
+		              error_code,
+		              error );
+
+		if( read_count == -1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_IO,
+			 LIBCERROR_IO_ERROR_IOCTL_FAILED,
+			 "%s: unable to query device for: FSCTL_ALLOW_EXTENDED_DASD_IO.",
+			 function );
+
+#if defined( HAVE_DEBUG_OUTPUT )
+			if( libcnotify_verbose != 0 )
+			{
+				if( ( error != NULL )
+				 && ( *error != NULL ) )
+				{
+					libcnotify_print_error_backtrace(
+					 *error );
+				}
+			}
+#endif
+			libcerror_error_free(
+			 error );
+		}
+#if ( WINVER >= 0x0600 )
+		result = GetFileInformationByHandleEx(
+		          internal_file->handle,
+		          FileAlignmentInfo,
+		          (void *) &file_alignment_information,
+		          (DWORD) sizeof( FILE_ALIGNMENT_INFO ) );
+
+		if( result == FALSE )
+		{
+			*error_code = (uint32_t) GetLastError();
+
+			libcerror_system_set_error(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_IO,
+			 LIBCERROR_IO_ERROR_IOCTL_FAILED,
+			 *error_code,
+			 "%s: unable to retrieve file alignment information.",
+			 function );
+
+#if defined( HAVE_DEBUG_OUTPUT )
+			if( libcnotify_verbose != 0 )
+			{
+				if( ( error != NULL )
+				 && ( *error != NULL ) )
+				{
+					libcnotify_print_error_backtrace(
+					 *error );
+				}
+			}
+#endif
+			libcerror_error_free(
+			 error );
+		}
+		else if( file_alignment_information.AlignmentRequirement != 0 )
+		{
+			if( libcfile_internal_file_set_block_size(
+			     internal_file,
+			     (size_t) 512,
+			     error ) != 1 )
+			{
+				libcerror_error_set(
+				 error,
+				 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+				 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+				 "%s: unable to set block size.",
+				 function );
+
+				return( -1 );
+			}
+		}
+#endif /* ( WINVER >= 0x0600 ) */
+	}
+	if( libcfile_internal_file_get_size(
+	     internal_file,
+	     &( internal_file->size ),
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+		 "%s: unable to retrieve size.",
+		 function );
+
 		return( -1 );
 	}
 	internal_file->access_flags   = access_flags;
@@ -663,6 +675,11 @@ int libcfile_file_open_with_error_code(
 
 		return( -1 );
 	}
+#if defined( O_CLOEXEC )
+	/* Prevent the file descriptor to remain open across an execve
+	 */
+	file_io_flags |= O_CLOEXEC;
+#endif
 #if defined( HAVE_GLIB_H )
 	internal_file->descriptor = g_open(
 	                             filename,
@@ -685,7 +702,7 @@ int libcfile_file_open_with_error_code(
 				 error,
 				 LIBCERROR_ERROR_DOMAIN_IO,
 				 LIBCERROR_IO_ERROR_ACCESS_DENIED,
-				 "%s: access denied to file: %" PRIs_LIBCSTRING_SYSTEM ".",
+				 "%s: access denied to file: %" PRIs_SYSTEM ".",
 				 function,
 				 filename );
 
@@ -696,7 +713,7 @@ int libcfile_file_open_with_error_code(
 				 error,
 				 LIBCERROR_ERROR_DOMAIN_IO,
 				 LIBCERROR_IO_ERROR_INVALID_RESOURCE,
-				 "%s: no such file: %" PRIs_LIBCSTRING_SYSTEM ".",
+				 "%s: no such file: %" PRIs_SYSTEM ".",
 				 function,
 				 filename );
 
@@ -708,12 +725,26 @@ int libcfile_file_open_with_error_code(
 				 LIBCERROR_ERROR_DOMAIN_IO,
 				 LIBCERROR_IO_ERROR_OPEN_FAILED,
 				 *error_code,
-				 "%s: unable to open file: %" PRIs_LIBCSTRING_SYSTEM ".",
+				 "%s: unable to open file: %" PRIs_SYSTEM ".",
 				 function,
 				 filename );
 
 				break;
 		}
+		return( -1 );
+	}
+	if( libcfile_internal_file_get_size(
+	     internal_file,
+	     &( internal_file->size ),
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+		 "%s: unable to retrieve size.",
+		 function );
+
 		return( -1 );
 	}
 	internal_file->access_flags   = access_flags;
@@ -727,66 +758,6 @@ int libcfile_file_open_with_error_code(
 #endif
 
 #if defined( HAVE_WIDE_CHARACTER_TYPE )
-
-#if defined( WINAPI ) && ( WINVER <= 0x0500 )
-
-/* Cross Windows safe version of CreateFileW
- * Returns a handle if successful or INVALID_HANDLE_VALUE on error
- */
-HANDLE libcfile_CreateFileW(
-        LPCWSTR filename,
-        DWORD desired_access,
-        DWORD share_mode,
-        SECURITY_ATTRIBUTES *security_attributes,
-        DWORD creation_disposition,
-        DWORD flags_and_attributes,
-        HANDLE template_file )
-{
-	FARPROC function       = NULL;
-	HANDLE result          = INVALID_HANDLE_VALUE;
-	HMODULE library_handle = NULL;
-
-	if( filename == NULL )
-	{
-		return( INVALID_HANDLE_VALUE );
-	}
-	library_handle = LoadLibrary(
-	                  _LIBCSTRING_SYSTEM_STRING( "kernel32.dll" ) );
-
-	if( library_handle == NULL )
-	{
-		return( INVALID_HANDLE_VALUE );
-	}
-	function = GetProcAddress(
-		    library_handle,
-		    (LPCSTR) "CreateFileW" );
-
-	if( function != NULL )
-	{
-		result = (HANDLE) function(
-		                   filename,
-		                   desired_access,
-		                   share_mode,
-		                   security_attributes,
-		                   creation_disposition,
-		                   flags_and_attributes,
-		                   template_file );
-	}
-	/* This call should be after using the function
-	 * in most cases kernel32.dll will still be available after free
-	 */
-	if( FreeLibrary(
-	     library_handle ) != TRUE )
-	{
-		libcfile_CloseHandle(
-		 result );
-
-		return( INVALID_HANDLE_VALUE );
-	}
-	return( result );
-}
-
-#endif /* defined( WINAPI ) && ( WINVER <= 0x0500 ) */
 
 /* Opens a file
  * Returns 1 if successful or -1 on error
@@ -833,13 +804,20 @@ int libcfile_file_open_wide_with_error_code(
      uint32_t *error_code,
      libcerror_error_t **error )
 {
+#if ( WINVER >= 0x0600 )
+	FILE_ALIGNMENT_INFO file_alignment_information;
+
+	BOOL result                             = 0;
+#endif
+
 	libcfile_internal_file_t *internal_file = NULL;
 	static char *function                   = "libcfile_file_open_wide_with_error_code";
-	size_t filename_length                  = 0;
 	DWORD file_io_access_flags              = 0;
 	DWORD file_io_creation_flags            = 0;
 	DWORD file_io_shared_flags              = 0;
 	DWORD flags_and_attributes              = 0;
+	size_t filename_length                  = 0;
+	ssize_t read_count                      = 0;
 
 	if( file == NULL )
 	{
@@ -927,7 +905,7 @@ int libcfile_file_open_wide_with_error_code(
 
 		return( -1 );
 	}
-	filename_length = libcstring_wide_string_length(
+	filename_length = wide_string_length(
 	                   filename );
 
 	if( filename_length > 4 )
@@ -984,7 +962,7 @@ int libcfile_file_open_wide_with_error_code(
 				 error,
 				 LIBCERROR_ERROR_DOMAIN_IO,
 				 LIBCERROR_IO_ERROR_ACCESS_DENIED,
-				 "%s: access denied to file: %" PRIs_LIBCSTRING_SYSTEM ".",
+				 "%s: access denied to file: %" PRIs_SYSTEM ".",
 				 function,
 				 filename );
 
@@ -996,7 +974,7 @@ int libcfile_file_open_wide_with_error_code(
 				 error,
 				 LIBCERROR_ERROR_DOMAIN_IO,
 				 LIBCERROR_IO_ERROR_INVALID_RESOURCE,
-				 "%s: no such file: %" PRIs_LIBCSTRING_SYSTEM ".",
+				 "%s: no such file: %" PRIs_SYSTEM ".",
 				 function,
 				 filename );
 
@@ -1008,7 +986,7 @@ int libcfile_file_open_wide_with_error_code(
 				 LIBCERROR_ERROR_DOMAIN_IO,
 				 LIBCERROR_IO_ERROR_OPEN_FAILED,
 				 *error_code,
-				 "%s: unable to open file: %" PRIs_LIBCSTRING_SYSTEM ".",
+				 "%s: unable to open file: %" PRIs_SYSTEM ".",
 				 function,
 				 filename );
 
@@ -1016,6 +994,110 @@ int libcfile_file_open_wide_with_error_code(
 		}
 		return( -1 );
 	}
+	if( internal_file->is_device_filename != 0 )
+	{
+		read_count = libcfile_internal_file_io_control_read_with_error_code(
+		              internal_file,
+		              FSCTL_ALLOW_EXTENDED_DASD_IO,
+		              NULL,
+		              0,
+		              NULL,
+		              0,
+		              error_code,
+		              error );
+
+		if( read_count == -1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_IO,
+			 LIBCERROR_IO_ERROR_IOCTL_FAILED,
+			 "%s: unable to query device for: FSCTL_ALLOW_EXTENDED_DASD_IO.",
+			 function );
+
+#if defined( HAVE_DEBUG_OUTPUT )
+			if( libcnotify_verbose != 0 )
+			{
+				if( ( error != NULL )
+				 && ( *error != NULL ) )
+				{
+					libcnotify_print_error_backtrace(
+					 *error );
+				}
+			}
+#endif
+			libcerror_error_free(
+			 error );
+		}
+#if ( WINVER >= 0x0600 )
+		result = GetFileInformationByHandleEx(
+		          internal_file->handle,
+		          FileAlignmentInfo,
+		          (void *) &file_alignment_information,
+		          (DWORD) sizeof( FILE_ALIGNMENT_INFO ) );
+
+		if( result == FALSE )
+		{
+			*error_code = (uint32_t) GetLastError();
+
+			libcerror_system_set_error(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_IO,
+			 LIBCERROR_IO_ERROR_IOCTL_FAILED,
+			 *error_code,
+			 "%s: unable to retrieve file alignment information.",
+			 function );
+
+#if defined( HAVE_DEBUG_OUTPUT )
+			if( libcnotify_verbose != 0 )
+			{
+				if( ( error != NULL )
+				 && ( *error != NULL ) )
+				{
+					libcnotify_print_error_backtrace(
+					 *error );
+				}
+			}
+#endif
+			libcerror_error_free(
+			 error );
+		}
+		else if( file_alignment_information.AlignmentRequirement != 0 )
+		{
+			if( libcfile_internal_file_set_block_size(
+			     internal_file,
+			     (size_t) 512,
+			     error ) != 1 )
+			{
+				libcerror_error_set(
+				 error,
+				 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+				 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+				 "%s: unable to set block size.",
+				 function );
+
+				return( -1 );
+			}
+		}
+#endif /* ( WINVER >= 0x0600 ) */
+	}
+	if( libcfile_internal_file_get_size(
+	     internal_file,
+	     &( internal_file->size ),
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+		 "%s: unable to retrieve size.",
+		 function );
+
+		return( -1 );
+	}
+	internal_file->access_flags   = access_flags;
+	internal_file->current_offset = 0;
+
 	return( 1 );
 }
 
@@ -1038,7 +1120,6 @@ int libcfile_file_open_wide_with_error_code(
 	size_t filename_size                    = 0;
 	size_t narrow_filename_size             = 0;
 	int file_io_flags                       = 0;
-	int result                              = 0;
 
 	if( file == NULL )
 	{
@@ -1116,48 +1197,14 @@ int libcfile_file_open_wide_with_error_code(
 
 		return( -1 );
 	}
-	filename_size = 1 + libcstring_wide_string_length(
+	filename_size = 1 + wide_string_length(
 	                     filename );
 
-	if( libclocale_codepage == 0 )
-	{
-#if SIZEOF_WCHAR_T == 4
-		result = libuna_utf8_string_size_from_utf32(
-		          (libuna_utf32_character_t *) filename,
-		          filename_size,
-		          &narrow_filename_size,
-		          error );
-#elif SIZEOF_WCHAR_T == 2
-		result = libuna_utf8_string_size_from_utf16(
-		          (libuna_utf16_character_t *) filename,
-		          filename_size,
-		          &narrow_filename_size,
-		          error );
-#else
-#error Unsupported size of wchar_t
-#endif /* SIZEOF_WCHAR_T */
-	}
-	else
-	{
-#if SIZEOF_WCHAR_T == 4
-		result = libuna_byte_stream_size_from_utf32(
-		          (libuna_utf32_character_t *) filename,
-		          filename_size,
-		          libclocale_codepage,
-		          &narrow_filename_size,
-		          error );
-#elif SIZEOF_WCHAR_T == 2
-		result = libuna_byte_stream_size_from_utf16(
-		          (libuna_utf16_character_t *) filename,
-		          filename_size,
-		          libclocale_codepage,
-		          &narrow_filename_size,
-		          error );
-#else
-#error Unsupported size of wchar_t
-#endif /* SIZEOF_WCHAR_T */
-	}
-	if( result != 1 )
+	if( libcfile_system_string_size_from_wide_string(
+	     filename,
+	     filename_size,
+	     &narrow_filename_size,
+	     error ) != 1 )
 	{
 		libcerror_error_set(
 		 error,
@@ -1166,9 +1213,9 @@ int libcfile_file_open_wide_with_error_code(
 		 "%s: unable to determine narrow character filename size.",
 		 function );
 
-		return( -1 );
+		goto on_error;
 	}
-	narrow_filename = libcstring_narrow_string_allocate(
+	narrow_filename = narrow_string_allocate(
 	                   narrow_filename_size );
 
 	if( narrow_filename == NULL )
@@ -1180,51 +1227,14 @@ int libcfile_file_open_wide_with_error_code(
 		 "%s: unable to create narrow character filename.",
 		 function );
 
-		return( -1 );
+		goto on_error;
 	}
-	if( libclocale_codepage == 0 )
-	{
-#if SIZEOF_WCHAR_T == 4
-		result = libuna_utf8_string_copy_from_utf32(
-		          (libuna_utf8_character_t *) narrow_filename,
-		          narrow_filename_size,
-		          (libuna_utf32_character_t *) filename,
-		          filename_size,
-		          error );
-#elif SIZEOF_WCHAR_T == 2
-		result = libuna_utf8_string_copy_from_utf16(
-		          (libuna_utf8_character_t *) narrow_filename,
-		          narrow_filename_size,
-		          (libuna_utf16_character_t *) filename,
-		          filename_size,
-		          error );
-#else
-#error Unsupported size of wchar_t
-#endif /* SIZEOF_WCHAR_T */
-	}
-	else
-	{
-#if SIZEOF_WCHAR_T == 4
-		result = libuna_byte_stream_copy_from_utf32(
-		          (uint8_t *) narrow_filename,
-		          narrow_filename_size,
-		          libclocale_codepage,
-		          (libuna_utf32_character_t *) filename,
-		          filename_size,
-		          error );
-#elif SIZEOF_WCHAR_T == 2
-		result = libuna_byte_stream_copy_from_utf16(
-		          (uint8_t *) narrow_filename,
-		          narrow_filename_size,
-		          libclocale_codepage,
-		          (libuna_utf16_character_t *) filename,
-		          filename_size,
-		          error );
-#else
-#error Unsupported size of wchar_t
-#endif /* SIZEOF_WCHAR_T */
-	}
-	if( result != 1 )
+	if( libcfile_system_string_copy_from_wide_string(
+	     narrow_filename,
+	     narrow_filename_size,
+	     filename,
+	     filename_size,
+	     error ) != 1 )
 	{
 		libcerror_error_set(
 		 error,
@@ -1233,11 +1243,13 @@ int libcfile_file_open_wide_with_error_code(
 		 "%s: unable to set narrow character filename.",
 		 function );
 
-		memory_free(
-		 narrow_filename );
-
-		return( -1 );
+		goto on_error;
 	}
+#if defined( O_CLOEXEC )
+	/* Prevent the file descriptor to remain open across an execve
+	 */
+	file_io_flags |= O_CLOEXEC;
+#endif
 #if defined( HAVE_GLIB_H )
 	internal_file->descriptor = g_open(
 	                             narrow_filename,
@@ -1253,6 +1265,8 @@ int libcfile_file_open_wide_with_error_code(
 	memory_free(
 	 narrow_filename );
 
+	narrow_filename = NULL;
+
 	if( internal_file->descriptor == -1 )
 	{
 		*error_code = (uint32_t) errno;
@@ -1264,7 +1278,7 @@ int libcfile_file_open_wide_with_error_code(
 				 error,
 				 LIBCERROR_ERROR_DOMAIN_IO,
 				 LIBCERROR_IO_ERROR_ACCESS_DENIED,
-				 "%s: access denied to file: %" PRIs_LIBCSTRING_SYSTEM ".",
+				 "%s: access denied to file: %" PRIs_SYSTEM ".",
 				 function,
 				 filename );
 
@@ -1275,7 +1289,7 @@ int libcfile_file_open_wide_with_error_code(
 				 error,
 				 LIBCERROR_ERROR_DOMAIN_IO,
 				 LIBCERROR_IO_ERROR_INVALID_RESOURCE,
-				 "%s: no such file: %" PRIs_LIBCSTRING_SYSTEM ".",
+				 "%s: no such file: %" PRIs_SYSTEM ".",
 				 function,
 				 filename );
 
@@ -1287,15 +1301,37 @@ int libcfile_file_open_wide_with_error_code(
 				 LIBCERROR_ERROR_DOMAIN_IO,
 				 LIBCERROR_IO_ERROR_OPEN_FAILED,
 				 *error_code,
-				 "%s: unable to open file: %" PRIs_LIBCSTRING_SYSTEM ".",
+				 "%s: unable to open file: %" PRIs_SYSTEM ".",
 				 function,
 				 filename );
 
 				break;
 		}
-		return( -1 );
+		goto on_error;
+	}
+	if( libcfile_internal_file_get_size(
+	     internal_file,
+	     &( internal_file->size ),
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+		 "%s: unable to retrieve size.",
+		 function );
+
+		goto on_error;
 	}
 	return( 1 );
+
+on_error:
+	if( narrow_filename != NULL )
+	{
+		memory_free(
+		 narrow_filename );
+	}
+	return( -1 );
 }
 
 #else
@@ -1487,126 +1523,6 @@ ssize_t libcfile_file_read_buffer(
 	return( read_count );
 }
 
-#if defined( WINAPI ) && ( WINVER <= 0x0500 )
-
-/* Cross Windows safe version of GetOverlappedResult
- * Returns TRUE if successful or FALSE on error
- */
-BOOL libcfile_GetOverlappedResult(
-      HANDLE file_handle,
-      OVERLAPPED *overlapped,
-      DWORD *read_count,
-      BOOL wait_io_complete )
-{
-	FARPROC function       = NULL;
-	HMODULE library_handle = NULL;
-	BOOL result            = FALSE;
-
-	if( file_handle == NULL )
-	{
-		return( FALSE );
-	}
-	if( overlapped == NULL )
-	{
-		return( FALSE );
-	}
-	if( read_count == NULL )
-	{
-		return( FALSE );
-	}
-	library_handle = LoadLibrary(
-	                  _LIBCSTRING_SYSTEM_STRING( "kernel32.dll" ) );
-
-	if( library_handle == NULL )
-	{
-		return( FALSE );
-	}
-	function = GetProcAddress(
-		    library_handle,
-		    (LPCSTR) "GetOverlappedResult" );
-
-	if( function != NULL )
-	{
-		result = function(
-			  file_handle,
-			  overlapped,
-			  read_count,
-			  wait_io_complete );
-	}
-	/* This call should be after using the function
-	 * in most cases kernel32.dll will still be available after free
-	 */
-	if( FreeLibrary(
-	     library_handle ) != TRUE )
-	{
-		result = FALSE;
-	}
-	return( result );
-}
-
-#endif
-
-#if defined( WINAPI ) && ( WINVER <= 0x0500 )
-
-/* Cross Windows safe version of ReadFile
- * Returns TRUE if successful or FALSE on error
- */
-BOOL libcfile_ReadFile(
-      HANDLE file_handle,
-      VOID *buffer,
-      DWORD read_size,
-      DWORD *read_count,
-      OVERLAPPED *overlapped )
-{
-	FARPROC function       = NULL;
-	HMODULE library_handle = NULL;
-	BOOL result            = FALSE;
-
-	if( file_handle == NULL )
-	{
-		return( FALSE );
-	}
-	if( buffer == NULL )
-	{
-		return( FALSE );
-	}
-	if( read_count == NULL )
-	{
-		return( FALSE );
-	}
-	library_handle = LoadLibrary(
-	                  _LIBCSTRING_SYSTEM_STRING( "kernel32.dll" ) );
-
-	if( library_handle == NULL )
-	{
-		return( FALSE );
-	}
-	function = GetProcAddress(
-		    library_handle,
-		    (LPCSTR) "ReadFile" );
-
-	if( function != NULL )
-	{
-		result = function(
-			  file_handle,
-			  buffer,
-			  read_size,
-			  read_count,
-			  overlapped );
-	}
-	/* This call should be after using the function
-	 * in most cases kernel32.dll will still be available after free
-	 */
-	if( FreeLibrary(
-	     library_handle ) != TRUE )
-	{
-		result = FALSE;
-	}
-	return( result );
-}
-
-#endif /* defined( WINAPI ) && ( WINVER <= 0x0500 ) */
-
 #if defined( WINAPI )
 
 /* Reads a buffer from the file
@@ -1637,6 +1553,17 @@ ssize_t libcfile_internal_file_read_buffer_at_offset_with_error_code(
 		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
 		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
 		 "%s: invalid file.",
+		 function );
+
+		return( -1 );
+	}
+	if( current_offset < 0 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_VALUE_OUT_OF_BOUNDS,
+		 "%s: invalid current offset value out of bounds.",
 		 function );
 
 		return( -1 );
@@ -1802,7 +1729,7 @@ ssize_t libcfile_file_read_buffer_with_error_code(
 	size_t buffer_offset                    = 0;
 	size_t read_size                        = 0;
 	size_t read_size_remainder              = 0;
-	DWORD read_count                        = 0;
+	ssize_t read_count                      = 0;
 	BOOL result                             = FALSE;
 
 	if( file == NULL )
@@ -1868,109 +1795,122 @@ ssize_t libcfile_file_read_buffer_with_error_code(
 	}
 	if( internal_file->block_size != 0 )
 	{
-		if( internal_file->current_offset < 0 )
+		if( internal_file->block_data == NULL )
 		{
 			libcerror_error_set(
 			 error,
 			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-			 LIBCERROR_RUNTIME_ERROR_VALUE_OUT_OF_BOUNDS,
-			 "%s: invalid file - current offset value out of bounds.",
+			 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
+			 "%s: invalid file - missing block data.",
 			 function );
 
 			return( -1 );
 		}
-		if( (size64_t) internal_file->current_offset > internal_file->size )
-		{
-			return( 0 );
-		}
-		if( ( (size64_t) internal_file->current_offset + size ) > internal_file->size )
-		{
-			size = (size_t) ( internal_file->size - internal_file->current_offset );
-		}
 	}
-	if( size == 0 )
+	if( internal_file->current_offset < 0 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_VALUE_OUT_OF_BOUNDS,
+		 "%s: invalid file - current offset value out of bounds.",
+		 function );
+
+		return( -1 );
+	}
+	if( ( size == 0 )
+	 || ( (size64_t) internal_file->current_offset > internal_file->size ) )
 	{
 		return( 0 );
 	}
-	if( ( internal_file->block_data_offset > 0 )
-	 && ( internal_file->block_data_size == 0 ) )
+	if( ( (size64_t) internal_file->current_offset + size ) > internal_file->size )
 	{
-		if( memory_set(
-		     internal_file->block_data,
-		     0,
-		     internal_file->block_size ) == NULL )
-		{
-			libcerror_error_set(
-			 error,
-			 LIBCERROR_ERROR_DOMAIN_MEMORY,
-			 LIBCERROR_MEMORY_ERROR_SET_FAILED,
-			 "%s: unable to clear block data.",
-			 function );
-
-			return( -1 );
-		}
-		read_count = libcfile_internal_file_read_buffer_at_offset_with_error_code(
-		              internal_file,
-		              internal_file->current_offset - internal_file->block_data_offset,
-		              internal_file->block_data,
-		              internal_file->block_size,
-		              error_code,
-		              error );
-
-		if( read_count != (ssize_t) internal_file->block_size )
-		{
-			libcerror_error_set(
-			 error,
-			 LIBCERROR_ERROR_DOMAIN_IO,
-			 LIBCERROR_IO_ERROR_READ_FAILED,
-			 "%s: invalid read count: %" PRIzd " returned.",
-			 function,
-			 read_count );
-
-			return( -1 );
-		}
-		internal_file->block_data_size = (size_t) read_count;
+		size = (size_t) ( internal_file->size - internal_file->current_offset );
 	}
-	if( ( internal_file->block_data_offset > 0 )
-	 && ( internal_file->block_data_offset < internal_file->block_data_size ) )
+	if( internal_file->block_size != 0 )
 	{
-		read_size = internal_file->block_data_size - internal_file->block_data_offset;
-
-		if( read_size > size )
+		/* Read a block of data to align with the next block
+		 */
+		if( ( internal_file->block_data_offset > 0 )
+		 && ( internal_file->block_data_size == 0 ) )
 		{
-			read_size = size;
-		}
-		if( memory_copy(
-		     buffer,
-		     &( internal_file->block_data[ internal_file->block_data_offset ] ),
-		     read_size ) == NULL )
-		{
-			libcerror_error_set(
-			 error,
-			 LIBCERROR_ERROR_DOMAIN_MEMORY,
-			 LIBCERROR_MEMORY_ERROR_COPY_FAILED,
-			 "%s: unable to copy block data.",
-			 function );
+			if( memory_set(
+			     internal_file->block_data,
+			     0,
+			     internal_file->block_size ) == NULL )
+			{
+				libcerror_error_set(
+				 error,
+				 LIBCERROR_ERROR_DOMAIN_MEMORY,
+				 LIBCERROR_MEMORY_ERROR_SET_FAILED,
+				 "%s: unable to clear block data.",
+				 function );
 
-			return( -1 );
+				return( -1 );
+			}
+			read_count = libcfile_internal_file_read_buffer_at_offset_with_error_code(
+			              internal_file,
+			              internal_file->current_offset - internal_file->block_data_offset,
+			              internal_file->block_data,
+			              internal_file->block_size,
+			              error_code,
+			              error );
+
+			if( read_count != (ssize_t) internal_file->block_size )
+			{
+				libcerror_error_set(
+				 error,
+				 LIBCERROR_ERROR_DOMAIN_IO,
+				 LIBCERROR_IO_ERROR_READ_FAILED,
+				 "%s: invalid read count: %" PRIzd " returned.",
+				 function,
+				 read_count );
+
+				return( -1 );
+			}
+			internal_file->block_data_size = (size_t) read_count;
 		}
-		buffer_offset                    += read_size;
-		size                             -= read_size;
-		internal_file->current_offset    += read_size;
-		internal_file->block_data_offset += read_size;
+		if( ( internal_file->block_data_offset > 0 )
+		 && ( internal_file->block_data_offset < internal_file->block_data_size ) )
+		{
+			read_size = internal_file->block_data_size - internal_file->block_data_offset;
+
+			if( read_size > size )
+			{
+				read_size = size;
+			}
+			if( memory_copy(
+			     buffer,
+			     &( internal_file->block_data[ internal_file->block_data_offset ] ),
+			     read_size ) == NULL )
+			{
+				libcerror_error_set(
+				 error,
+				 LIBCERROR_ERROR_DOMAIN_MEMORY,
+				 LIBCERROR_MEMORY_ERROR_COPY_FAILED,
+				 "%s: unable to copy block data.",
+				 function );
+
+				return( -1 );
+			}
+			buffer_offset                    += read_size;
+			size                             -= read_size;
+			internal_file->current_offset    += read_size;
+			internal_file->block_data_offset += read_size;
+		}
+		if( size == 0 )
+		{
+			return( (ssize_t) buffer_offset );
+		}
 	}
-	if( size == 0 )
+	read_size = size;
+
+	if( internal_file->block_size != 0 )
 	{
-		return( (ssize_t) buffer_offset );
-	}
-	if( internal_file->block_size == 0 )
-	{
-		read_size = size;
-	}
-	else
-	{
-		read_size_remainder = size % internal_file->block_size;
-		read_size           = size - read_size_remainder;
+		/* Read block aligned
+		 */
+		read_size_remainder = read_size % internal_file->block_size;
+		read_size          -= read_size_remainder;
 	}
 	if( read_size > 0 )
 	{
@@ -1990,100 +1930,31 @@ ssize_t libcfile_file_read_buffer_with_error_code(
 		else if( ( internal_file->block_size != 0 )
 		      && ( read_count != (ssize_t) read_size ) )
 		{
-			/* Windows devices sometimes don't allow to read the last block
-			 * this behavior is seen with e.g. \\.\D:
-			 */
-			if( ( internal_file->is_device_filename != 0 )
-			 && ( ( read_size - read_count ) == internal_file->block_size )
-			 && ( (size64_t) internal_file->current_offset == ( internal_file->size - internal_file->block_size ) ) )
-			{
-				result = 1;
-			}
-			else
-			{
-				result = 0;
-			}
+			result = 0;
 		}
 		else
 		{
 			result = 1;
 		}
-		if( result != 0 )
+		if( result == 0 )
 		{
-			buffer_offset                 += (size_t) read_count;
-			internal_file->current_offset += read_count;
-		}
-		/* Non-buffered Windows devices require the buffer to be aligned.
-		 * The alignment can be determined by GetFileInformationByHandleEx.
-		 * The ReadFile function appears to return ERROR_INVALID_PARAMETER
-		 * in case it fails on alignment.
-		 */
-		else if( *error_code == ERROR_INVALID_PARAMETER )
-		{
-			/* As a fallback read the data using the block data buffer
-			 */
-			while( read_size > 0 )
-			{
-				read_count = libcfile_internal_file_read_buffer_at_offset_with_error_code(
-					      internal_file,
-					      internal_file->current_offset,
-					      internal_file->block_data,
-					      internal_file->block_size,
-					      error_code,
-					      error );
-
-				if( read_count != (ssize_t) internal_file->block_size )
-				{
-					libcerror_error_set(
-					 error,
-					 LIBCERROR_ERROR_DOMAIN_IO,
-					 LIBCERROR_IO_ERROR_READ_FAILED,
-					 "%s: invalid read count: %" PRIzd " returned.",
-					 function,
-					 read_count );
-
-					return( -1 );
-				}
-				if( memory_copy(
-				     &( buffer[ buffer_offset ] ),
-				     internal_file->block_data,
-				     internal_file->block_size ) == NULL )
-				{
-					libcerror_error_set(
-					 error,
-					 LIBCERROR_ERROR_DOMAIN_MEMORY,
-					 LIBCERROR_MEMORY_ERROR_COPY_FAILED,
-					 "%s: unable to copy block data.",
-					 function );
-
-					return( -1 );
-				}
-				buffer_offset                 += internal_file->block_size;
-				read_size                     -= internal_file->block_size;
-				internal_file->current_offset += internal_file->block_size;
-			}
-		}
-		else
-		{
-			libcerror_error_set(
+			libcerror_system_set_error(
 			 error,
 			 LIBCERROR_ERROR_DOMAIN_IO,
 			 LIBCERROR_IO_ERROR_READ_FAILED,
-			 "%s: invalid read count: %" PRIzd " returned.",
-			 function,
-			 read_count );
+			 *error_code,
+			 "%s: unable to read from file.",
+			 function );
 
 			return( -1 );
 		}
+		buffer_offset                 += (size_t) read_count;
+		internal_file->current_offset += read_count;
 	}
+	/* Read the non-aligned remainder
+	 */
 	if( read_size_remainder > 0 )
 	{
-		/* The read was cut short
-		 */
-		if( read_count != (size_t) read_size )
-		{
-			return( (ssize_t) buffer_offset );
-		}
 		if( memory_set(
 		     internal_file->block_data,
 		     0,
@@ -2222,108 +2093,121 @@ ssize_t libcfile_file_read_buffer_with_error_code(
 	}
 	if( internal_file->block_size != 0 )
 	{
-		if( internal_file->current_offset < 0 )
+		if( internal_file->block_data == NULL )
 		{
 			libcerror_error_set(
 			 error,
 			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-			 LIBCERROR_RUNTIME_ERROR_VALUE_OUT_OF_BOUNDS,
-			 "%s: invalid file - current offset value out of bounds.",
+			 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
+			 "%s: invalid file - missing block data.",
 			 function );
 
 			return( -1 );
 		}
-		if( (size64_t) internal_file->current_offset > internal_file->size )
-		{
-			return( 0 );
-		}
-		if( ( (size64_t) internal_file->current_offset + size ) > internal_file->size )
-		{
-			size = (size_t) ( internal_file->size - internal_file->current_offset );
-		}
 	}
-	if( size == 0 )
+	if( internal_file->current_offset < 0 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_VALUE_OUT_OF_BOUNDS,
+		 "%s: invalid file - current offset value out of bounds.",
+		 function );
+
+		return( -1 );
+	}
+	if( ( size == 0 )
+	 || ( (size64_t) internal_file->current_offset > internal_file->size ) )
 	{
 		return( 0 );
 	}
-	if( ( internal_file->block_data_offset > 0 )
-	 && ( internal_file->block_data_size == 0 ) )
+	if( ( (size64_t) internal_file->current_offset + size ) > internal_file->size )
 	{
-		if( memory_set(
-		     internal_file->block_data,
-		     0,
-		     internal_file->block_size ) == NULL )
-		{
-			libcerror_error_set(
-			 error,
-			 LIBCERROR_ERROR_DOMAIN_MEMORY,
-			 LIBCERROR_MEMORY_ERROR_SET_FAILED,
-			 "%s: unable to clear block data.",
-			 function );
-
-			return( -1 );
-		}
-		read_count = read(
-		              internal_file->descriptor,
-		              internal_file->block_data,
-		              internal_file->block_size );
-
-		if( read_count != (ssize_t) internal_file->block_size )
-		{
-			*error_code = (uint32_t) errno;
-
-			libcerror_system_set_error(
-			 error,
-			 LIBCERROR_ERROR_DOMAIN_IO,
-			 LIBCERROR_IO_ERROR_READ_FAILED,
-			 *error_code,
-			 "%s: unable to read from file.",
-			 function );
-
-			return( -1 );
-		}
-		internal_file->block_data_size = (size_t) read_count;
+		size = (size_t) ( internal_file->size - internal_file->current_offset );
 	}
-	if( ( internal_file->block_data_offset > 0 )
-	 && ( internal_file->block_data_offset < internal_file->block_data_size ) )
+	if( internal_file->block_size != 0 )
 	{
-		read_size = internal_file->block_data_size - internal_file->block_data_offset;
-
-		if( read_size > size )
+		/* Read a block of data to align with the next block
+		 */
+		if( ( internal_file->block_data_offset > 0 )
+		 && ( internal_file->block_data_size == 0 ) )
 		{
-			read_size = size;
-		}
-		if( memory_copy(
-		     buffer,
-		     &( internal_file->block_data[ internal_file->block_data_offset ] ),
-		     read_size ) == NULL )
-		{
-			libcerror_error_set(
-			 error,
-			 LIBCERROR_ERROR_DOMAIN_MEMORY,
-			 LIBCERROR_MEMORY_ERROR_COPY_FAILED,
-			 "%s: unable to copy block data.",
-			 function );
+			if( memory_set(
+			     internal_file->block_data,
+			     0,
+			     internal_file->block_size ) == NULL )
+			{
+				libcerror_error_set(
+				 error,
+				 LIBCERROR_ERROR_DOMAIN_MEMORY,
+				 LIBCERROR_MEMORY_ERROR_SET_FAILED,
+				 "%s: unable to clear block data.",
+				 function );
 
-			return( -1 );
+				return( -1 );
+			}
+			read_count = read(
+			              internal_file->descriptor,
+			              internal_file->block_data,
+			              internal_file->block_size );
+
+			if( read_count != (ssize_t) internal_file->block_size )
+			{
+				*error_code = (uint32_t) errno;
+
+				libcerror_system_set_error(
+				 error,
+				 LIBCERROR_ERROR_DOMAIN_IO,
+				 LIBCERROR_IO_ERROR_READ_FAILED,
+				 *error_code,
+				 "%s: unable to read from file.",
+				 function );
+
+				return( -1 );
+			}
+			internal_file->block_data_size = (size_t) read_count;
 		}
-		buffer_offset                    += read_size;
-		size                             -= read_size;
-		internal_file->block_data_offset += read_size;
-		internal_file->current_offset    += read_size;
+		if( ( internal_file->block_data_offset > 0 )
+		 && ( internal_file->block_data_offset < internal_file->block_data_size ) )
+		{
+			read_size = internal_file->block_data_size - internal_file->block_data_offset;
+
+			if( read_size > size )
+			{
+				read_size = size;
+			}
+			if( memory_copy(
+			     buffer,
+			     &( internal_file->block_data[ internal_file->block_data_offset ] ),
+			     read_size ) == NULL )
+			{
+				libcerror_error_set(
+				 error,
+				 LIBCERROR_ERROR_DOMAIN_MEMORY,
+				 LIBCERROR_MEMORY_ERROR_COPY_FAILED,
+				 "%s: unable to copy block data.",
+				 function );
+
+				return( -1 );
+			}
+			buffer_offset                    += read_size;
+			size                             -= read_size;
+			internal_file->block_data_offset += read_size;
+			internal_file->current_offset    += read_size;
+		}
+		if( size == 0 )
+		{
+			return( (ssize_t) buffer_offset );
+		}
 	}
-	if( size == 0 )
+	read_size = size;
+
+	if( internal_file->block_size != 0 )
 	{
-		return( (ssize_t) buffer_offset );
-	}
-	if( internal_file->block_size == 0 )
-	{
-		read_size = size;
-	}
-	else
-	{
-		read_size_remainder = size % internal_file->block_size;
-		read_size           = size - read_size_remainder;
+		/* Read block aligned
+		 */
+		read_size_remainder = read_size % internal_file->block_size;
+		read_size          -= read_size_remainder;
 	}
 	if( read_size > 0 )
 	{
@@ -2363,14 +2247,10 @@ ssize_t libcfile_file_read_buffer_with_error_code(
 		buffer_offset                 += (size_t) read_count;
 		internal_file->current_offset += read_count;
 	}
+	/* Read the non-aligned remainder
+	 */
 	if( read_size_remainder > 0 )
 	{
-		/* The read was cut short
-		 */
-		if( read_count != (ssize_t) read_size )
-		{
-			return( (ssize_t) buffer_offset );
-		}
 		if( memory_set(
 		     internal_file->block_data,
 		     0,
@@ -2465,67 +2345,6 @@ ssize_t libcfile_file_write_buffer(
 	}
 	return( write_count );
 }
-
-#if defined( WINAPI ) && ( WINVER <= 0x0500 )
-
-/* Cross Windows safe version of WriteFile
- * Returns TRUE if successful or FALSE on error
- */
-BOOL libcfile_WriteFile(
-      HANDLE file_handle,
-      VOID *buffer,
-      DWORD write_size,
-      DWORD *write_count,
-      OVERLAPPED *overlapped )
-{
-	FARPROC function       = NULL;
-	HMODULE library_handle = NULL;
-	BOOL result            = FALSE;
-
-	if( file_handle == NULL )
-	{
-		return( FALSE );
-	}
-	if( buffer == NULL )
-	{
-		return( FALSE );
-	}
-	if( write_count == NULL )
-	{
-		return( FALSE );
-	}
-	library_handle = LoadLibrary(
-	                  _LIBCSTRING_SYSTEM_STRING( "kernel32.dll" ) );
-
-	if( library_handle == NULL )
-	{
-		return( FALSE );
-	}
-	function = GetProcAddress(
-		    library_handle,
-		    (LPCSTR) "WriteFile" );
-
-	if( function != NULL )
-	{
-		result = function(
-			  file_handle,
-			  buffer,
-			  write_size,
-			  write_count,
-			  overlapped );
-	}
-	/* This call should be after using the function
-	 * in most cases kernel32.dll will still be available after free
-	 */
-	if( FreeLibrary(
-	     library_handle ) != TRUE )
-	{
-		result = FALSE;
-	}
-	return( result );
-}
-
-#endif /* defined( WINAPI ) && ( WINVER <= 0x0500 ) */
 
 #if defined( WINAPI )
 
@@ -2753,108 +2572,6 @@ ssize_t libcfile_file_write_buffer_with_error_code(
 
 #else
 #error Missing file write function
-#endif
-
-#if defined( WINAPI ) && ( WINVER <= 0x0500 )
-
-#if !defined( INVALID_SET_FILE_POINTER )
-#define INVALID_SET_FILE_POINTER	((LONG) -1)
-#endif
-
-/* Cross Windows safe version of SetFilePointerEx
- * Returns TRUE if successful or FALSE on error
- */
-BOOL libcfile_SetFilePointerEx(
-      HANDLE file_handle,
-      LARGE_INTEGER distance_to_move_large_integer,
-      LARGE_INTEGER *new_file_pointer_large_integer,
-      DWORD move_method )
-{
-	FARPROC function                 = NULL;
-	HMODULE library_handle           = NULL;
-	LONG distance_to_move_lower_long = 0;
-	LONG distance_to_move_upper_long = 0;
-	DWORD error_number               = 0;
-	BOOL result                      = FALSE;
-
-	if( file_handle == NULL )
-	{
-		return( FALSE );
-	}
-	if( new_file_pointer_large_integer == NULL )
-	{
-		return( FALSE );
-	}
-	library_handle = LoadLibrary(
-	                  _LIBCSTRING_SYSTEM_STRING( "kernel32.dll" ) );
-
-	if( library_handle == NULL )
-	{
-		return( FALSE );
-	}
-	function = GetProcAddress(
-		    library_handle,
-		    (LPCSTR) "SetFilePointerEx" );
-
-	if( function != NULL )
-	{
-		result = function(
-			  file_handle,
-			  distance_to_move_large_integer,
-			  new_file_pointer_large_integer,
-			  move_method );
-	}
-	else
-	{
-		function = GetProcAddress(
-			    library_handle,
-			    (LPCSTR) "SetFilePointer" );
-
-		if( function != NULL )
-		{
-#if defined( __BORLANDC__ ) && __BORLANDC__ <= 0x520
-			distance_to_move_lower_long = distance_to_move_large_integer.QuadPart & 0xffffffffUL;
-			distance_to_move_upper_long = distance_to_move_large_integer.QuadPart >> 32;
-#else
-			distance_to_move_lower_long = distance_to_move_large_integer.LowPart;
-			distance_to_move_upper_long = distance_to_move_large_integer.HighPart;
-#endif
-
-			distance_to_move_lower_long = function(
-						       file_handle,
-						       distance_to_move_lower_long,
-						       &distance_to_move_upper_long,
-						       move_method );
-
-			error_number = GetLastError();
-
-			if( ( distance_to_move_lower_long != (LONG) INVALID_SET_FILE_POINTER )
-			 || ( error_number == NO_ERROR ) )
-			{
-#if defined( __BORLANDC__ ) && __BORLANDC__ <= 0x520
-				new_file_pointer_large_integer->QuadPart   = distance_to_move_upper_long;
-				new_file_pointer_large_integer->QuadPart <<= 32;
-				new_file_pointer_large_integer->QuadPart  += distance_to_move_lower_long;
-#else
-				new_file_pointer_large_integer->HighPart = distance_to_move_upper_long;
-				new_file_pointer_large_integer->LowPart  = distance_to_move_lower_long;
-#endif
-
-				result = TRUE;
-			}
-		}
-	}
-	/* This call should be after using the function
-	 * in most cases kernel32.dll will still be available after free
-	 */
-	if( FreeLibrary(
-	     library_handle ) != TRUE )
-	{
-		result = FALSE;
-	}
-	return( result );
-}
-
 #endif
 
 #if defined( WINAPI )
@@ -3128,51 +2845,6 @@ off64_t libcfile_file_seek_offset(
 #error Missing file lseek function
 #endif
 
-#if defined( WINAPI ) && ( WINVER <= 0x0500 )
-
-/* Cross Windows safe version of SetEndOfFile
- * Returns TRUE if successful or FALSE on error
- */
-BOOL libcfile_SetEndOfFile(
-      HANDLE file_handle )
-{
-	FARPROC function       = NULL;
-	HMODULE library_handle = NULL;
-	BOOL result            = FALSE;
-
-	if( file_handle == NULL )
-	{
-		return( FALSE );
-	}
-	library_handle = LoadLibrary(
-	                  _LIBCSTRING_SYSTEM_STRING( "kernel32.dll" ) );
-
-	if( library_handle == NULL )
-	{
-		return( FALSE );
-	}
-	function = GetProcAddress(
-		    library_handle,
-		    (LPCSTR) "SetEndOfFile" );
-
-	if( function != NULL )
-	{
-		result = function(
-			  file_handle );
-	}
-	/* This call should be after using the function
-	 * in most cases kernel32.dll will still be available after free
-	 */
-	if( FreeLibrary(
-	     library_handle ) != TRUE )
-	{
-		result = FALSE;
-	}
-	return( result );
-}
-
-#endif /* defined( WINAPI ) && ( WINVER <= 0x0500 ) */
-
 #if defined( WINAPI )
 
 /* Resizes the file
@@ -3430,90 +3102,6 @@ int libcfile_file_is_open(
 	return( 1 );
 }
 
-#if defined( WINAPI ) && ( WINVER <= 0x0500 )
-
-/* Cross Windows safe version of GetFileSizeEx
- * Returns TRUE if successful or FALSE on error
- */
-BOOL libcfile_GetFileSizeEx(
-      HANDLE file_handle,
-      LARGE_INTEGER *file_size_large_integer )
-{
-	FARPROC function            = NULL;
-	HMODULE library_handle      = NULL;
-	DWORD error_number          = 0;
-	DWORD file_size_upper_dword = 0;
-	DWORD file_size_lower_dword = 0;
-	BOOL result                 = FALSE;
-
-	if( file_handle == NULL )
-	{
-		return( FALSE );
-	}
-	if( file_size_large_integer == NULL )
-	{
-		return( FALSE );
-	}
-	library_handle = LoadLibrary(
-	                  _LIBCSTRING_SYSTEM_STRING( "kernel32.dll" ) );
-
-	if( library_handle == NULL )
-	{
-		return( FALSE );
-	}
-	function = GetProcAddress(
-		    library_handle,
-		    (LPCSTR) "GetFileSizeEx" );
-
-	if( function != NULL )
-	{
-		result = function(
-			  file_handle,
-			  file_size_large_integer );
-	}
-	else
-	{
-		function = GetProcAddress(
-			    library_handle,
-			    (LPCSTR) "GetFileSize" );
-
-		if( function != NULL )
-		{
-			file_size_lower_dword = function(
-			                         file_handle,
-			                         &file_size_upper_dword );
-
-			error_number = GetLastError();
-
-			if( ( file_size_lower_dword != INVALID_FILE_SIZE )
-			 || ( error_number == NO_ERROR ) )
-			{
-#if defined( __BORLANDC__ ) && __BORLANDC__ <= 0x520
-				file_size_large_integer->QuadPart   = file_size_upper_dword;
-				file_size_large_integer->QuadPart <<= 32;
-				file_size_large_integer->QuadPart  += file_size_lower_dword;
-#else
-				file_size_large_integer->HighPart = file_size_upper_dword;
-				file_size_large_integer->LowPart  = file_size_lower_dword;
-#endif
-
-				result = TRUE;
-			}
-		}
-	}
-	/* This call should be after using the function
-	 * in most cases kernel32.dll will still be available after free
-	 */
-	if( FreeLibrary(
-	     library_handle ) != TRUE )
-	{
-		result = FALSE;
-	}
-	return( result );
-}
-
-#endif
-
 /* Retrieves the current offset in the file
  * Returns 1 if successful or -1 on error
  */
@@ -3598,22 +3186,21 @@ GET_LENGTH_INFORMATION;
  * or tries to dynamically call the function for Windows 2000 (0x0500) or earlier
  * Returns 1 if successful or -1 on error
  */
-int libcfile_file_get_size(
-     libcfile_file_t *file,
+int libcfile_internal_file_get_size(
+     libcfile_internal_file_t *internal_file,
      size64_t *size,
      libcerror_error_t **error )
 {
 	DISK_GEOMETRY disk_geometry;
 	GET_LENGTH_INFORMATION length_information;
 
-	libcfile_internal_file_t *internal_file = NULL;
-	static char *function                   = "libcfile_file_get_size";
-	size_t read_count                       = 0;
-	LARGE_INTEGER large_integer_size        = LIBCFILE_LARGE_INTEGER_ZERO;
-	uint32_t error_code                     = 0;
-	int result                              = 0;
+	static char *function            = "libcfile_internal_file_get_size";
+	LARGE_INTEGER large_integer_size = LIBCFILE_LARGE_INTEGER_ZERO;
+	size_t read_count                = 0;
+	uint32_t error_code              = 0;
+	int result                       = 0;
 
-	if( file == NULL )
+	if( internal_file == NULL )
 	{
 		libcerror_error_set(
 		 error,
@@ -3624,8 +3211,6 @@ int libcfile_file_get_size(
 
 		return( -1 );
 	}
-	internal_file = (libcfile_internal_file_t *) file;
-
 	if( internal_file->handle == INVALID_HANDLE_VALUE )
 	{
 		libcerror_error_set(
@@ -3649,7 +3234,7 @@ int libcfile_file_get_size(
 		return( -1 );
 	}
 	result = libcfile_file_is_device(
-	          file,
+	          (libcfile_file_t *) internal_file,
 	          error );
 
 	if( result == -1 )
@@ -3665,8 +3250,8 @@ int libcfile_file_get_size(
 	}
 	else if( result != 0 )
 	{
-		read_count = libcfile_file_io_control_read_with_error_code(
-		              file,
+		read_count = libcfile_internal_file_io_control_read_with_error_code(
+		              internal_file,
 		              IOCTL_DISK_GET_LENGTH_INFO,
 		              NULL,
 		              0,
@@ -3702,13 +3287,14 @@ int libcfile_file_get_size(
 			{
 				/* A floppy device does not support IOCTL_DISK_GET_LENGTH_INFO
 				 */
-				read_count = libcfile_file_io_control_read(
-				              file,
+				read_count = libcfile_internal_file_io_control_read_with_error_code(
+				              internal_file,
 				              IOCTL_DISK_GET_DRIVE_GEOMETRY,
 				              NULL,
 				              0,
 				              (uint8_t *) &disk_geometry,
 				              sizeof( DISK_GEOMETRY ),
+				              &error_code,
 				              error );
 
 				if( read_count == -1 )
@@ -3746,7 +3332,7 @@ int libcfile_file_get_size(
 		else
 		{
 			*size  = (size64_t) length_information.Length.HighPart << 32;
-			*size += length_information.Length.LowPart;
+			*size += (uint32_t) length_information.Length.LowPart;
 		}
 	}
 	else
@@ -3773,7 +3359,8 @@ int libcfile_file_get_size(
 #if defined( __BORLANDC__ ) && __BORLANDC__ <= 0x520
 		*size = (size64_t) large_integer_size.QuadPart;
 #else
-		*size = ( (size64_t) large_integer_size.HighPart << 32 ) + large_integer_size.LowPart;
+		*size  = (size64_t) large_integer_size.HighPart << 32;
+		*size += (uint32_t) large_integer_size.LowPart;
 #endif
 	}
 	return( 1 );
@@ -3785,29 +3372,29 @@ int libcfile_file_get_size(
  * This function uses the POSIX fstat function or equivalent
  * Returns 1 if successful or -1 on error
  */
-int libcfile_file_get_size(
-     libcfile_file_t *file,
+int libcfile_internal_file_get_size(
+     libcfile_internal_file_t *internal_file,
      size64_t *size,
      libcerror_error_t **error )
 {
 	struct stat file_statistics;
 
-	libcfile_internal_file_t *internal_file = NULL;
-	static char *function                   = "libcfile_file_get_size";
-	off64_t current_offset                  = 0;
-	off64_t offset                          = 0;
-	ssize_t read_count                      = 0;
-	size_t file_statistics_size             = 0;
+	static char *function     = "libcfile_internal_file_get_size";
+	size64_t safe_size        = 0;
+	ssize_t read_count        = 0;
+	off64_t current_offset    = 0;
+	off64_t offset            = 0;
+	uint32_t error_code       = 0;
 
 #if !defined( DIOCGMEDIASIZE ) && defined( DIOCGDINFO )
 	struct disklabel disk_label;
 #endif
 #if defined( DKIOCGETBLOCKCOUNT ) && defined( DKIOCGETBLOCKSIZE )
-	uint64_t block_count                    = 0;
-	uint32_t bytes_per_sector               = 0;
+	uint64_t block_count      = 0;
+	uint32_t bytes_per_sector = 0;
 #endif
 
-	if( file == NULL )
+	if( internal_file == NULL )
 	{
 		libcerror_error_set(
 		 error,
@@ -3818,8 +3405,6 @@ int libcfile_file_get_size(
 
 		return( -1 );
 	}
-	internal_file = (libcfile_internal_file_t *) file;
-
 	if( internal_file->descriptor == -1 )
 	{
 		libcerror_error_set(
@@ -3842,12 +3427,10 @@ int libcfile_file_get_size(
 
 		return( -1 );
 	}
-	file_statistics_size = sizeof( struct stat );
-
 	if( memory_set(
 	     &file_statistics,
 	     0,
-	     file_statistics_size ) == NULL )
+	     sizeof( struct stat ) ) == NULL )
 	{
 		libcerror_error_set(
 		 error,
@@ -3875,13 +3458,14 @@ int libcfile_file_get_size(
 	 || S_ISCHR( file_statistics.st_mode ) )
 	{
 #if defined( BLKGETSIZE64 )
-		read_count = libcfile_file_io_control_read(
-		              file,
+		read_count = libcfile_internal_file_io_control_read_with_error_code(
+		              internal_file,
 		              (uint32_t) BLKGETSIZE64,
 		              NULL,
 		              0,
-		              (uint8_t *) size,
+		              (uint8_t *) &safe_size,
 		              8,
+		              &error_code,
 		              error );
 
 		if( read_count == -1 )
@@ -3908,13 +3492,14 @@ int libcfile_file_get_size(
 			 error );
 		}
 #elif defined( DIOCGMEDIASIZE )
-		read_count = libcfile_file_io_control_read(
-		              file,
+		read_count = libcfile_internal_file_io_control_read_with_error_code(
+		              internal_file,
 		              (uint32_t) DIOCGMEDIASIZE,
 		              NULL,
 		              0,
-		              (uint8_t *) size,
+		              (uint8_t *) &safe_size,
 		              8,
+		              &error_code,
 		              error );
 
 		if( read_count == -1 )
@@ -3941,13 +3526,14 @@ int libcfile_file_get_size(
 			 error );
 		}
 #elif defined( DIOCGDINFO )
-		read_count = libcfile_file_io_control_read(
-		              file,
+		read_count = libcfile_internal_file_io_control_read_with_error_code(
+		              internal_file,
 		              (uint32_t) DIOCGDINFO,
 		              NULL,
 		              0,
 		              (uint8_t *) &disk_label,
 		              sizeof( struct disklabel ),
+		              &error_code,
 		              error );
 
 		if( read_count == -1 )
@@ -3975,16 +3561,17 @@ int libcfile_file_get_size(
 		}
 		else
 		{
-			*size = disk_label.d_secperunit * disk_label.d_secsize;
+			safe_size = disk_label.d_secperunit * disk_label.d_secsize;
 		}
 #elif defined( DKIOCGETBLOCKCOUNT ) && defined( DKIOCGETBLOCKSIZE )
-		read_count = libcfile_file_io_control_read(
-		              file,
+		read_count = libcfile_internal_file_io_control_read_with_error_code(
+		              internal_file,
 		              (uint32_t) DKIOCGETBLOCKSIZE,
 		              NULL,
 		              0,
 		              (uint8_t *) &bytes_per_sector,
 		              4,
+		              &error_code,
 		              error );
 
 		if( read_count == -1 )
@@ -4012,13 +3599,14 @@ int libcfile_file_get_size(
 		}
 		else
 		{
-			read_count = libcfile_file_io_control_read(
-			              file,
+			read_count = libcfile_internal_file_io_control_read_with_error_code(
+			              internal_file,
 			              (uint32_t) DKIOCGETBLOCKCOUNT,
 			              NULL,
 			              0,
 			              (uint8_t *) &block_count,
 			              4,
+			              &error_code,
 			              error );
 
 			if( read_count == -1 )
@@ -4056,7 +3644,7 @@ int libcfile_file_get_size(
 					 block_count );
 				}
 #endif
-				*size = (size64_t) ( block_count * bytes_per_sector );
+				safe_size = (size64_t) ( block_count * bytes_per_sector );
 			}
 		}
 #endif
@@ -4065,7 +3653,7 @@ int libcfile_file_get_size(
 			/* Try to seek the end of the file and determine the size based on the offset
 			 */
 			if( libcfile_file_get_offset(
-			     file,
+			     (libcfile_file_t *) internal_file,
 			     &current_offset,
 			     error ) != 1  )
 			{
@@ -4079,7 +3667,7 @@ int libcfile_file_get_size(
 				return( -1 );
 			}
 			offset = libcfile_file_seek_offset(
-				  file,
+			          (libcfile_file_t *) internal_file,
 				  0,
 				  SEEK_END,
 				  error );
@@ -4095,10 +3683,10 @@ int libcfile_file_get_size(
 
 				return( -1 );
 			}
-			*size = (size64_t) offset;
+			safe_size = (size64_t) offset;
 
 			offset = libcfile_file_seek_offset(
-				  file,
+			          (libcfile_file_t *) internal_file,
 				  current_offset,
 				  SEEK_SET,
 				  error );
@@ -4122,14 +3710,16 @@ int libcfile_file_get_size(
 			libcnotify_printf(
 			 "%s: device media size: %" PRIu64 "\n",
 			 function,
-			 *size );
+			 safe_size );
 		}
 #endif
 	}
 	else
 	{
-		*size = (size64_t) file_statistics.st_size;
+		safe_size = (size64_t) file_statistics.st_size;
 	}
+	*size = safe_size;
+
 	return( 1 );
 }
 
@@ -4137,50 +3727,45 @@ int libcfile_file_get_size(
 #error Missing file get size function
 #endif
 
-#if defined( WINAPI ) && ( WINVER <= 0x0500 )
-
-/* Cross Windows safe version of GetFileType
- * Returns the file type if successful or FILE_TYPE_UNKNOWN on error
+/* Retrieves the size of the file
+ * Returns 1 if successful or -1 on error
  */
-DWORD libcfile_GetFileType(
-       HANDLE file_handle )
+int libcfile_file_get_size(
+     libcfile_file_t *file,
+     size64_t *size,
+     libcerror_error_t **error )
 {
-	FARPROC function       = NULL;
-	HMODULE library_handle = NULL;
-	DWORD result           = FILE_TYPE_UNKNOWN;
+	libcfile_internal_file_t *internal_file = NULL;
+	static char *function                   = "libcfile_file_get_size";
 
-	if( file_handle == NULL )
+	if( file == NULL )
 	{
-		return( FILE_TYPE_UNKNOWN );
-	}
-	library_handle = LoadLibrary(
-	                  _LIBCSTRING_SYSTEM_STRING( "kernel32.dll" ) );
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid file.",
+		 function );
 
-	if( library_handle == NULL )
-	{
-		return( FILE_TYPE_UNKNOWN );
+		return( -1 );
 	}
-	function = GetProcAddress(
-		    library_handle,
-		    (LPCSTR) "GetFileType" );
+	internal_file = (libcfile_internal_file_t *) file;
 
-	if( function != NULL )
+	if( size == NULL )
 	{
-		result = function(
-			  file_handle );
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid size.",
+		 function );
+
+		return( -1 );
 	}
-	/* This call should be after using the function
-	 * in most cases kernel32.dll will still be available after free
-	 */
-	if( FreeLibrary(
-	     library_handle ) != TRUE )
-	{
-		result = FILE_TYPE_UNKNOWN;
-	}
-	return( result );
+	*size = internal_file->size;
+
+	return( 1 );
 }
-
-#endif /* defined( WINAPI ) && ( WINVER <= 0x0500 ) */
 
 #if defined( WINAPI )
 
@@ -4270,7 +3855,6 @@ int libcfile_file_is_device(
 
 	libcfile_internal_file_t *internal_file = NULL;
 	static char *function                   = "libcfile_file_is_device";
-	size_t file_statistics_size             = 0;
 	int result                              = 0;
 
 	if( file == NULL )
@@ -4297,12 +3881,10 @@ int libcfile_file_is_device(
 
 		return( -1 );
 	}
-	file_statistics_size = sizeof( struct stat );
-
 	if( memory_set(
 	     &file_statistics,
 	     0,
-	     file_statistics_size ) == NULL )
+	     sizeof( struct stat ) ) == NULL )
 	{
 		libcerror_error_set(
 		 error,
@@ -4338,54 +3920,14 @@ int libcfile_file_is_device(
 #error Missing file is device function
 #endif
 
-/* Read data from a device file using IO control
- * Returns the number of bytes read if successful or -1 on error
- */
-ssize_t libcfile_file_io_control_read(
-         libcfile_file_t *file,
-         uint32_t control_code,
-         uint8_t *control_data,
-         size_t control_data_size,
-         uint8_t *data,
-         size_t data_size,
-         libcerror_error_t **error )
-{
-	static char *function = "libcfile_file_io_control_read";
-	ssize_t read_count    = 0;
-	uint32_t error_code   = 0;
-
-	read_count = libcfile_file_io_control_read_with_error_code(
-	              file,
-	              control_code,
-	              control_data,
-	              control_data_size,
-	              data,
-	              data_size,
-	              &error_code,
-	              error );
-
-	if( read_count == -1 )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_IO,
-		 LIBCERROR_IO_ERROR_IOCTL_FAILED,
-		 "%s: unable to to IO control device.",
-		 function );
-
-		return( -1 );
-	}
-	return( read_count );
-}
-
 #if defined( HAVE_IOCTL ) || defined( WINAPI )
 
 /* Read data from a device file using IO control
  * This function uses the POSIX ioctl function or WINAPI DeviceIoControl
  * Returns the number of bytes read if successful or -1 on error
  */
-ssize_t libcfile_file_io_control_read_with_error_code(
-         libcfile_file_t *file,
+ssize_t libcfile_internal_file_io_control_read_with_error_code(
+         libcfile_internal_file_t *internal_file,
          uint32_t control_code,
          uint8_t *control_data,
          size_t control_data_size,
@@ -4394,14 +3936,13 @@ ssize_t libcfile_file_io_control_read_with_error_code(
          uint32_t *error_code,
          libcerror_error_t **error )
 {
-	libcfile_internal_file_t *internal_file = NULL;
-	static char *function                   = "libcfile_file_io_control_read_with_error_code";
+	static char *function = "libcfile_internal_file_io_control_read_with_error_code";
 
 #if defined( WINAPI )
-	DWORD response_count                    = 0;
+	DWORD response_count  = 0;
 #endif
 
-	if( file == NULL )
+	if( internal_file == NULL )
 	{
 		libcerror_error_set(
 		 error,
@@ -4412,8 +3953,6 @@ ssize_t libcfile_file_io_control_read_with_error_code(
 
 		return( -1 );
 	}
-	internal_file = (libcfile_internal_file_t *) file;
-
 #if defined( WINAPI )
 	if( internal_file->handle == INVALID_HANDLE_VALUE )
 	{
@@ -4589,9 +4128,117 @@ ssize_t libcfile_file_io_control_read_with_error_code(
 #error Missing file IO control with data function
 #endif
 
+/* Read data from a device file using IO control
+ * Returns the number of bytes read if successful or -1 on error
+ */
+ssize_t libcfile_file_io_control_read(
+         libcfile_file_t *file,
+         uint32_t control_code,
+         uint8_t *control_data,
+         size_t control_data_size,
+         uint8_t *data,
+         size_t data_size,
+         libcerror_error_t **error )
+{
+	libcfile_internal_file_t *internal_file = NULL;
+	static char *function                   = "libcfile_file_io_control_read";
+	ssize_t read_count                      = 0;
+	uint32_t error_code                     = 0;
+
+	if( file == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid file.",
+		 function );
+
+		return( -1 );
+	}
+	internal_file = (libcfile_internal_file_t *) file;
+
+	read_count = libcfile_internal_file_io_control_read_with_error_code(
+	              internal_file,
+	              control_code,
+	              control_data,
+	              control_data_size,
+	              data,
+	              data_size,
+	              &error_code,
+	              error );
+
+	if( read_count == -1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_IO,
+		 LIBCERROR_IO_ERROR_IOCTL_FAILED,
+		 "%s: unable to to IO control device.",
+		 function );
+
+		return( -1 );
+	}
+	return( read_count );
+}
+
+/* Read data from a device file using IO control
+ * Returns the number of bytes read if successful or -1 on error
+ */
+ssize_t libcfile_file_io_control_read_with_error_code(
+         libcfile_file_t *file,
+         uint32_t control_code,
+         uint8_t *control_data,
+         size_t control_data_size,
+         uint8_t *data,
+         size_t data_size,
+         uint32_t *error_code,
+         libcerror_error_t **error )
+{
+	libcfile_internal_file_t *internal_file = NULL;
+	static char *function                   = "libcfile_file_io_control_read_with_error_code";
+	ssize_t read_count                      = 0;
+
+	if( file == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid file.",
+		 function );
+
+		return( -1 );
+	}
+	internal_file = (libcfile_internal_file_t *) file;
+
+	read_count = libcfile_internal_file_io_control_read_with_error_code(
+	              internal_file,
+	              control_code,
+	              control_data,
+	              control_data_size,
+	              data,
+	              data_size,
+	              error_code,
+	              error );
+
+	if( read_count == -1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_IO,
+		 LIBCERROR_IO_ERROR_IOCTL_FAILED,
+		 "%s: unable to to IO control device.",
+		 function );
+
+		return( -1 );
+	}
+	return( read_count );
+}
+
 /* On some versions of Linux the FADVISE definions seem to be missing from fcntl.h
  */
-#if defined( HAVE_POSIX_FADVISE )
+#if defined( HAVE_POSIX_FADVISE ) && !defined( WINAPI )
 
 #if !defined( POSIX_FADV_NORMAL )
 #define POSIX_FADV_NORMAL		0
@@ -4605,7 +4252,7 @@ ssize_t libcfile_file_io_control_read_with_error_code(
 #define POSIX_FADV_SEQUENTIAL		2
 #endif
 
-#endif /* #if defined( HAVE_POSIX_FADVISE ) */
+#endif /* #if defined( HAVE_POSIX_FADVISE ) && !defined( WINAPI ) */
 
 /* Sets the expected access behavior so the system can optimize the access
  * Returns 1 if successful or -1 on error
@@ -4618,7 +4265,7 @@ int libcfile_file_set_access_behavior(
 	libcfile_internal_file_t *internal_file = NULL;
 	static char *function                   = "libcfile_file_set_access_behavior";
 
-#if defined( HAVE_POSIX_FADVISE )
+#if defined( HAVE_POSIX_FADVISE ) && !defined( WINAPI )
 	int advice                              = POSIX_FADV_NORMAL;
 	int result                              = 0;
 #endif
@@ -4675,7 +4322,7 @@ int libcfile_file_set_access_behavior(
 
 		return( -1 );
 	}
-#if defined( HAVE_POSIX_FADVISE )
+#if defined( HAVE_POSIX_FADVISE ) && !defined( WINAPI )
 	if( access_behavior == LIBCFILE_ACCESS_BEHAVIOR_NORMAL )
 	{
 		advice = POSIX_FADV_NORMAL;
@@ -4711,7 +4358,95 @@ int libcfile_file_set_access_behavior(
 
 		return( -1 );
 	}
+#endif /* defined( HAVE_POSIX_FADVISE ) && !defined( WINAPI ) */
+
+	return( 1 );
+}
+
+/* Sets the block size for the read and seek operations
+ * A block size of 0 represents no block-based operations
+ * The total size must be a multitude of block size
+ * Returns 1 if successful or -1 on error
+ */
+int libcfile_internal_file_set_block_size(
+     libcfile_internal_file_t *internal_file,
+     size_t block_size,
+     libcerror_error_t **error )
+{
+	static char *function = "libcfile_internal_file_set_block_size";
+
+	if( internal_file == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid file.",
+		 function );
+
+		return( -1 );
+	}
+#if defined( WINAPI ) && ( UINT32_MAX < SSIZE_MAX )
+	if( block_size > (size_t) UINT32_MAX )
+#else
+	if( block_size > (size_t) SSIZE_MAX )
 #endif
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_VALUE_EXCEEDS_MAXIMUM,
+		 "%s: invalid block size value exceeds maximum.",
+		 function );
+
+		return( -1 );
+	}
+	if( internal_file->block_data != NULL )
+	{
+		if( block_size != internal_file->block_size )
+		{
+			memory_free(
+			 internal_file->block_data );
+
+			internal_file->block_data      = NULL;
+			internal_file->block_data_size = 0;
+		}
+	}
+	if( internal_file->block_data == NULL )
+	{
+		if( block_size > 0 )
+		{
+			internal_file->block_data = (uint8_t *) memory_allocate(
+			                                         sizeof( uint8_t ) * block_size );
+
+			if( internal_file->block_data == NULL )
+			{
+				libcerror_error_set(
+				 error,
+				 LIBCERROR_ERROR_DOMAIN_MEMORY,
+				 LIBCERROR_MEMORY_ERROR_INSUFFICIENT,
+				 "%s: unable to create block data.",
+				 function );
+
+				return( -1 );
+			}
+			if( memory_set(
+			     internal_file->block_data,
+			     0,
+			     block_size ) == NULL )
+			{
+				libcerror_error_set(
+				 error,
+				 LIBCERROR_ERROR_DOMAIN_MEMORY,
+				 LIBCERROR_MEMORY_ERROR_SET_FAILED,
+				 "%s: unable to clear block data.",
+				 function );
+
+				return( -1 );
+			}
+		}
+		internal_file->block_size = block_size;
+	}
 	return( 1 );
 }
 
@@ -4792,73 +4527,31 @@ int libcfile_file_set_block_size(
 
 		return( -1 );
 	}
-	if( block_size != internal_file->block_size )
+	if( ( block_size != 0 )
+	 && ( ( internal_file->size % block_size ) != 0 ) )
 	{
-		if( libcfile_file_get_size(
-		     file,
-		     &( internal_file->size ),
-		     error ) != 1 )
-		{
-			libcerror_error_set(
-			 error,
-			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
-			 "%s: unable to retrieve size.",
-			 function );
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_VALUE_OUT_OF_BOUNDS,
+		 "%s: invalid block size value out of bounds.",
+		 function );
 
-			return( -1 );
-		}
-		if( internal_file->block_data != NULL )
-		{
-			memory_free(
-			 internal_file->block_data );
+		return( -1 );
+	}
+	if( libcfile_internal_file_set_block_size(
+	     internal_file,
+	     block_size,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_SET_FAILED,
+		 "%s: unable to set block size.",
+		 function );
 
-			internal_file->block_data      = NULL;
-			internal_file->block_data_size = 0;
-		}
-		if( block_size > 0 )
-		{
-			if( ( internal_file->size % block_size ) != 0 )
-			{
-				libcerror_error_set(
-				 error,
-				 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-				 LIBCERROR_RUNTIME_ERROR_VALUE_OUT_OF_BOUNDS,
-				 "%s: invalid block size value out of bounds.",
-				 function );
-
-				return( -1 );
-			}
-			internal_file->block_data = (uint8_t *) memory_allocate(
-			                                         sizeof( uint8_t ) * block_size );
-
-			if( internal_file == NULL )
-			{
-				libcerror_error_set(
-				 error,
-				 LIBCERROR_ERROR_DOMAIN_MEMORY,
-				 LIBCERROR_MEMORY_ERROR_INSUFFICIENT,
-				 "%s: unable to create file.",
-				 function );
-
-				return( -1 );
-			}
-			if( memory_set(
-			     internal_file->block_data,
-			     0,
-			     block_size ) == NULL )
-			{
-				libcerror_error_set(
-				 error,
-				 LIBCERROR_ERROR_DOMAIN_MEMORY,
-				 LIBCERROR_MEMORY_ERROR_SET_FAILED,
-				 "%s: unable to clear block data.",
-				 function );
-
-				return( -1 );
-			}
-		}
-		internal_file->block_size = block_size;
+		return( -1 );
 	}
 	return( 1 );
 }

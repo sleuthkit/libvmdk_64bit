@@ -1,22 +1,22 @@
 /*
  * Extent file functions
  *
- * Copyright (C) 2009-2016, Joachim Metz <joachim.metz@gmail.com>
+ * Copyright (C) 2009-2020, Joachim Metz <joachim.metz@gmail.com>
  *
  * Refer to AUTHORS for acknowledgements.
  *
- * This software is free software: you can redistribute it and/or modify
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This software is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
- * along with this software.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #include <common.h>
@@ -32,7 +32,6 @@
 #include "libvmdk_libbfio.h"
 #include "libvmdk_libcerror.h"
 #include "libvmdk_libcnotify.h"
-#include "libvmdk_libcstring.h"
 #include "libvmdk_libfcache.h"
 #include "libvmdk_libfdata.h"
 #include "libvmdk_types.h"
@@ -77,6 +76,17 @@ int libvmdk_extent_file_initialize(
 
 		return( -1 );
 	}
+	if( io_handle == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid IO handle.",
+		 function );
+
+		return( -1 );
+	}
 	*extent_file = memory_allocate_structure(
 	                libvmdk_extent_file_t );
 
@@ -115,7 +125,7 @@ int libvmdk_extent_file_initialize(
 	     (intptr_t *) *extent_file,
 	     NULL,
 	     NULL,
-	     (int (*)(intptr_t *, intptr_t *, libfdata_list_element_t *, libfcache_cache_t *, int, off64_t, size64_t, uint32_t, uint8_t, libcerror_error_t **)) &libvmdk_extent_file_read_grain_group_element_data,
+	     (int (*)(intptr_t *, intptr_t *, libfdata_list_element_t *, libfdata_cache_t *, int, off64_t, size64_t, uint32_t, uint8_t, libcerror_error_t **)) &libvmdk_extent_file_read_grain_group_element_data,
 	     NULL,
 	     LIBFDATA_DATA_HANDLE_FLAG_NON_MANAGED,
 	     error ) != 1 )
@@ -640,11 +650,14 @@ int libvmdk_extent_file_read_file_header_data(
      size_t file_header_data_size,
      libcerror_error_t **error )
 {
-	static char *function     = "libvmdk_extent_file_read_file_header_data";
-	size64_t grain_table_size = 0;
+	static char *function                          = "libvmdk_extent_file_read_file_header_data";
+	size64_t grain_table_size                      = 0;
+	uint64_t safe_descriptor_offset                = 0;
+	uint64_t safe_primary_grain_directory_offset   = 0;
+	uint64_t safe_secondary_grain_directory_offset = 0;
 
 #if defined( HAVE_DEBUG_OUTPUT )
-	uint64_t value_64bit  = 0;
+	uint64_t value_64bit                           = 0;
 #endif
 
 	if( extent_file == NULL )
@@ -759,7 +772,7 @@ int libvmdk_extent_file_read_file_header_data(
 
 		byte_stream_copy_to_uint32_little_endian(
 		 ( (cowd_sparse_file_header_t *) file_header_data )->primary_grain_directory_sector_number,
-		 extent_file->primary_grain_directory_offset );
+		 safe_primary_grain_directory_offset );
 
 		byte_stream_copy_to_uint32_little_endian(
 		 ( (cowd_sparse_file_header_t *) file_header_data )->number_of_grain_directory_entries,
@@ -785,7 +798,7 @@ int libvmdk_extent_file_read_file_header_data(
 
 		byte_stream_copy_to_uint64_little_endian(
 		 ( (vmdk_sparse_file_header_t *) file_header_data )->descriptor_sector_number,
-		 extent_file->descriptor_offset );
+		 safe_descriptor_offset );
 
 		byte_stream_copy_to_uint64_little_endian(
 		 ( (vmdk_sparse_file_header_t *) file_header_data )->descriptor_number_of_sectors,
@@ -797,11 +810,11 @@ int libvmdk_extent_file_read_file_header_data(
 
 		byte_stream_copy_to_uint64_little_endian(
 		 ( (vmdk_sparse_file_header_t *) file_header_data )->secondary_grain_directory_sector_number,
-		 extent_file->secondary_grain_directory_offset );
+		 safe_secondary_grain_directory_offset );
 
 		byte_stream_copy_to_uint64_little_endian(
 		 ( (vmdk_sparse_file_header_t *) file_header_data )->primary_grain_directory_sector_number,
-		 extent_file->primary_grain_directory_offset );
+		 safe_primary_grain_directory_offset );
 
 		extent_file->is_dirty = ( (vmdk_sparse_file_header_t *) file_header_data )->is_dirty;
 
@@ -850,7 +863,7 @@ int libvmdk_extent_file_read_file_header_data(
 			libcnotify_printf(
 			 "%s: descriptor sector number\t\t\t: %" PRIu64 "\n",
 			 function,
-			 extent_file->descriptor_offset );
+			 safe_descriptor_offset );
 
 			libcnotify_printf(
 			 "%s: descriptor number of sectors\t\t\t: %" PRIu64 "\n",
@@ -862,36 +875,34 @@ int libvmdk_extent_file_read_file_header_data(
 			 function,
 			 extent_file->number_of_grain_table_entries );
 
-			if( ( extent_file->secondary_grain_directory_offset >= 0 )
-			 && ( extent_file->secondary_grain_directory_offset <= (off64_t) ( INT64_MAX / 512 ) ) )
+			if( safe_secondary_grain_directory_offset <= ( (uint64_t) INT64_MAX / 512 ) )
 			{
 				libcnotify_printf(
 				 "%s: secondary grain directory sector number\t: %" PRIu64 "\n",
 				 function,
-				 extent_file->secondary_grain_directory_offset );
+				 safe_secondary_grain_directory_offset );
 			}
 			else
 			{
 				libcnotify_printf(
 				 "%s: secondary grain directory sector number\t: 0x%08" PRIx64 "\n",
 				 function,
-				 extent_file->secondary_grain_directory_offset );
+				 safe_secondary_grain_directory_offset );
 			}
 		}
-		if( ( extent_file->primary_grain_directory_offset >= 0 )
-		 && ( extent_file->primary_grain_directory_offset <= (off64_t) ( INT64_MAX / 512 ) ) )
+		if( safe_primary_grain_directory_offset <= ( (uint64_t) INT64_MAX / 512 ) )
 		{
 			libcnotify_printf(
 			 "%s: primary grain directory sector number\t: %" PRIu64 "\n",
 			 function,
-			 extent_file->primary_grain_directory_offset );
+			 safe_primary_grain_directory_offset );
 		}
 		else
 		{
 			libcnotify_printf(
 			 "%s: primary grain directory sector number\t: 0x%08" PRIx64 "\n",
 			 function,
-			 extent_file->primary_grain_directory_offset );
+			 safe_primary_grain_directory_offset );
 		}
 		if( extent_file->file_type == LIBVMDK_FILE_TYPE_COWD_SPARSE_DATA )
 		{
@@ -954,20 +965,52 @@ int libvmdk_extent_file_read_file_header_data(
 			 LIBCNOTIFY_PRINT_DATA_FLAG_GROUP_DATA );
 		}
 	}
-#endif
-	if( extent_file->grain_size == 0 )
+#endif /* defined( HAVE_DEBUG_OUTPUT ) */
+
+	if( ( extent_file->grain_size == 0 )
+	 || ( extent_file->grain_size > ( (uint64_t) INT64_MAX / 512 ) ) )
 	{
 		libcerror_error_set(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-		 LIBCERROR_RUNTIME_ERROR_UNSUPPORTED_VALUE,
-		 "%s: unsupported grain number of sectors value is 0.",
+		 LIBCERROR_RUNTIME_ERROR_VALUE_OUT_OF_BOUNDS,
+		 "%s: invalid grain number of sectors value out of bounds.",
 		 function );
 
 		return( -1 );
 	}
+	if( safe_descriptor_offset > (uint64_t) INT64_MAX )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_VALUE_OUT_OF_BOUNDS,
+		 "%s: invalid descriptor offset value out of bounds.",
+		 function );
+
+		return( -1 );
+	}
+	extent_file->descriptor_offset = (off64_t) safe_descriptor_offset;
+
+	/* Note that the primary grain directory offsets can be -1
+	 */
+	extent_file->primary_grain_directory_offset = (off64_t) safe_primary_grain_directory_offset;
+
 	if( extent_file->file_type == LIBVMDK_FILE_TYPE_VMDK_SPARSE_DATA )
 	{
+		if( safe_secondary_grain_directory_offset > ( (uint64_t) INT64_MAX / 512 ) )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_VALUE_OUT_OF_BOUNDS,
+			 "%s: invalid secondary grain directory offset value out of bounds.",
+			 function );
+
+			return( -1 );
+		}
+		extent_file->secondary_grain_directory_offset = (off64_t) safe_secondary_grain_directory_offset;
+
 		if( extent_file->grain_size <= 8 )
 		{
 			libcerror_error_set(
@@ -1136,14 +1179,24 @@ int libvmdk_extent_file_read_file_header_data(
 	{
 		grain_table_size = (size64_t) extent_file->number_of_grain_table_entries * extent_file->grain_size;
 
+		if( grain_table_size == 0 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_VALUE_OUT_OF_BOUNDS,
+			 "%s: invalid grain table size value out of bounds.",
+			 function );
+
+			return( -1 );
+		}
 		extent_file->number_of_grain_directory_entries = (uint32_t) ( extent_file->maximum_data_size / grain_table_size );
 
 		if( ( extent_file->maximum_data_size % grain_table_size ) != 0 )
 		{
 			extent_file->number_of_grain_directory_entries += 1;
 		}
-		if( ( extent_file->descriptor_offset < 0 )
-		 || ( extent_file->descriptor_offset > (off64_t) ( INT64_MAX / 512 ) ) )
+		if( extent_file->descriptor_offset > (off64_t) ( INT64_MAX / 512 ) )
 		{
 			libcerror_error_set(
 			 error,
@@ -1157,18 +1210,6 @@ int libvmdk_extent_file_read_file_header_data(
 		extent_file->descriptor_offset *= 512;
 		extent_file->descriptor_size   *= 512;
 
-		if( ( extent_file->secondary_grain_directory_offset < 0 )
-		 || ( extent_file->secondary_grain_directory_offset > (off64_t) ( INT64_MAX / 512 ) ) )
-		{
-			libcerror_error_set(
-			 error,
-			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-			 LIBCERROR_RUNTIME_ERROR_VALUE_OUT_OF_BOUNDS,
-			 "%s: invalid secondary grain directory offset value out of bounds.",
-			 function );
-
-			return( -1 );
-		}
 		extent_file->secondary_grain_directory_offset *= 512;
 	}
 #if defined( HAVE_DEBUG_OUTPUT )
@@ -1583,6 +1624,18 @@ int libvmdk_extent_file_read_grain_directory(
 
 		return( -1 );
 	}
+	if( ( extent_file->grain_directory_size == 0 )
+	 || ( extent_file->grain_directory_size > (size_t) MEMORY_MAXIMUM_ALLOCATION_SIZE ) )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_VALUE_OUT_OF_BOUNDS,
+		 "%s: invalid extent file - grain directory size value out of bounds.",
+		 function );
+
+		goto on_error;
+	}
 #if defined( HAVE_DEBUG_OUTPUT )
 	if( libcnotify_verbose != 0 )
 	{
@@ -1846,6 +1899,18 @@ int libvmdk_extent_file_read_backup_grain_directory(
 
 		return( -1 );
 	}
+	if( ( extent_file->grain_directory_size == 0 )
+	 || ( extent_file->grain_directory_size > (size_t) MEMORY_MAXIMUM_ALLOCATION_SIZE ) )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_VALUE_OUT_OF_BOUNDS,
+		 "%s: invalid extent file - grain directory size value out of bounds.",
+		 function );
+
+		goto on_error;
+	}
 #if defined( HAVE_DEBUG_OUTPUT )
 	if( libcnotify_verbose != 0 )
 	{
@@ -2078,7 +2143,7 @@ int libvmdk_extent_file_read_element_data(
      libvmdk_io_handle_t *io_handle,
      libbfio_pool_t *file_io_pool,
      libfdata_list_element_t *element,
-     libfcache_cache_t *cache,
+     libfdata_cache_t *cache,
      int file_io_pool_entry,
      off64_t element_offset LIBVMDK_ATTRIBUTE_UNUSED,
      size64_t extent_file_size,
@@ -2211,7 +2276,7 @@ int libvmdk_extent_file_read_grain_group_element_data(
      libvmdk_extent_file_t *extent_file,
      libbfio_pool_t *file_io_pool,
      libfdata_list_element_t *element,
-     libfcache_cache_t *cache,
+     libfdata_cache_t *cache,
      int file_io_pool_entry,
      off64_t grain_group_data_offset,
      size64_t grain_group_data_size,
@@ -2262,7 +2327,7 @@ int libvmdk_extent_file_read_grain_group_element_data(
 		return( -1 );
 	}
 	if( ( grain_group_data_size == 0 )
-	 || ( grain_group_data_size > (size64_t) SSIZE_MAX ) )
+	 || ( grain_group_data_size > (size64_t) MEMORY_MAXIMUM_ALLOCATION_SIZE ) )
 	{
 		libcerror_error_set(
 		 error,
@@ -2360,7 +2425,7 @@ int libvmdk_extent_file_read_grain_group_element_data(
 	     (intptr_t *) extent_file->io_handle,
 	     NULL,
 	     NULL,
-	     (int (*)(intptr_t *, intptr_t *, libfdata_list_element_t *, libfcache_cache_t *, int, off64_t, size64_t, uint32_t, uint8_t, libcerror_error_t **)) &libvmdk_grain_data_read_element_data,
+	     (int (*)(intptr_t *, intptr_t *, libfdata_list_element_t *, libfdata_cache_t *, int, off64_t, size64_t, uint32_t, uint8_t, libcerror_error_t **)) &libvmdk_grain_data_read_element_data,
 	     NULL,
 	     LIBFDATA_DATA_HANDLE_FLAG_NON_MANAGED,
 	     error ) != 1 )
@@ -2528,7 +2593,7 @@ int libvmdk_extent_file_get_grain_group_at_offset(
 	result = libfdata_list_get_element_value_at_offset(
 		  extent_file->grain_groups_list,
 		  (intptr_t *) file_io_pool,
-		  extent_file->grain_groups_cache,
+		  (libfdata_cache_t *) extent_file->grain_groups_cache,
 		  offset,
 		  grain_group_index,
 		  grain_group_data_offset,

@@ -1,22 +1,22 @@
 /*
  * Range list value
  *
- * Copyright (C) 2006-2016, Joachim Metz <joachim.metz@gmail.com>
+ * Copyright (C) 2006-2020, Joachim Metz <joachim.metz@gmail.com>
  *
  * Refer to AUTHORS for acknowledgements.
  *
- * This software is free software: you can redistribute it and/or modify
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This software is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
- * along with this software.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #include <common.h>
@@ -379,5 +379,51 @@ int libcdata_range_list_value_merge(
 		destination_range_list_value->end   = source_range_list_value->end;
 	}
 	return( 1 );
+}
+
+/* Checks if the range overlaps with the range list value
+ * Returns 1 if the range overlaps, 0 if not or -1 on error
+ */
+int libcdata_range_list_value_check_range_overlap(
+     libcdata_range_list_value_t *range_list_value,
+     uint64_t range_start,
+     uint64_t range_end,
+     libcerror_error_t **error )
+{
+	static char *function = "libcdata_range_list_value_check_range_overlap";
+
+	if( range_list_value == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid range list value.",
+		 function );
+
+		return( -1 );
+	}
+	/* Check if the range overlaps the existing range entirely
+	 */
+	if( ( range_start < range_list_value->start )
+	 && ( range_end > range_list_value->end ) )
+	{
+		return( 1 );
+	}
+	/* Check if the range overlaps at the end of the existing range
+	 */
+	if( ( range_start >= range_list_value->start )
+	 && ( range_start <= range_list_value->end ) )
+	{
+		return( 1 );
+	}
+	/* Check if the range overlaps at the beginning of the existing range
+	 */
+	if( ( range_end >= range_list_value->start )
+	 && ( range_end <= range_list_value->end ) )
+	{
+		return( 1 );
+	}
+	return( 0 );
 }
 

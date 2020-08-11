@@ -1,34 +1,35 @@
 /*
  * Support functions
  *
- * Copyright (C) 2009-2016, Joachim Metz <joachim.metz@gmail.com>
+ * Copyright (C) 2009-2020, Joachim Metz <joachim.metz@gmail.com>
  *
  * Refer to AUTHORS for acknowledgements.
  *
- * This software is free software: you can redistribute it and/or modify
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This software is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
- * along with this software.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #include <common.h>
 #include <memory.h>
+#include <narrow_string.h>
 #include <types.h>
+#include <wide_string.h>
 
 #include "libvmdk_definitions.h"
 #include "libvmdk_extent_file.h"
 #include "libvmdk_libbfio.h"
 #include "libvmdk_libcerror.h"
 #include "libvmdk_libclocale.h"
-#include "libvmdk_libcstring.h"
 #include "libvmdk_support.h"
 
 #if !defined( HAVE_LOCAL_LIBVMDK )
@@ -126,7 +127,7 @@ int libvmdk_check_file_signature(
 
 		return( -1 );
 	}
-	filename_length = libcstring_narrow_string_length(
+	filename_length = narrow_string_length(
 	                   filename );
 
 	if( filename_length == 0 )
@@ -233,7 +234,7 @@ int libvmdk_check_file_signature_wide(
 
 		return( -1 );
 	}
-	filename_length = libcstring_wide_string_length(
+	filename_length = wide_string_length(
 	                   filename );
 
 	if( filename_length == 0 )
@@ -324,7 +325,7 @@ int libvmdk_check_file_signature_file_io_handle(
      libbfio_handle_t *file_io_handle,
      libcerror_error_t **error )
 {
-	uint8_t signature[ 4 ];
+	uint8_t signature[ 22 ];
 
 	static char *function      = "libvmdk_check_file_signature_file_io_handle";
 	ssize_t read_count         = 0;
@@ -397,10 +398,10 @@ int libvmdk_check_file_signature_file_io_handle(
 	read_count = libbfio_handle_read_buffer(
 	              file_io_handle,
 	              signature,
-	              4,
+	              22,
 	              error );
 
-	if( read_count != 4 )
+	if( read_count != 22 )
 	{
 		libcerror_error_set(
 		 error,
@@ -444,6 +445,13 @@ int libvmdk_check_file_signature_file_io_handle(
 	          vmdk_sparse_file_signature,
 	          signature,
 	          4 ) == 0 )
+	{
+		return( 1 );
+	}
+	else if( memory_compare(
+	          "# Disk DescriptorFile\n",
+	          signature,
+	          22 ) == 0 )
 	{
 		return( 1 );
 	}

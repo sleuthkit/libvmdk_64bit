@@ -65,9 +65,6 @@
     <ClInclude Include="..\..\libcthreads\libcthreads_libcerror.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\libcthreads\libcthreads_libcstring.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\libcthreads\libcthreads_lock.h">
       <Filter>Header Files</Filter>
     </ClInclude>

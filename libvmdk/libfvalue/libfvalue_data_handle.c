@@ -1,22 +1,22 @@
 /*
  * Data handle functions
  *
- * Copyright (C) 2010-2016, Joachim Metz <joachim.metz@gmail.com>
+ * Copyright (C) 2010-2020, Joachim Metz <joachim.metz@gmail.com>
  *
  * Refer to AUTHORS for acknowledgements.
  *
- * This software is free software: you can redistribute it and/or modify
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This software is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
- * along with this software.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #include <common.h>
@@ -140,14 +140,6 @@ int libfvalue_data_handle_free(
 		internal_data_handle = (libfvalue_internal_data_handle_t *) *data_handle;
 		*data_handle         = NULL;
 
-		if( ( internal_data_handle->flags & LIBFVALUE_VALUE_DATA_FLAG_MANAGED ) != 0 )
-		{
-			if( internal_data_handle->data != NULL )
-			{
-				memory_free(
-				 internal_data_handle->data );
-			}
-		}
 		if( internal_data_handle->value_entries != NULL )
 		{
 			if( libcdata_array_free(
@@ -163,6 +155,14 @@ int libfvalue_data_handle_free(
 				 function );
 
 				result = -1;
+			}
+		}
+		if( ( internal_data_handle->flags & LIBFVALUE_VALUE_DATA_FLAG_MANAGED ) != 0 )
+		{
+			if( internal_data_handle->data != NULL )
+			{
+				memory_free(
+				 internal_data_handle->data );
 			}
 		}
 		memory_free(
@@ -288,6 +288,62 @@ on_error:
 	return( -1 );
 }
 
+/* Clears a data handle
+ * Returns 1 if successful or -1 on error
+ */
+int libfvalue_data_handle_clear(
+     libfvalue_data_handle_t *data_handle,
+     libcerror_error_t **error )
+{
+	libfvalue_internal_data_handle_t *internal_data_handle = NULL;
+	static char *function                                  = "libfvalue_data_handle_clear";
+
+	if( data_handle == NULL )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_INVALID_VALUE,
+		 "%s: invalid data handle.",
+		 function );
+
+		return( -1 );
+	}
+	internal_data_handle = (libfvalue_internal_data_handle_t *) data_handle;
+
+	if( internal_data_handle->value_entries != NULL )
+	{
+		if( libcdata_array_empty(
+		     internal_data_handle->value_entries,
+		     (int (*)(intptr_t **, libcerror_error_t **)) &libfvalue_value_entry_free,
+		     error ) != 1 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_FINALIZE_FAILED,
+			 "%s: unable to empty value instances array.",
+			 function );
+
+			return( -1 );
+		}
+	}
+	if( ( internal_data_handle->flags & LIBFVALUE_VALUE_DATA_FLAG_MANAGED ) != 0 )
+	{
+		if( internal_data_handle->data != NULL )
+		{
+			memory_free(
+			 internal_data_handle->data );
+		}
+	}
+	internal_data_handle->data       = NULL;
+	internal_data_handle->data_size  = 0;
+	internal_data_handle->encoding   = 0;
+	internal_data_handle->data_flags = 0;
+
+	return( 1 );
+}
+
 /* Retrieves the data
  * Returns 1 if successful or -1 on error
  */
@@ -381,16 +437,33 @@ int libfvalue_data_handle_set_data(
 	}
 	internal_data_handle = (libfvalue_internal_data_handle_t *) data_handle;
 
-	if( data_size > (size_t) SSIZE_MAX )
+	if( data == NULL )
 	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
-		 LIBCERROR_ARGUMENT_ERROR_VALUE_EXCEEDS_MAXIMUM,
-		 "%s: invalid data size value exceeds maximum.",
-		 function );
+		if( data_size != 0 )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+			 LIBCERROR_ARGUMENT_ERROR_VALUE_OUT_OF_BOUNDS,
+			 "%s: invalid data size value out of bounds.",
+			 function );
 
-		return( -1 );
+			return( -1 );
+		}
+	}
+	else
+	{
+		if( data_size > (size_t) SSIZE_MAX )
+		{
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+			 LIBCERROR_ARGUMENT_ERROR_VALUE_EXCEEDS_MAXIMUM,
+			 "%s: invalid data size value exceeds maximum.",
+			 function );
+
+			return( -1 );
+		}
 	}
 	if( ( flags & ~( LIBFVALUE_VALUE_DATA_FLAG_MANAGED | LIBFVALUE_VALUE_DATA_FLAG_CLONE_BY_REFERENCE ) ) != 0 )
 	{
@@ -725,7 +798,7 @@ int libfvalue_data_handle_set_value_entry(
 {
 	libfvalue_internal_data_handle_t *internal_data_handle = NULL;
 	libfvalue_value_entry_t *value_entry                   = NULL;
-	static char *function                                  = "libfvalue_data_handle_set_value_entry_data";
+	static char *function                                  = "libfvalue_data_handle_set_value_entry";
 
 	if( data_handle == NULL )
 	{
@@ -796,7 +869,7 @@ int libfvalue_data_handle_set_value_entry(
 		return( -1 );
 	}
 	if( ( value_entry_size > internal_data_handle->data_size )
-	 || ( ( value_entry_offset + value_entry_size ) > internal_data_handle->data_size ) )
+	 || ( value_entry_offset > ( internal_data_handle->data_size - value_entry_size ) ) )
 	{
 		libcerror_error_set(
 		 error,
@@ -991,7 +1064,7 @@ int libfvalue_data_handle_append_value_entry(
 		return( -1 );
 	}
 	if( ( value_entry_size > internal_data_handle->data_size )
-	 || ( ( value_entry_offset + value_entry_size ) > internal_data_handle->data_size ) )
+	 || ( value_entry_offset > ( internal_data_handle->data_size - value_entry_size ) ) )
 	{
 		libcerror_error_set(
 		 error,
@@ -1167,7 +1240,7 @@ int libfvalue_data_handle_get_value_entry_data(
 		return( -1 );
 	}
 	if( ( value_entry_size > internal_data_handle->data_size )
-	 || ( ( value_entry_offset + value_entry_size ) > internal_data_handle->data_size ) )
+	 || ( value_entry_offset > ( internal_data_handle->data_size - value_entry_size ) ) )
 	{
 		libcerror_error_set(
 		 error,
@@ -1233,6 +1306,7 @@ int libfvalue_data_handle_set_value_entry_data(
 
 		return( -1 );
 	}
+/* TODO remove limitation */
 	if( value_entry_index != 0 )	
 	{
 		libcerror_error_set(
@@ -1307,7 +1381,7 @@ int libfvalue_data_handle_set_value_entry_data(
 		return( -1 );
 	}
 	if( ( value_entry_size > internal_data_handle->data_size )
-	 || ( ( value_entry_offset + value_entry_size ) > internal_data_handle->data_size ) )
+	 || ( value_entry_offset > ( internal_data_handle->data_size - value_entry_size ) ) )
 	{
 		libcerror_error_set(
 		 error,
@@ -1363,8 +1437,9 @@ int libfvalue_data_handle_append_value_entry_data(
 {
 	libfvalue_internal_data_handle_t *internal_data_handle = NULL;
 	libfvalue_value_entry_t *value_entry                   = NULL;
-	void *reallocation                                     = NULL;
 	static char *function                                  = "libfvalue_data_handle_append_value_entry_data";
+	void *reallocation                                     = NULL;
+	size_t reallocation_data_size                          = 0;
 
 	if( data_handle == NULL )
 	{
@@ -1446,7 +1521,7 @@ int libfvalue_data_handle_append_value_entry_data(
 
 			return( -1 );
 		}
-		if( ( internal_data_handle->data_size + value_entry_data_size ) > (size_t) SSIZE_MAX )
+		if( internal_data_handle->data_size > ( (size_t) SSIZE_MAX - value_entry_data_size ) )
 		{
 			libcerror_error_set(
 			 error,
@@ -1519,12 +1594,13 @@ int libfvalue_data_handle_append_value_entry_data(
 
 			goto on_error;
 		}
-		value_entry->offset = internal_data_handle->data_size;
-		value_entry->size   = value_entry_data_size;
+		value_entry->offset    = internal_data_handle->data_size;
+		value_entry->size      = value_entry_data_size;
+		reallocation_data_size = internal_data_handle->data_size + value_entry_data_size;
 
 		reallocation = memory_reallocate(
 		                internal_data_handle->data,
-		                internal_data_handle->data_size + value_entry_data_size );
+		                reallocation_data_size );
 
 		if( reallocation == NULL )
 		{
@@ -1537,8 +1613,8 @@ int libfvalue_data_handle_append_value_entry_data(
 
 			goto on_error;
 		}
-		internal_data_handle->data       = (uint8_t *) reallocation;
-		internal_data_handle->data_size += value_entry_data_size;
+		internal_data_handle->data      = (uint8_t *) reallocation;
+		internal_data_handle->data_size = reallocation_data_size;
 
 		if( memory_copy(
 		     &( ( internal_data_handle->data )[ value_entry->offset ] ),

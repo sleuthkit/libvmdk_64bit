@@ -1,22 +1,22 @@
 /*
- * Python object definition of the libvmdk extent descriptor
+ * Python object wrapper of libvmdk_extent_descriptor_t
  *
- * Copyright (C) 2009-2016, Joachim Metz <joachim.metz@gmail.com>
+ * Copyright (C) 2009-2020, Joachim Metz <joachim.metz@gmail.com>
  *
  * Refer to AUTHORS for acknowledgements.
  *
- * This software is free software: you can redistribute it and/or modify
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This software is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
- * along with this software.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #include <common.h>
@@ -31,7 +31,6 @@
 #include "pyvmdk_handle.h"
 #include "pyvmdk_integer.h"
 #include "pyvmdk_libcerror.h"
-#include "pyvmdk_libcstring.h"
 #include "pyvmdk_libvmdk.h"
 #include "pyvmdk_python.h"
 #include "pyvmdk_unused.h"
@@ -202,7 +201,7 @@ PyTypeObject pyvmdk_extent_descriptor_type_object = {
  */
 PyObject *pyvmdk_extent_descriptor_new(
            libvmdk_extent_descriptor_t *extent_descriptor,
-           pyvmdk_handle_t *handle_object )
+           PyObject *parent_object )
 {
 	pyvmdk_extent_descriptor_t *pyvmdk_extent_descriptor = NULL;
 	static char *function                                = "pyvmdk_extent_descriptor_new";
@@ -240,10 +239,10 @@ PyObject *pyvmdk_extent_descriptor_new(
 		goto on_error;
 	}
 	pyvmdk_extent_descriptor->extent_descriptor = extent_descriptor;
-	pyvmdk_extent_descriptor->handle_object     = handle_object;
+	pyvmdk_extent_descriptor->parent_object     = parent_object;
 
 	Py_IncRef(
-	 (PyObject *) pyvmdk_extent_descriptor->handle_object );
+	 (PyObject *) pyvmdk_extent_descriptor->parent_object );
 
 	return( (PyObject *) pyvmdk_extent_descriptor );
 
@@ -341,10 +340,10 @@ void pyvmdk_extent_descriptor_free(
 		libcerror_error_free(
 		 &error );
 	}
-	if( pyvmdk_extent_descriptor->handle_object != NULL )
+	if( pyvmdk_extent_descriptor->parent_object != NULL )
 	{
 		Py_DecRef(
-		 (PyObject *) pyvmdk_extent_descriptor->handle_object );
+		 (PyObject *) pyvmdk_extent_descriptor->parent_object );
 	}
 	ob_type->tp_free(
 	 (PyObject*) pyvmdk_extent_descriptor );

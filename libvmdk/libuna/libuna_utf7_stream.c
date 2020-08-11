@@ -1,22 +1,22 @@
 /*
  * UTF-7 stream functions
  *
- * Copyright (C) 2008-2016, Joachim Metz <joachim.metz@gmail.com>
+ * Copyright (C) 2008-2020, Joachim Metz <joachim.metz@gmail.com>
  *
  * Refer to AUTHORS for acknowledgements.
  *
- * This software is free software: you can redistribute it and/or modify
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This software is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
- * along with this software.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #include <common.h>
@@ -24,7 +24,6 @@
 #include <types.h>
 
 #include "libuna_definitions.h"
-#include "libuna_inline.h"
 #include "libuna_libcerror.h"
 #include "libuna_types.h"
 #include "libuna_unicode_character.h"
@@ -40,8 +39,8 @@ int libuna_utf7_stream_size_from_utf8(
      libcerror_error_t **error )
 {
 	static char *function                        = "libuna_utf7_stream_size_from_utf8";
-	size_t utf8_string_index                     = 0;
 	libuna_unicode_character_t unicode_character = 0;
+	size_t utf8_string_index                     = 0;
 	uint32_t utf7_stream_base64_data             = 0;
 
 	if( utf8_string == NULL )
@@ -79,7 +78,7 @@ int libuna_utf7_stream_size_from_utf8(
 	}
 	while( utf8_string_index < utf8_string_size )
 	{
-		/* Convert the UTF-8 character bytes into a Unicode character
+		/* Convert the UTF-8 character bytes into an Unicode character
 		 */
 		if( libuna_unicode_character_copy_from_utf8(
 		     &unicode_character,
@@ -114,6 +113,10 @@ int libuna_utf7_stream_size_from_utf8(
 
 			return( -1 );
 		}
+		if( unicode_character == 0 )
+		{
+			break;
+		}
 	}
 	return( 1 );
 }
@@ -129,9 +132,9 @@ int libuna_utf7_stream_copy_from_utf8(
      libcerror_error_t **error )
 {
 	static char *function                        = "libuna_utf7_stream_copy_from_utf8";
+	libuna_unicode_character_t unicode_character = 0;
 	size_t utf7_stream_index                     = 0;
 	size_t utf8_string_index                     = 0;
-	libuna_unicode_character_t unicode_character = 0;
 	uint32_t utf7_stream_base64_data             = 0;
 
 	if( utf7_stream == NULL )
@@ -180,7 +183,7 @@ int libuna_utf7_stream_copy_from_utf8(
 	}
 	while( utf8_string_index < utf8_string_size )
 	{
-		/* Convert the UTF-8 string bytes into a Unicode character
+		/* Convert the UTF-8 string bytes into an Unicode character
 		 */
 		if( libuna_unicode_character_copy_from_utf8(
 		     &unicode_character,
@@ -217,6 +220,10 @@ int libuna_utf7_stream_copy_from_utf8(
 
 			return( -1 );
 		}
+		if( unicode_character == 0 )
+		{
+			break;
+		}
 	}
 	return( 1 );
 }
@@ -231,8 +238,8 @@ int libuna_utf7_stream_size_from_utf16(
      libcerror_error_t **error )
 {
 	static char *function                        = "libuna_utf7_stream_size_from_utf16";
-	size_t utf16_string_index                    = 0;
 	libuna_unicode_character_t unicode_character = 0;
+	size_t utf16_string_index                    = 0;
 	uint32_t utf7_stream_base64_data             = 0;
 
 	if( utf16_string == NULL )
@@ -270,7 +277,7 @@ int libuna_utf7_stream_size_from_utf16(
 	}
 	while( utf16_string_index < utf16_string_size )
 	{
-		/* Convert the UTF-16 character bytes into a Unicode character
+		/* Convert the UTF-16 character bytes into an Unicode character
 		 */
 		if( libuna_unicode_character_copy_from_utf16(
 		     &unicode_character,
@@ -305,6 +312,10 @@ int libuna_utf7_stream_size_from_utf16(
 
 			return( -1 );
 		}
+		if( unicode_character == 0 )
+		{
+			break;
+		}
 	}
 	return( 1 );
 }
@@ -320,9 +331,9 @@ int libuna_utf7_stream_copy_from_utf16(
      libcerror_error_t **error )
 {
 	static char *function                        = "libuna_utf7_stream_copy_from_utf16";
+	libuna_unicode_character_t unicode_character = 0;
 	size_t utf16_string_index                    = 0;
 	size_t utf7_stream_index                     = 0;
-	libuna_unicode_character_t unicode_character = 0;
 	uint32_t utf7_stream_base64_data             = 0;
 
 	if( utf7_stream == NULL )
@@ -371,7 +382,7 @@ int libuna_utf7_stream_copy_from_utf16(
 	}
 	while( utf16_string_index < utf16_string_size )
 	{
-		/* Convert the UTF-16 string bytes into a Unicode character
+		/* Convert the UTF-16 string bytes into an Unicode character
 		 */
 		if( libuna_unicode_character_copy_from_utf16(
 		     &unicode_character,
@@ -408,6 +419,10 @@ int libuna_utf7_stream_copy_from_utf16(
 
 			return( -1 );
 		}
+		if( unicode_character == 0 )
+		{
+			break;
+		}
 	}
 	return( 1 );
 }
@@ -422,8 +437,8 @@ int libuna_utf7_stream_size_from_utf32(
      libcerror_error_t **error )
 {
 	static char *function                        = "libuna_utf7_stream_size_from_utf32";
-	size_t utf32_string_index                    = 0;
 	libuna_unicode_character_t unicode_character = 0;
+	size_t utf32_string_index                    = 0;
 	uint32_t utf7_stream_base64_data             = 0;
 
 	if( utf32_string == NULL )
@@ -461,7 +476,7 @@ int libuna_utf7_stream_size_from_utf32(
 	}
 	while( utf32_string_index < utf32_string_size )
 	{
-		/* Convert the UTF-32 character bytes into a Unicode character
+		/* Convert the UTF-32 character bytes into an Unicode character
 		 */
 		if( libuna_unicode_character_copy_from_utf32(
 		     &unicode_character,
@@ -496,6 +511,10 @@ int libuna_utf7_stream_size_from_utf32(
 
 			return( -1 );
 		}
+		if( unicode_character == 0 )
+		{
+			break;
+		}
 	}
 	return( 1 );
 }
@@ -511,9 +530,9 @@ int libuna_utf7_stream_copy_from_utf32(
      libcerror_error_t **error )
 {
 	static char *function                        = "libuna_utf7_stream_copy_from_utf32";
+	libuna_unicode_character_t unicode_character = 0;
 	size_t utf32_string_index                    = 0;
 	size_t utf7_stream_index                     = 0;
-	libuna_unicode_character_t unicode_character = 0;
 	uint32_t utf7_stream_base64_data             = 0;
 
 	if( utf7_stream == NULL )
@@ -562,7 +581,7 @@ int libuna_utf7_stream_copy_from_utf32(
 	}
 	while( utf32_string_index < utf32_string_size )
 	{
-		/* Convert the UTF-32 character bytes into a Unicode character
+		/* Convert the UTF-32 character bytes into an Unicode character
 		 */
 		if( libuna_unicode_character_copy_from_utf32(
 		     &unicode_character,
@@ -598,6 +617,10 @@ int libuna_utf7_stream_copy_from_utf32(
 			 function );
 
 			return( -1 );
+		}
+		if( unicode_character == 0 )
+		{
+			break;
 		}
 	}
 	return( 1 );

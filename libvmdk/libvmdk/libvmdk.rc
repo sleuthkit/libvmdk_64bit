@@ -22,12 +22,12 @@ BEGIN
     BLOCK "040904E4"
     BEGIN
       VALUE "FileDescription",		"Library to access the VMware Virtual Disk (VMDK) format\0"
-      VALUE "FileVersion",		"20160119" "\0"
+      VALUE "FileVersion",		"20200810" "\0"
       VALUE "InternalName",		"libvmdk.dll\0"
-      VALUE "LegalCopyright",		"(C) 2009-2016, Joachim Metz <joachim.metz@gmail.com>\0"
+      VALUE "LegalCopyright",		"(C) 2009-2020, Joachim Metz <joachim.metz@gmail.com>\0"
       VALUE "OriginalFilename",		"libvmdk.dll\0"
       VALUE "ProductName",		"libvmdk\0"
-      VALUE "ProductVersion",		"20160119" "\0"
+      VALUE "ProductVersion",		"20200810" "\0"
       VALUE "Comments",			"For more information visit https://github.com/libyal/libvmdk/\0"
     END
   END

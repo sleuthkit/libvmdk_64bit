@@ -1,22 +1,22 @@
 /*
  * Python file object IO handle functions
  *
- * Copyright (C) 2009-2016, Joachim Metz <joachim.metz@gmail.com>
+ * Copyright (C) 2009-2020, Joachim Metz <joachim.metz@gmail.com>
  *
  * Refer to AUTHORS for acknowledgements.
  *
- * This software is free software: you can redistribute it and/or modify
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This software is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
- * along with this software.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #include <common.h>
@@ -28,7 +28,6 @@
 #include "pyvmdk_integer.h"
 #include "pyvmdk_libbfio.h"
 #include "pyvmdk_libcerror.h"
-#include "pyvmdk_libcstring.h"
 #include "pyvmdk_python.h"
 
 /* Creates a file object IO handle
@@ -212,8 +211,8 @@ int pyvmdk_file_object_io_handle_free(
      pyvmdk_file_object_io_handle_t **file_object_io_handle,
      libcerror_error_t **error )
 {
-	PyGILState_STATE gil_state = 0;
 	static char *function      = "pyvmdk_file_object_io_handle_free";
+	PyGILState_STATE gil_state = 0;
 
 	if( file_object_io_handle == NULL )
 	{
@@ -423,8 +422,8 @@ ssize_t pyvmdk_file_object_read_buffer(
 	PyObject *argument_size    = NULL;
 	PyObject *method_name      = NULL;
 	PyObject *method_result    = NULL;
-	char *safe_buffer          = NULL;
 	static char *function      = "pyvmdk_file_object_read_buffer";
+	char *safe_buffer          = NULL;
 	Py_ssize_t safe_read_count = 0;
 	ssize_t read_count         = 0;
 	int result                 = 0;
@@ -1376,8 +1375,8 @@ int pyvmdk_file_object_io_handle_get_size(
 {
 	PyObject *method_name      = NULL;
 	static char *function      = "pyvmdk_file_object_io_handle_get_size";
-	off64_t current_offset     = 0;
 	PyGILState_STATE gil_state = 0;
+	off64_t current_offset     = 0;
 	int result                 = 0;
 
 	if( file_object_io_handle == NULL )

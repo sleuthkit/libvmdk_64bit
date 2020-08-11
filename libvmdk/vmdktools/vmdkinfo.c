@@ -1,45 +1,53 @@
 /*
  * Shows information obtained from a VMware Virtual Disk (VMDK) file
  *
- * Copyright (C) 2009-2016, Joachim Metz <joachim.metz@gmail.com>
+ * Copyright (C) 2009-2020, Joachim Metz <joachim.metz@gmail.com>
  *
  * Refer to AUTHORS for acknowledgements.
  *
- * This software is free software: you can redistribute it and/or modify
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This software is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
- * along with this software.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #include <common.h>
 #include <file_stream.h>
 #include <memory.h>
+#include <system_string.h>
 #include <types.h>
 
-#if defined( HAVE_UNISTD_H )
-#include <unistd.h>
+#include <stdio.h>
+
+#if defined( HAVE_IO_H ) || defined( WINAPI )
+#include <io.h>
 #endif
 
 #if defined( HAVE_STDLIB_H ) || defined( WINAPI )
 #include <stdlib.h>
 #endif
 
+#if defined( HAVE_UNISTD_H )
+#include <unistd.h>
+#endif
+
 #include "info_handle.h"
-#include "vmdkoutput.h"
+#include "vmdktools_getopt.h"
 #include "vmdktools_libcerror.h"
 #include "vmdktools_libclocale.h"
 #include "vmdktools_libcnotify.h"
-#include "vmdktools_libcstring.h"
-#include "vmdktools_libcsystem.h"
 #include "vmdktools_libvmdk.h"
+#include "vmdktools_output.h"
+#include "vmdktools_signal.h"
+#include "vmdktools_unused.h"
 
 info_handle_t *vmdkinfo_info_handle = NULL;
 int vmdkinfo_abort                  = 0;
@@ -68,12 +76,12 @@ void usage_fprint(
 /* Signal handler for vmdkinfo
  */
 void vmdkinfo_signal_handler(
-      libcsystem_signal_t signal LIBCSYSTEM_ATTRIBUTE_UNUSED )
+      vmdktools_signal_t signal VMDKTOOLS_ATTRIBUTE_UNUSED )
 {
 	libcerror_error_t *error = NULL;
 	static char *function   = "vmdkinfo_signal_handler";
 
-	LIBCSYSTEM_UNREFERENCED_PARAMETER( signal )
+	VMDKTOOLS_UNREFERENCED_PARAMETER( signal )
 
 	vmdkinfo_abort = 1;
 
@@ -95,8 +103,13 @@ void vmdkinfo_signal_handler(
 	}
 	/* Force stdin to close otherwise any function reading it will remain blocked
 	 */
-	if( libcsystem_file_io_close(
+#if defined( WINAPI ) && !defined( __CYGWIN__ )
+	if( _close(
 	     0 ) != 0 )
+#else
+	if( close(
+	     0 ) != 0 )
+#endif
 	{
 		libcnotify_printf(
 		 "%s: unable to close stdin.\n",
@@ -106,18 +119,18 @@ void vmdkinfo_signal_handler(
 
 /* The main program
  */
-#if defined( LIBCSTRING_HAVE_WIDE_SYSTEM_CHARACTER )
+#if defined( HAVE_WIDE_SYSTEM_CHARACTER )
 int wmain( int argc, wchar_t * const argv[] )
 #else
 int main( int argc, char * const argv[] )
 #endif
 {
-	libcstring_system_character_t * const *source_filenames = NULL;
-	libvmdk_error_t *error                                  = NULL;
-	char *program                                           = "vmdkinfo";
-	libcstring_system_integer_t option                      = 0;
-	int number_of_source_filenames                          = 0;
-	int verbose                                             = 0;
+	system_character_t * const *source_filenames = NULL;
+	libvmdk_error_t *error                       = NULL;
+	char *program                                = "vmdkinfo";
+	system_integer_t option                      = 0;
+	int number_of_source_filenames               = 0;
+	int verbose                                  = 0;
 
 	libcnotify_stream_set(
 	 stderr,
@@ -135,32 +148,32 @@ int main( int argc, char * const argv[] )
 
 		goto on_error;
 	}
-        if( libcsystem_initialize(
+        if( vmdktools_output_initialize(
              _IONBF,
              &error ) != 1 )
 	{
 		fprintf(
 		 stderr,
-		 "Unable to initialize system values.\n" );
+		 "Unable to initialize output settings.\n" );
 
 		goto on_error;
 	}
-	vmdkoutput_version_fprint(
+	vmdktools_output_version_fprint(
 	 stdout,
 	 program );
 
-	while( ( option = libcsystem_getopt(
+	while( ( option = vmdktools_getopt(
 	                   argc,
 	                   argv,
-	                   _LIBCSTRING_SYSTEM_STRING( "hvV" ) ) ) != (libcstring_system_integer_t) -1 )
+	                   _SYSTEM_STRING( "hvV" ) ) ) != (system_integer_t) -1 )
 	{
 		switch( option )
 		{
-			case (libcstring_system_integer_t) '?':
+			case (system_integer_t) '?':
 			default:
 				fprintf(
 				 stderr,
-				 "Invalid argument: %" PRIs_LIBCSTRING_SYSTEM "\n",
+				 "Invalid argument: %" PRIs_SYSTEM "\n",
 				 argv[ optind - 1 ] );
 
 				usage_fprint(
@@ -168,19 +181,19 @@ int main( int argc, char * const argv[] )
 
 				return( EXIT_FAILURE );
 
-			case (libcstring_system_integer_t) 'h':
+			case (system_integer_t) 'h':
 				usage_fprint(
 				 stdout );
 
 				return( EXIT_SUCCESS );
 
-			case (libcstring_system_integer_t) 'v':
+			case (system_integer_t) 'v':
 				verbose = 1;
 
 				break;
 
-			case (libcstring_system_integer_t) 'V':
-				vmdkoutput_copyright_fprint(
+			case (system_integer_t) 'V':
+				vmdktools_output_copyright_fprint(
 				 stdout );
 
 				return( EXIT_SUCCESS );

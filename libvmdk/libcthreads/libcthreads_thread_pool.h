@@ -1,22 +1,22 @@
 /*
  * Thread pool functions
  *
- * Copyright (C) 2012-2016, Joachim Metz <joachim.metz@gmail.com>
+ * Copyright (C) 2012-2020, Joachim Metz <joachim.metz@gmail.com>
  *
  * Refer to AUTHORS for acknowledgements.
  *
- * This software is free software: you can redistribute it and/or modify
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This software is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
- * along with this software.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #if !defined( _LIBCTHREADS_INTERNAL_THREAD_POOL_H )
@@ -48,6 +48,14 @@ struct libcthreads_internal_thread_pool
 	 */
 	TP_POOL *thread_pool;
 
+	/* The cleanup group.
+	 */
+	TP_CLEANUP_GROUP *cleanup_group;
+
+	/* The callback environment
+	 */
+	TP_CALLBACK_ENVIRON callback_environment;
+
 #else
 	/* The number of threads in the pool
 	 */
@@ -70,6 +78,8 @@ struct libcthreads_internal_thread_pool
 #else
 #error Missing thread type
 #endif
+
+#endif /* defined( WINAPI ) && ( WINVER >= 0x0602 ) */
 
 	/* The callback function
 	 */
@@ -116,7 +126,6 @@ struct libcthreads_internal_thread_pool
 	/* The status
 	 */
 	uint8_t status;
-#endif
 };
 
 LIBCTHREADS_EXTERN \
@@ -131,19 +140,26 @@ int libcthreads_thread_pool_create(
      void *callback_function_arguments,
      libcerror_error_t **error );
 
-#if !( defined( WINAPI ) && ( WINVER >= 0x0602 ) )
-
 int libcthreads_internal_thread_pool_pop(
      libcthreads_internal_thread_pool_t *internal_thread_pool,
      intptr_t **value,
      libcerror_error_t **error );
 
-#endif
-
 LIBCTHREADS_EXTERN \
 int libcthreads_thread_pool_push(
      libcthreads_thread_pool_t *thread_pool,
      intptr_t *value,
+     libcerror_error_t **error );
+
+LIBCTHREADS_EXTERN \
+int libcthreads_thread_pool_push_sorted(
+     libcthreads_thread_pool_t *thread_pool,
+     intptr_t *value,
+     int (*value_compare_function)(
+            intptr_t *first_value,
+            intptr_t *second_value,
+            libcerror_error_t **error ),
+     uint8_t sort_flags,
      libcerror_error_t **error );
 
 LIBCTHREADS_EXTERN \
@@ -157,5 +173,5 @@ int libcthreads_thread_pool_join(
 }
 #endif
 
-#endif
+#endif /* !defined( _LIBCTHREADS_INTERNAL_THREAD_POOL_H ) */
 

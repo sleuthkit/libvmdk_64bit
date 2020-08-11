@@ -1,22 +1,22 @@
 /*
  * Queue functions
  *
- * Copyright (C) 2012-2016, Joachim Metz <joachim.metz@gmail.com>
+ * Copyright (C) 2012-2020, Joachim Metz <joachim.metz@gmail.com>
  *
  * Refer to AUTHORS for acknowledgements.
  *
- * This software is free software: you can redistribute it and/or modify
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This software is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
- * along with this software.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #if !defined( _LIBCTHREADS_INTERNAL_QUEUE_H )
@@ -81,17 +81,14 @@ int libcthreads_queue_initialize(
 LIBCTHREADS_EXTERN \
 int libcthreads_queue_free(
      libcthreads_queue_t **queue,
+     int (*value_free_function)(
+            intptr_t **value,
+            libcerror_error_t **error ),
      libcerror_error_t **error );
 
 LIBCTHREADS_EXTERN \
 int libcthreads_queue_empty(
      libcthreads_queue_t *queue,
-     libcerror_error_t **error );
-
-LIBCTHREADS_EXTERN \
-int libcthreads_queue_pop(
-     libcthreads_queue_t *queue,
-     intptr_t **value,
      libcerror_error_t **error );
 
 LIBCTHREADS_EXTERN \
@@ -101,9 +98,9 @@ int libcthreads_queue_try_pop(
      libcerror_error_t **error );
 
 LIBCTHREADS_EXTERN \
-int libcthreads_queue_push(
+int libcthreads_queue_pop(
      libcthreads_queue_t *queue,
-     intptr_t *value,
+     intptr_t **value,
      libcerror_error_t **error );
 
 LIBCTHREADS_EXTERN \
@@ -112,11 +109,28 @@ int libcthreads_queue_try_push(
      intptr_t *value,
      libcerror_error_t **error );
 
+LIBCTHREADS_EXTERN \
+int libcthreads_queue_push(
+     libcthreads_queue_t *queue,
+     intptr_t *value,
+     libcerror_error_t **error );
+
+LIBCTHREADS_EXTERN \
+int libcthreads_queue_push_sorted(
+     libcthreads_queue_t *queue,
+     intptr_t *value,
+     int (*value_compare_function)(
+            intptr_t *first_value,
+            intptr_t *second_value,
+            libcerror_error_t **error ),
+     uint8_t sort_flags,
+     libcerror_error_t **error );
+
 #endif /* !defined( HAVE_LOCAL_LIBCTHREADS ) || defined( HAVE_MULTI_THREAD_SUPPORT ) */
 
 #if defined( __cplusplus )
 }
 #endif
 
-#endif
+#endif /* !defined( _LIBCTHREADS_INTERNAL_QUEUE_H ) */
 

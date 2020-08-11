@@ -1,22 +1,22 @@
 /*
  * Date and time functions
  *
- * Copyright (C) 2010-2016, Joachim Metz <joachim.metz@gmail.com>
+ * Copyright (C) 2010-2020, Joachim Metz <joachim.metz@gmail.com>
  *
  * Refer to AUTHORS for acknowledgements.
  *
- * This software is free software: you can redistribute it and/or modify
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This software is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
- * along with this software.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #include <common.h>
@@ -38,9 +38,13 @@
  * Returns 1 if successful or -1 on error
  */
 int libfcache_date_time_get_timestamp(
-     time_t *timestamp,
+     int64_t *timestamp,
      libcerror_error_t **error )
 {
+#if defined( HAVE_CLOCK_GETTIME )
+	struct timespec time_structure;
+#endif
+
 	static char *function = "libfcache_date_time_get_timestamp";
 
 	if( timestamp == NULL )
@@ -54,7 +58,37 @@ int libfcache_date_time_get_timestamp(
 
 		return( -1 );
 	}
-	*timestamp = time( NULL );
+#if defined( HAVE_CLOCK_GETTIME )
+	if( clock_gettime(
+	     CLOCK_REALTIME,
+	     &time_structure ) != 0 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+		 "%s: unable to retrieve current time structure.",
+		 function );
+
+		return( -1 );
+	}
+	*timestamp = ( (int64_t) time_structure.tv_sec * 1000000000 ) + time_structure.tv_nsec;
+
+#else
+	*timestamp = (int64_t) time( NULL );
+
+	if( *timestamp == (time_t) -1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
+		 "%s: unable to retrieve current time.",
+		 function );
+
+		return( -1 );
+	}
+#endif /* defined( HAVE_CLOCK_GETTIME ) */
 
 	return( 1 );
 }
