@@ -18,6 +18,9 @@
 /* Define to 1 if you have the `chdir' function. */
 #undef HAVE_CHDIR
 
+/* Define to 1 if you have the `clock_gettime' function. */
+#undef HAVE_CLOCK_GETTIME
+
 /* Define to 1 if you have the `close' function. */
 #undef HAVE_CLOSE
 
@@ -63,8 +66,8 @@
 /* Define to 1 if you have the `fgetws' function. */
 #undef HAVE_FGETWS
 
-/* Define to 1 if you have the `fileno' function. */
-#undef HAVE_FILENO
+/* Define to 1 if you have the `fmemopen' function. */
+#undef HAVE_FMEMOPEN
 
 /* Define to 1 if you have the `fopen' function. */
 #undef HAVE_FOPEN
@@ -83,12 +86,6 @@
 
 /* Define to 1 if you have the `fstat' function. */
 #undef HAVE_FSTAT
-
-/* Define to 1 if you have the `ftello' function. */
-#undef HAVE_FTELLO
-
-/* Define to 1 if you have the `ftello64' function. */
-#undef HAVE_FTELLO64
 
 /* Define to 1 if you have the `ftruncate' function. */
 #undef HAVE_FTRUNCATE
@@ -117,8 +114,8 @@
 /* Define if the GNU gettext() function is already present or preinstalled. */
 #undef HAVE_GETTEXT
 
-/* Define to 1 if you have the <glob.h> header file. */
-#undef HAVE_GLOB_H
+/* Define to 1 if dlsym function is available in GNU dl. */
+#undef HAVE_GNU_DL_DLSYM
 
 /* Define if you have the iconv() function and it works. */
 #undef HAVE_ICONV
@@ -128,9 +125,6 @@
 
 /* Define to 1 if you have the `ioctl' function. */
 #undef HAVE_IOCTL
-
-/* Define to 1 if you have the <io.h> header file. */
-#undef HAVE_IO_H
 
 /* Define if nl_langinfo has CODESET support. */
 #undef HAVE_LANGINFO_CODESET
@@ -186,23 +180,14 @@
 /* Define to 1 if you have the <libcsplit.h> header file. */
 #undef HAVE_LIBCSPLIT_H
 
-/* Define to 1 if you have the `cstring' library (-lcstring). */
-#undef HAVE_LIBCSTRING
-
-/* Define to 1 if you have the <libcstring.h> header file. */
-#undef HAVE_LIBCSTRING_H
-
-/* Define to 1 if you have the `csystem' library (-lcsystem). */
-#undef HAVE_LIBCSYSTEM
-
-/* Define to 1 if you have the <libcsystem.h> header file. */
-#undef HAVE_LIBCSYSTEM_H
-
 /* Define to 1 if you have the `cthreads' library (-lcthreads). */
 #undef HAVE_LIBCTHREADS
 
 /* Define to 1 if you have the <libcthreads.h> header file. */
 #undef HAVE_LIBCTHREADS_H
+
+/* Define to 1 if you have the `dl' library (-ldl). */
+#undef HAVE_LIBDL
 
 /* Define to 1 if you have the `fcache' library (-lfcache). */
 #undef HAVE_LIBFCACHE
@@ -276,12 +261,6 @@
 /* Define to 1 if the local version of libcsplit is used. */
 #undef HAVE_LOCAL_LIBCSPLIT
 
-/* Define to 1 if the local version of libcstring is used. */
-#undef HAVE_LOCAL_LIBCSTRING
-
-/* Define to 1 if the local version of libcsystem is used. */
-#undef HAVE_LOCAL_LIBCSYSTEM
-
 /* Define to 1 if the local version of libcthreads is used. */
 #undef HAVE_LOCAL_LIBCTHREADS
 
@@ -327,6 +306,9 @@
 /* Define to 1 if you have the mkdir function with a second mode argument. */
 #undef HAVE_MKDIR_MODE
 
+/* Define to 1 if you have the `mkstemp' function. */
+#undef HAVE_MKSTEMP
+
 /* Define to 1 if multi thread support should be used. */
 #undef HAVE_MULTI_THREAD_SUPPORT
 
@@ -354,15 +336,6 @@
 /* Define to 1 if you have the <pthread.h> header file. */
 #undef HAVE_PTHREAD_H
 
-/* Define to 1 if you have Python */
-#undef HAVE_PYTHON
-
-/* Define to 1 if you have Python 2 */
-#undef HAVE_PYTHON2
-
-/* Define to 1 if you have Python 3 */
-#undef HAVE_PYTHON3
-
 /* Define to 1 if you have the <Python.h> header file. */
 #undef HAVE_PYTHON_H
 
@@ -371,6 +344,9 @@
 
 /* Define to 1 if you have the `realloc' function. */
 #undef HAVE_REALLOC
+
+/* Define to 1 if you have the `setenv' function. */
+#undef HAVE_SETENV
 
 /* Define to 1 if you have the `setlocale' function. */
 #undef HAVE_SETLOCALE
@@ -465,17 +441,20 @@
 /* Define to 1 if you have the <sys/types.h> header file. */
 #undef HAVE_SYS_TYPES_H
 
-/* Define to 1 if you have the `textdomain' function. */
-#undef HAVE_TEXTDOMAIN
-
 /* Define to 1 if you have the `time' function. */
 #undef HAVE_TIME
 
 /* Define to 1 if you have the `towlower' function. */
 #undef HAVE_TOWLOWER
 
+/* Define to 1 if you have the `tzset' function. */
+#undef HAVE_TZSET
+
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
+
+/* Define to 1 if you have the `unlink' function. */
+#undef HAVE_UNLINK
 
 /* Define to 1 if you have the <varargs.h> header file. */
 #undef HAVE_VARARGS_H
@@ -555,8 +534,7 @@
 /* Define to 1 if you have the `uncompress' function. */
 #undef HAVE_ZLIB_UNCOMPRESS
 
-/* Define to the sub-directory in which libtool stores uninstalled libraries.
-   */
+/* Define to the sub-directory where libtool stores uninstalled libraries. */
 #undef LT_OBJDIR
 
 /* Name of package */
@@ -582,6 +560,9 @@
 
 /* The size of `int', as computed by sizeof. */
 #undef SIZEOF_INT
+
+/* The size of `long', as computed by sizeof. */
+#undef SIZEOF_LONG
 
 /* The size of `off_t', as computed by sizeof. */
 #undef SIZEOF_OFF_T

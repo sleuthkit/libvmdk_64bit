@@ -1,22 +1,22 @@
 /*
  * The libfdatetime header wrapper
  *
- * Copyright (C) 2010-2016, Joachim Metz <joachim.metz@gmail.com>
+ * Copyright (C) 2010-2020, Joachim Metz <joachim.metz@gmail.com>
  *
  * Refer to AUTHORS for acknowledgements.
  *
- * This software is free software: you can redistribute it and/or modify
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This software is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
- * along with this software.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #if !defined( _LIBFVALUE_LIBFDATETIME_H )
@@ -33,6 +33,7 @@
 #include <libfdatetime_fat_date_time.h>
 #include <libfdatetime_filetime.h>
 #include <libfdatetime_floatingtime.h>
+#include <libfdatetime_hfs_time.h>
 #include <libfdatetime_nsf_timedate.h>
 #include <libfdatetime_posix_time.h>
 #include <libfdatetime_systemtime.h>
@@ -40,7 +41,7 @@
 
 /* Note that libfvalue does not require to have libfdatetime support
  */
-#elif defined( HAVE_LIBFDATETIME_H )
+#elif defined( HAVE_LIBFDATETIME )
 
 /* If libtool DLL support is enabled set LIBFDATETIME_DLL_IMPORT
  * before including libfdatetime.h
@@ -51,7 +52,7 @@
 
 #include <libfdatetime.h>
 
-#endif
+#endif /* defined( HAVE_LOCAL_LIBFDATETIME ) */
 
-#endif
+#endif /* !defined( _LIBFVALUE_LIBFDATETIME_H ) */
 

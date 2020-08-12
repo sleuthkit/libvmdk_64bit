@@ -1,22 +1,22 @@
 /*
  * Grain data functions
  *
- * Copyright (C) 2009-2016, Joachim Metz <joachim.metz@gmail.com>
+ * Copyright (C) 2009-2020, Joachim Metz <joachim.metz@gmail.com>
  *
  * Refer to AUTHORS for acknowledgements.
  *
- * This software is free software: you can redistribute it and/or modify
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This software is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
- * along with this software.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #include <common.h>
@@ -31,7 +31,6 @@
 #include "libvmdk_io_handle.h"
 #include "libvmdk_libcerror.h"
 #include "libvmdk_libcnotify.h"
-#include "libvmdk_libfcache.h"
 #include "libvmdk_libfdata.h"
 #include "libvmdk_unused.h"
 
@@ -68,7 +67,8 @@ int libvmdk_grain_data_initialize(
 
 		return( -1 );
 	}
-	if( data_size > (size_t) SSIZE_MAX )
+	if( ( data_size == 0 )
+	 || ( data_size > (size_t) MEMORY_MAXIMUM_ALLOCATION_SIZE ) )
 	{
 		libcerror_error_set(
 		 error,
@@ -107,24 +107,22 @@ int libvmdk_grain_data_initialize(
 
 		goto on_error;
 	}
-	if( data_size > 0 )
+	( *grain_data )->data = (uint8_t *) memory_allocate(
+	                                     sizeof( uint8_t ) * data_size );
+
+	if( ( *grain_data )->data == NULL )
 	{
-		( *grain_data )->data = (uint8_t *) memory_allocate(
-		                                     sizeof( uint8_t ) * data_size );
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_MEMORY,
+		 LIBCERROR_MEMORY_ERROR_INSUFFICIENT,
+		 "%s: unable to create data.",
+		 function );
 
-		if( ( *grain_data )->data == NULL )
-		{
-			libcerror_error_set(
-			 error,
-			 LIBCERROR_ERROR_DOMAIN_MEMORY,
-			 LIBCERROR_MEMORY_ERROR_INSUFFICIENT,
-			 "%s: unable to create data.",
-			 function );
-
-			goto on_error;
-		}
-		( *grain_data )->data_size = data_size;
+		goto on_error;
 	}
+	( *grain_data )->data_size = data_size;
+
 	return( 1 );
 
 on_error:
@@ -279,7 +277,7 @@ int libvmdk_grain_data_read_element_data(
      libvmdk_io_handle_t *io_handle,
      libbfio_pool_t *file_io_pool,
      libfdata_list_element_t *element,
-     libfcache_cache_t *cache,
+     libfdata_cache_t *cache,
      int file_io_pool_entry,
      off64_t grain_data_offset,
      size64_t grain_data_size,
@@ -391,20 +389,8 @@ int libvmdk_grain_data_read_element_data(
 
 			goto on_error;
 		}
-#if SIZEOF_UINT32 <= SIZEOF_SIZE_T
-		if( grain_data->compressed_data_size > (uint32_t) SSIZE_MAX )
-		{
-			libcerror_error_set(
-			 error,
-			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-			 LIBCERROR_RUNTIME_ERROR_VALUE_OUT_OF_BOUNDS,
-			 "%s: invalid grain data - compressed data size value exceeds maximum.",
-			 function );
-
-			goto on_error;
-		}
-#endif
-		if( grain_data->compressed_data_size == 0 )
+		if( ( grain_data->compressed_data_size == 0 )
+		 || ( grain_data->compressed_data_size > (uint32_t) MEMORY_MAXIMUM_ALLOCATION_SIZE ) )
 		{
 			libcerror_error_set(
 			 error,

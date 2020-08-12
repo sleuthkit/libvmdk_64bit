@@ -33,7 +33,10 @@
     <ClCompile Include="..\..\libfvalue\libfvalue_integer.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\libfvalue\libfvalue_split_string.c">
+    <ClCompile Include="..\..\libfvalue\libfvalue_split_utf16_string.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libfvalue\libfvalue_split_utf8_string.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\libfvalue\libfvalue_string.c">
@@ -43,6 +46,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\libfvalue\libfvalue_table.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libfvalue\libfvalue_utf16_string.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libfvalue\libfvalue_utf8_string.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\libfvalue\libfvalue_value.c">
@@ -92,9 +101,6 @@
     <ClInclude Include="..\..\libfvalue\libfvalue_libcnotify.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\libfvalue\libfvalue_libcstring.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\libfvalue\libfvalue_libfdatetime.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -107,7 +113,10 @@
     <ClInclude Include="..\..\libfvalue\libfvalue_libuna.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\libfvalue\libfvalue_split_string.h">
+    <ClInclude Include="..\..\libfvalue\libfvalue_split_utf16_string.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libfvalue\libfvalue_split_utf8_string.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\libfvalue\libfvalue_string.h">
@@ -123,6 +132,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\libfvalue\libfvalue_unused.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libfvalue\libfvalue_utf16_string.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libfvalue\libfvalue_utf8_string.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\libfvalue\libfvalue_value.h">

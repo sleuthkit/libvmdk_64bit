@@ -1,22 +1,22 @@
 /*
  * The handle functions
  *
- * Copyright (C) 2009-2016, Joachim Metz <joachim.metz@gmail.com>
+ * Copyright (C) 2009-2020, Joachim Metz <joachim.metz@gmail.com>
  *
  * Refer to AUTHORS for acknowledgements.
  *
- * This software is free software: you can redistribute it and/or modify
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This software is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
- * along with this software.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #if !defined( _LIBBFIO_INTERNAL_HANDLE_H )
@@ -284,15 +284,15 @@ int libbfio_handle_set_access_flags(
      libcerror_error_t **error );
 
 LIBBFIO_EXTERN \
-int libbfio_handle_get_size(
-     libbfio_handle_t *handle,
-     size64_t *size,
-     libcerror_error_t **error );
-
-LIBBFIO_EXTERN \
 int libbfio_handle_get_offset(
      libbfio_handle_t *handle,
      off64_t *offset,
+     libcerror_error_t **error );
+
+LIBBFIO_EXTERN \
+int libbfio_handle_get_size(
+     libbfio_handle_t *handle,
+     size64_t *size,
      libcerror_error_t **error );
 
 LIBBFIO_EXTERN \
@@ -325,5 +325,5 @@ int libbfio_handle_get_offset_read(
 }
 #endif
 
-#endif
+#endif /* !defined( _LIBBFIO_INTERNAL_HANDLE_H ) */
 

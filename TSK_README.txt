@@ -34,3 +34,9 @@ Select the "x64" configuration in VS. Then for each project in libvmdk solution:
 Repeat these steps for all VS projects in the libvmdk solution
 
 In order to be used with TSK the user needs to define an environment variable LIBVMDK_HOME pointed at C:\cygwin64\home\user_name\libvmdk_64bit\libvmdk
+
+--------
+8.11.2020 notes:
+- The dokan project was gone.
+- The script didn't work, but everything seemed to be set up correctly.
+- The output dir change only seemed to be needed on one project.

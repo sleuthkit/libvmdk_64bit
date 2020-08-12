@@ -2,26 +2,21 @@ if HAVE_LOCAL_LIBFDATA
 AM_CPPFLAGS = \
 	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/common \
-	@LIBCSTRING_CPPFLAGS@ \
 	@LIBCERROR_CPPFLAGS@ \
 	@LIBCTHREADS_CPPFLAGS@ \
 	@LIBCDATA_CPPFLAGS@ \
 	@LIBCNOTIFY_CPPFLAGS@ \
 	@LIBFCACHE_CPPFLAGS@ \
-	@PTHREAD_CPPFLAGS@
+	@PTHREAD_CPPFLAGS@ 
 
 noinst_LTLIBRARIES = libfdata.la
 
 libfdata_la_SOURCES = \
 	libfdata_area.c libfdata_area.h \
-	libfdata_btree.c libfdata_btree.h \
-	libfdata_btree_node.c libfdata_btree_node.h \
-	libfdata_btree_range.c libfdata_btree_range.h \
 	libfdata_cache.c libfdata_cache.h \
 	libfdata_definitions.h \
 	libfdata_error.c libfdata_error.h \
 	libfdata_extern.h \
-	libfdata_inline.h \
 	libfdata_libcdata.h \
 	libfdata_libcerror.h \
 	libfdata_libcnotify.h \

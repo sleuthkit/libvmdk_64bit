@@ -1,32 +1,33 @@
 /*
  * Tree functions
  *
- * Copyright (C) 2006-2016, Joachim Metz <joachim.metz@gmail.com>
+ * Copyright (C) 2006-2020, Joachim Metz <joachim.metz@gmail.com>
  *
  * Refer to AUTHORS for acknowledgements.
  *
- * This software is free software: you can redistribute it and/or modify
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This software is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
- * along with this software.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#if !defined( _LIBCDATA_INTERNAL_TREE_NODE_H )
-#define _LIBCDATA_INTERNAL_TREE_NODE_H
+#if !defined( _LIBCDATA_TREE_NODE_H )
+#define _LIBCDATA_TREE_NODE_H
 
 #include <common.h>
 #include <types.h>
 
 #include "libcdata_extern.h"
 #include "libcdata_libcerror.h"
+#include "libcdata_libcthreads.h"
 #include "libcdata_types.h"
 
 #if defined( __cplusplus )
@@ -64,6 +65,12 @@ struct libcdata_internal_tree_node
 	/* The node value
 	 */
 	intptr_t *value;
+
+#if defined( HAVE_MULTI_THREAD_SUPPORT ) && !defined( HAVE_LOCAL_LIBCDATA )
+	/* The read/write lock
+	 */
+	libcthreads_read_write_lock_t *read_write_lock;
+#endif
 };
 
 LIBCDATA_EXTERN \
@@ -165,21 +172,78 @@ int libcdata_tree_node_set_nodes(
      libcerror_error_t **error );
 
 LIBCDATA_EXTERN \
-int libcdata_tree_node_append_node(
-     libcdata_tree_node_t *parent_node,
+int libcdata_tree_node_get_first_sub_node(
      libcdata_tree_node_t *node,
+     libcdata_tree_node_t **first_sub_node,
+     libcerror_error_t **error );
+
+int libcdata_internal_tree_node_set_first_sub_node(
+     libcdata_internal_tree_node_t *internal_node,
+     libcdata_tree_node_t *first_sub_node,
+     libcerror_error_t **error );
+
+LIBCDATA_EXTERN \
+int libcdata_tree_node_get_last_sub_node(
+     libcdata_tree_node_t *node,
+     libcdata_tree_node_t **last_sub_node,
+     libcerror_error_t **error );
+
+int libcdata_internal_tree_node_set_last_sub_node(
+     libcdata_internal_tree_node_t *internal_node,
+     libcdata_tree_node_t *last_sub_node,
+     libcerror_error_t **error );
+
+int libcdata_tree_node_get_sub_nodes(
+     libcdata_tree_node_t *node,
+     libcdata_tree_node_t **first_sub_node,
+     libcdata_tree_node_t **last_sub_node,
+     libcerror_error_t **error );
+
+int libcdata_tree_node_set_sub_nodes(
+     libcdata_tree_node_t *node,
+     libcdata_tree_node_t *first_sub_node,
+     libcdata_tree_node_t *last_sub_node,
+     libcerror_error_t **error );
+
+int libcdata_internal_tree_node_append_node(
+     libcdata_internal_tree_node_t *internal_node,
+     libcdata_tree_node_t *node_to_append,
+     libcerror_error_t **error );
+
+LIBCDATA_EXTERN \
+int libcdata_tree_node_append_node(
+     libcdata_tree_node_t *node,
+     libcdata_tree_node_t *node_to_append,
      libcerror_error_t **error );
 
 LIBCDATA_EXTERN \
 int libcdata_tree_node_append_value(
-     libcdata_tree_node_t *parent_node,
+     libcdata_tree_node_t *node,
      intptr_t *value,
+     libcerror_error_t **error );
+
+int libcdata_internal_tree_node_insert_node_find_sub_node(
+     libcdata_internal_tree_node_t *internal_node,
+     intptr_t *value_to_insert,
+     int (*value_compare_function)(
+            intptr_t *first_value,
+            intptr_t *second_value,
+            libcerror_error_t **error ),
+     uint8_t insert_flags,
+     int *sub_node_index,
+     libcdata_tree_node_t **sub_node,
+     libcerror_error_t **error );
+
+int libcdata_internal_tree_node_insert_node_before_sub_node(
+     libcdata_internal_tree_node_t *internal_node,
+     libcdata_tree_node_t *sub_node,
+     libcdata_tree_node_t *node_to_insert,
      libcerror_error_t **error );
 
 LIBCDATA_EXTERN \
 int libcdata_tree_node_insert_node(
-     libcdata_tree_node_t *parent_node,
      libcdata_tree_node_t *node,
+     libcdata_tree_node_t *node_to_insert,
      int (*value_compare_function)(
             intptr_t *first_value,
             intptr_t *second_value,
@@ -189,7 +253,7 @@ int libcdata_tree_node_insert_node(
 
 LIBCDATA_EXTERN \
 int libcdata_tree_node_insert_value(
-     libcdata_tree_node_t *parent_node,
+     libcdata_tree_node_t *node,
      intptr_t *value,
      int (*value_compare_function)(
             intptr_t *first_value,
@@ -206,8 +270,8 @@ int libcdata_tree_node_replace_node(
 
 LIBCDATA_EXTERN \
 int libcdata_tree_node_remove_node(
-     libcdata_tree_node_t *parent_node,
      libcdata_tree_node_t *node,
+     libcdata_tree_node_t *sub_node_to_remove,
      libcerror_error_t **error );
 
 LIBCDATA_EXTERN \
@@ -233,5 +297,5 @@ int libcdata_tree_node_get_leaf_node_list(
 }
 #endif
 
-#endif
+#endif /* !defined( _LIBCDATA_TREE_NODE_H ) */
 

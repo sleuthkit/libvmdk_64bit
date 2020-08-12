@@ -1,22 +1,22 @@
 /*
  * Type and type-support defintions
  *
- * Copyright (C) 2006-2016, Joachim Metz <joachim.metz@gmail.com>
+ * Copyright (C) 2009-2020, Joachim Metz <joachim.metz@gmail.com>
  *
  * Refer to AUTHORS for acknowledgements.
  *
- * This software is free software: you can redistribute it and/or modify
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This software is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
- * along with this software.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #if !defined( _TYPES_H )
@@ -33,7 +33,33 @@
  */
 #include <libvmdk/types.h>
 
-/* Fix for systems without PRI definitions
+#if defined( WINAPI ) && ( defined( _UNICODE ) || defined( UNICODE ) )
+
+#define HAVE_WIDE_SYSTEM_CHARACTER 1
+
+/* The system character type is wide
+ * A system string contains either UTF-16 or UTF-32
+ */
+typedef wchar_t system_character_t;
+typedef wint_t system_integer_t;
+
+#define PRIc_SYSTEM "lc"
+#define PRIs_SYSTEM "ls"
+
+#else
+
+/* The system character type is narrow
+ * A system string contains either UTF-8 or extended ASCII with a codepage
+ */
+typedef char system_character_t;
+typedef int system_integer_t;
+
+#define PRIc_SYSTEM "c"
+#define PRIs_SYSTEM "s"
+
+#endif /* defined( WINAPI ) && ( defined( _UNICODE ) || defined( UNICODE ) ) */
+
+/* Fallback for systems without PRI definitions
  */
 #if !defined( PRId8 )
 #define PRId8 "d"
@@ -51,7 +77,7 @@
 #define PRId32 "d"
 
 #endif
-#endif
+#endif /* !defined( PRId32 ) */
 
 #if !defined( PRId64 )
 #if defined( WINAPI )
@@ -64,7 +90,7 @@
 #define PRId64 "lld"
 
 #endif
-#endif
+#endif /* !defined( PRId64 ) */
 
 #if !defined( PRIi8 )
 #define PRIi8 "i"
@@ -82,7 +108,7 @@
 #define PRIi32 "i"
 
 #endif
-#endif
+#endif /* !defined( PRIi32 ) */
 
 #if !defined( PRIi64 )
 #if defined( WINAPI )
@@ -95,7 +121,7 @@
 #define PRIi64 "lli"
 
 #endif
-#endif
+#endif /* !defined( PRIi64 ) */
 
 #if !defined( PRIu8 )
 #define PRIu8 "u"
@@ -113,7 +139,7 @@
 #define PRIu32 "u"
 
 #endif
-#endif
+#endif /* !defined( PRIu32 ) */
 
 #if !defined( PRIu64 )
 #if defined( WINAPI )
@@ -126,7 +152,38 @@
 #define PRIu64 "llu"
 
 #endif
+#endif /* !defined( PRIu64 ) */
+
+#if !defined( PRIo8 )
+#define PRIo8 "o"
 #endif
+
+#if !defined( PRIo16 )
+#define PRIo16 "o"
+#endif
+
+#if !defined( PRIo32 )
+#if defined( WINAPI )
+#define PRIo32 "I32o"
+
+#else
+#define PRIo32 "o"
+
+#endif
+#endif /* !defined( PRIo32 ) */
+
+#if !defined( PRIo64 )
+#if defined( WINAPI )
+#define PRIo64 "I64o"
+
+#elif __WORDSIZE == 64
+#define PRIo64 "lo"
+
+#else
+#define PRIo64 "llo"
+
+#endif
+#endif /* !defined( PRIo64 ) */
 
 #if !defined( PRIx8 )
 #define PRIx8 "x"
@@ -144,7 +201,7 @@
 #define PRIx32 "x"
 
 #endif
-#endif
+#endif /* !defined( PRIx32 ) */
 
 #if !defined( PRIx64 )
 #if defined( WINAPI )
@@ -157,9 +214,9 @@
 #define PRIx64 "llx"
 
 #endif
-#endif
+#endif /* !defined( PRIx64 ) */
 
-/* Fix for systems without printf %jd definition
+/* Fallback for systems without printf %jd definition
  */
 #if defined( HAVE_PRINTF_JD )
 #define PRIjd	"jd"
@@ -179,9 +236,9 @@
 #define PRIju	PRIu32
 #define PRIjx	PRIx32
 
-#endif
+#endif /* defined( HAVE_PRINTF_JD ) */
 
-/* Fix for systems without printf %zd definition
+/* Fallback for systems without printf %zd definition
  */
 #if defined( HAVE_PRINTF_ZD )
 #define PRIzd	"zd"
@@ -189,7 +246,7 @@
 #define PRIzu	"zu"
 #define PRIzx	"zx"
 
-#elif defined( WINAPI )
+#elif defined( _MSC_VER )
 #define PRIzd	"Id"
 #define PRIzi	"Ii"
 #define PRIzu	"Iu"
@@ -207,9 +264,9 @@
 #define PRIzu	PRIu32
 #define PRIzx	PRIx32
 
-#endif
+#endif /* defined( HAVE_PRINTF_ZD ) */
 
-/* Fix for systems without (U)INTx_MAX definitions
+/* Fallback for systems without (U)INTx_MAX definitions
  */
 
 /* The maximum signed 8-bit integer is 127 (0x7f)
@@ -224,7 +281,7 @@
 #define UINT8_MAX (0xff)
 #endif
 
-/* The maximum signed 16-bit integer is 32767 (0xr7ffff)
+/* The maximum signed 16-bit integer is 32767 (0x7ffff)
  */
 #if !defined( INT16_MAX )
 #define INT16_MAX (0x7fff)
@@ -256,7 +313,7 @@
 #else
 #define INT64_MAX (0x7fffffffffffffffULL)
 #endif
-#endif
+#endif /* !defined( INT64_MAX ) */
 
 /* The maximum unsigned 64-bit integer is 18446744073709551615 (0xffffffffffffffff)
  */
@@ -266,7 +323,7 @@
 #else
 #define UINT64_MAX (0xffffffffffffffffULL)
 #endif
-#endif
+#endif /* !defined( UINT64_MAX ) */
 
 /* The maximum signed integer
  */
@@ -280,6 +337,18 @@
 #define UINT_MAX UINT32_MAX
 #endif
 
+/* The maximum signed long integer
+ */
+#if !defined( LONG_MAX )
+#define LONG_MAX INT32_MAX
+#endif
+
+/* The maximum unsigned long integer
+ */
+#if !defined( ULONG_MAX )
+#define ULONG_MAX UINT32_MAX
+#endif
+
 /* The maximum signed size type is platform dependent
  */
 #if !defined( SSIZE_MAX )
@@ -290,7 +359,7 @@
 #define SSIZE_MAX INT64_MAX
 #else
 #define SSIZE_MAX INT32_MAX
-#endif /* _WIN64 */
+#endif
 
 #else
 
@@ -298,11 +367,11 @@
 #define SSIZE_MAX INT64_MAX
 #else
 #define SSIZE_MAX INT32_MAX
-#endif /* __WORDSIZE == 64 */
+#endif
 
 #endif /* WINAPI */
 
 #endif /* SSIZE_MAX */
 
-#endif
+#endif /* !defined( _TYPES_H ) */
 

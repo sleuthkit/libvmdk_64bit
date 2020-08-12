@@ -1,22 +1,22 @@
 /*
  * Integer value functions
  *
- * Copyright (C) 2010-2016, Joachim Metz <joachim.metz@gmail.com>
+ * Copyright (C) 2010-2020, Joachim Metz <joachim.metz@gmail.com>
  *
  * Refer to AUTHORS for acknowledgements.
  *
- * This software is free software: you can redistribute it and/or modify
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This software is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
- * along with this software.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #include <common.h>
@@ -488,7 +488,7 @@ int libfvalue_integer_get_string_size(
 int libfvalue_integer_copy_from_utf8_string_with_index(
      libfvalue_integer_t *integer,
      uint8_t *utf8_string,
-     size_t utf8_string_size,
+     size_t utf8_string_length,
      size_t *utf8_string_index,
      uint32_t string_format_flags,
      libcerror_error_t **error )
@@ -508,7 +508,7 @@ int libfvalue_integer_copy_from_utf8_string_with_index(
 	}
 	if( libfvalue_utf8_string_with_index_copy_to_integer(
 	     utf8_string,
-	     utf8_string_size,
+	     utf8_string_length,
 	     utf8_string_index,
 	     &( integer->value ),
 	     integer->value_size,
@@ -580,7 +580,7 @@ int libfvalue_integer_copy_to_utf8_string_with_index(
 int libfvalue_integer_copy_from_utf16_string_with_index(
      libfvalue_integer_t *integer,
      uint16_t *utf16_string,
-     size_t utf16_string_size,
+     size_t utf16_string_length,
      size_t *utf16_string_index,
      uint32_t string_format_flags,
      libcerror_error_t **error )
@@ -600,7 +600,7 @@ int libfvalue_integer_copy_from_utf16_string_with_index(
 	}
 	if( libfvalue_utf16_string_with_index_copy_to_integer(
 	     utf16_string,
-	     utf16_string_size,
+	     utf16_string_length,
 	     utf16_string_index,
 	     &( integer->value ),
 	     integer->value_size,
@@ -672,7 +672,7 @@ int libfvalue_integer_copy_to_utf16_string_with_index(
 int libfvalue_integer_copy_from_utf32_string_with_index(
      libfvalue_integer_t *integer,
      uint32_t *utf32_string,
-     size_t utf32_string_size,
+     size_t utf32_string_length,
      size_t *utf32_string_index,
      uint32_t string_format_flags,
      libcerror_error_t **error )
@@ -692,7 +692,7 @@ int libfvalue_integer_copy_from_utf32_string_with_index(
 	}
 	if( libfvalue_utf32_string_with_index_copy_to_integer(
 	     utf32_string,
-	     utf32_string_size,
+	     utf32_string_length,
 	     utf32_string_index,
 	     &( integer->value ),
 	     integer->value_size,
@@ -938,15 +938,15 @@ int libfvalue_utf8_string_with_index_copy_from_integer(
      uint32_t string_format_flags,
      libcerror_error_t **error )
 {
-	static char *function        = "libfvalue_utf8_string_with_index_copy_from_integer";
-	size_t string_index          = 0;
-	uint64_t divider             = 0;
-	uint32_t string_format_type  = 0;
-	uint32_t supported_flags     = 0;
-	uint8_t byte_value           = 0;
-	uint8_t is_signed            = 0;
-	uint8_t number_of_characters = 0;
-	int8_t bit_shift             = 0;
+	static char *function         = "libfvalue_utf8_string_with_index_copy_from_integer";
+	size_t safe_utf8_string_index = 0;
+	uint64_t divider              = 0;
+	uint32_t string_format_type   = 0;
+	uint32_t supported_flags      = 0;
+	uint8_t byte_value            = 0;
+	uint8_t is_signed             = 0;
+	uint8_t number_of_characters  = 0;
+	int8_t bit_shift              = 0;
 
 	if( utf8_string == NULL )
 	{
@@ -992,7 +992,7 @@ int libfvalue_utf8_string_with_index_copy_from_integer(
 
 		return( -1 );
 	}
-	string_index = *utf8_string_index;
+	safe_utf8_string_index = *utf8_string_index;
 
 	if( ( integer_value_size != 8 )
 	 && ( integer_value_size != 16 )
@@ -1093,7 +1093,8 @@ int libfvalue_utf8_string_with_index_copy_from_integer(
 			number_of_characters += 1;
 		}
 	}
-	if( ( string_index + number_of_characters ) > utf8_string_size )
+	if( ( number_of_characters > utf8_string_size )
+	 || ( safe_utf8_string_index > ( utf8_string_size - number_of_characters ) ) )
 	{
 		libcerror_error_set(
 		 error,
@@ -1108,26 +1109,26 @@ int libfvalue_utf8_string_with_index_copy_from_integer(
 	{
 		if( integer_value == 0 )
 		{
-			utf8_string[ string_index++ ] = (uint8_t) 'f';
-			utf8_string[ string_index++ ] = (uint8_t) 'a';
-			utf8_string[ string_index++ ] = (uint8_t) 'l';
-			utf8_string[ string_index++ ] = (uint8_t) 's';
-			utf8_string[ string_index++ ] = (uint8_t) 'e';
+			utf8_string[ safe_utf8_string_index++ ] = (uint8_t) 'f';
+			utf8_string[ safe_utf8_string_index++ ] = (uint8_t) 'a';
+			utf8_string[ safe_utf8_string_index++ ] = (uint8_t) 'l';
+			utf8_string[ safe_utf8_string_index++ ] = (uint8_t) 's';
+			utf8_string[ safe_utf8_string_index++ ] = (uint8_t) 'e';
 		}
 		else
 		{
-			utf8_string[ string_index++ ] = (uint8_t) 't';
-			utf8_string[ string_index++ ] = (uint8_t) 'r';
-			utf8_string[ string_index++ ] = (uint8_t) 'u';
-			utf8_string[ string_index++ ] = (uint8_t) 'e';
+			utf8_string[ safe_utf8_string_index++ ] = (uint8_t) 't';
+			utf8_string[ safe_utf8_string_index++ ] = (uint8_t) 'r';
+			utf8_string[ safe_utf8_string_index++ ] = (uint8_t) 'u';
+			utf8_string[ safe_utf8_string_index++ ] = (uint8_t) 'e';
 		}
 	}
 	else if( string_format_type == LIBFVALUE_INTEGER_FORMAT_TYPE_HEXADECIMAL )
 	{
 		if( ( string_format_flags & LIBFVALUE_INTEGER_FORMAT_FLAG_NO_BASE_INDICATOR ) == 0 )
 		{
-			utf8_string[ string_index++ ] = (uint8_t) '0';
-			utf8_string[ string_index++ ] = (uint8_t) 'x';
+			utf8_string[ safe_utf8_string_index++ ] = (uint8_t) '0';
+			utf8_string[ safe_utf8_string_index++ ] = (uint8_t) 'x';
 		}
 		bit_shift = (uint8_t) ( integer_value_size - 4 );
 
@@ -1137,11 +1138,11 @@ int libfvalue_utf8_string_with_index_copy_from_integer(
 
 			if( byte_value <= 9 )
 			{
-				utf8_string[ string_index++ ] = (uint8_t) '0' + byte_value;
+				utf8_string[ safe_utf8_string_index++ ] = (uint8_t) '0' + byte_value;
 			}
 			else
 			{
-				utf8_string[ string_index++ ] = (uint8_t) 'a' + byte_value - 10;
+				utf8_string[ safe_utf8_string_index++ ] = (uint8_t) 'a' + byte_value - 10;
 			}
 			bit_shift -= 4;
 		}
@@ -1151,21 +1152,21 @@ int libfvalue_utf8_string_with_index_copy_from_integer(
 	{
 		if( is_signed != 0 )
 		{
-			utf8_string[ string_index++ ] = (uint8_t) '-';
+			utf8_string[ safe_utf8_string_index++ ] = (uint8_t) '-';
 		}
 		while( divider > 1 )
 		{
-			utf8_string[ string_index++ ] = (uint8_t) '0' + (uint8_t) ( integer_value / divider );
+			utf8_string[ safe_utf8_string_index++ ] = (uint8_t) '0' + (uint8_t) ( integer_value / divider );
 
 			integer_value %= divider;
 
 			divider /= 10;
 		}
-		utf8_string[ string_index++ ] = (uint8_t) '0' + (uint8_t) ( integer_value / divider );
+		utf8_string[ safe_utf8_string_index++ ] = (uint8_t) '0' + (uint8_t) ( integer_value / divider );
 	}
-	utf8_string[ string_index++ ] = 0;
+	utf8_string[ safe_utf8_string_index++ ] = 0;
 
-	*utf8_string_index = string_index;
+	*utf8_string_index = safe_utf8_string_index;
 
 	return( 1 );
 }
@@ -1219,17 +1220,17 @@ int libfvalue_utf8_string_with_index_copy_to_integer(
      uint32_t string_format_flags,
      libcerror_error_t **error )
 {
-	static char *function       = "libfvalue_utf8_string_with_index_copy_to_integer";
-	size_t maximum_string_index = 0;
-	size_t string_index         = 0;
-	uint64_t divider            = 0;
-	uint64_t value_64bit        = 0;
-	uint32_t string_format_type = 0;
-	uint32_t supported_flags    = 0;
-	uint8_t byte_value          = 0;
-	uint8_t character_value     = 0;
-	int8_t bit_shift            = 0;
-	int8_t sign                 = 1;
+	static char *function         = "libfvalue_utf8_string_with_index_copy_to_integer";
+	size_t maximum_string_index   = 0;
+	size_t safe_utf8_string_index = 0;
+	uint64_t divider              = 0;
+	uint64_t value_64bit          = 0;
+	uint32_t string_format_type   = 0;
+	uint32_t supported_flags      = 0;
+	uint8_t byte_value            = 0;
+	uint8_t character_value       = 0;
+	int8_t bit_shift              = 0;
+	int8_t sign                   = 1;
 
 	if( utf8_string == NULL )
 	{
@@ -1275,7 +1276,7 @@ int libfvalue_utf8_string_with_index_copy_to_integer(
 
 		return( -1 );
 	}
-	string_index = *utf8_string_index;
+	safe_utf8_string_index = *utf8_string_index;
 
 	if( integer_value == NULL )
 	{
@@ -1373,7 +1374,7 @@ int libfvalue_utf8_string_with_index_copy_to_integer(
 			maximum_string_index += 1;
 		}
 	}
-	maximum_string_index += string_index;
+	maximum_string_index += safe_utf8_string_index;
 
 	if( maximum_string_index > (size_t) SSIZE_MAX )
 	{
@@ -1396,7 +1397,9 @@ int libfvalue_utf8_string_with_index_copy_to_integer(
 	{
 		if( ( string_format_flags & LIBFVALUE_INTEGER_FORMAT_FLAG_NO_BASE_INDICATOR ) == 0 )
 		{
-			if( utf8_string[ string_index ] != (uint8_t) '0' )
+			character_value = utf8_string[ safe_utf8_string_index++ ];
+
+			if( character_value != (uint8_t) '0' )
 			{
 				libcerror_error_set(
 				 error,
@@ -1404,14 +1407,14 @@ int libfvalue_utf8_string_with_index_copy_to_integer(
 				 LIBCERROR_RUNTIME_ERROR_UNSUPPORTED_VALUE,
 				 "%s: unsupported character value: 0x%02" PRIx8 " at index: %d.",
 				 function,
-				 utf8_string[ string_index ],
-				 string_index );
+				 character_value,
+				 safe_utf8_string_index );
 
 				return( -1 );
 			}
-			string_index++;
+			character_value = utf8_string[ safe_utf8_string_index++ ];
 
-			if( utf8_string[ string_index ] != (uint8_t) 'x' )
+			if( character_value != (uint8_t) 'x' )
 			{
 				libcerror_error_set(
 				 error,
@@ -1419,20 +1422,21 @@ int libfvalue_utf8_string_with_index_copy_to_integer(
 				 LIBCERROR_RUNTIME_ERROR_UNSUPPORTED_VALUE,
 				 "%s: unsupported character value: 0x%02" PRIx8 " at index: %d.",
 				 function,
-				 utf8_string[ string_index ],
-				 string_index );
+				 character_value,
+				 safe_utf8_string_index );
 
 				return( -1 );
 			}
-			string_index++;
 		}
-		while( string_index < utf8_string_length )
+		while( safe_utf8_string_index < utf8_string_length )
 		{
-			if( utf8_string[ string_index ] == 0 )
+			character_value = utf8_string[ safe_utf8_string_index ];
+
+			if( character_value == 0 )
 			{
 				break;
 			}
-			if( string_index > (size_t) maximum_string_index )
+			if( safe_utf8_string_index > (size_t) maximum_string_index )
 			{
 				libcerror_error_set(
 				 error,
@@ -1445,20 +1449,20 @@ int libfvalue_utf8_string_with_index_copy_to_integer(
 			}
 			value_64bit <<= 4;
 
-			if( ( utf8_string[ string_index ] >= (uint8_t) '0' )
-			 && ( utf8_string[ string_index ] <= (uint8_t) '9' ) )
+			if( ( character_value >= (uint8_t) '0' )
+			 && ( character_value <= (uint8_t) '9' ) )
 			{
-				byte_value = (uint8_t) ( utf8_string[ string_index ] - (uint8_t) '0' );
+				byte_value = character_value - (uint8_t) '0';
 			}
-			else if( ( utf8_string[ string_index ] >= (uint8_t) 'A' )
-			      && ( utf8_string[ string_index ] <= (uint8_t) 'F' ) )
+			else if( ( character_value >= (uint8_t) 'A' )
+			      && ( character_value <= (uint8_t) 'F' ) )
 			{
-				byte_value = (uint8_t) ( utf8_string[ string_index ] - (uint8_t) 'A' + 10 );
+				byte_value = character_value - (uint8_t) 'A' + 10;
 			}
-			else if( ( utf8_string[ string_index ] >= (uint8_t) 'a' )
-			      && ( utf8_string[ string_index ] <= (uint8_t) 'f' ) )
+			else if( ( character_value >= (uint8_t) 'a' )
+			      && ( character_value <= (uint8_t) 'f' ) )
 			{
-				byte_value = (uint8_t) ( utf8_string[ string_index ] - (uint8_t) 'a' + 10 );
+				byte_value = character_value - (uint8_t) 'a' + 10;
 			}
 			else
 			{
@@ -1468,40 +1472,44 @@ int libfvalue_utf8_string_with_index_copy_to_integer(
 				 LIBCERROR_RUNTIME_ERROR_UNSUPPORTED_VALUE,
 				 "%s: unsupported character value: 0x%02" PRIx8 " at index: %d.",
 				 function,
-				 utf8_string[ string_index ],
-				 string_index );
+				 character_value,
+				 safe_utf8_string_index );
 
 				return( -1 );
 			}
 			value_64bit += byte_value;
 
-			string_index++;
+			safe_utf8_string_index++;
 		}
 	}
 	else
 	{
 		if( ( string_format_flags & LIBFVALUE_INTEGER_FORMAT_FLAG_SIGNED ) != 0 )
 		{
+			character_value = utf8_string[ safe_utf8_string_index ];
+
 			/* In the maximum possible string one character is substituted for the sign
 			 */
-			if( utf8_string[ string_index ] == (uint8_t) '-' )
+			if( character_value == (uint8_t) '-' )
 			{
-				string_index++;
+				safe_utf8_string_index++;
 
 				sign = -1;
 			}
-			else if( utf8_string[ string_index ] == (uint8_t) '+' )
+			else if( character_value == (uint8_t) '+' )
 			{
-				string_index++;
+				safe_utf8_string_index++;
 			}
 		}
-		while( string_index < utf8_string_length )
+		while( safe_utf8_string_index < utf8_string_length )
 		{
-			if( utf8_string[ string_index ] == 0 )
+			character_value = utf8_string[ safe_utf8_string_index ];
+
+			if( character_value == 0 )
 			{
 				break;
 			}
-			if( string_index > (size_t) maximum_string_index )
+			if( safe_utf8_string_index > (size_t) maximum_string_index )
 			{
 				libcerror_error_set(
 				 error,
@@ -1514,8 +1522,8 @@ int libfvalue_utf8_string_with_index_copy_to_integer(
 			}
 			value_64bit *= 10;
 
-			if( ( utf8_string[ string_index ] < (uint8_t) '0' )
-			 && ( utf8_string[ string_index ] > (uint8_t) '9' ) )
+			if( ( character_value < (uint8_t) '0' )
+			 || ( character_value > (uint8_t) '9' ) )
 			{
 				libcerror_error_set(
 				 error,
@@ -1523,23 +1531,24 @@ int libfvalue_utf8_string_with_index_copy_to_integer(
 				 LIBCERROR_RUNTIME_ERROR_UNSUPPORTED_VALUE,
 				 "%s: unsupported character value: 0x%02" PRIx8 " at index: %d.",
 				 function,
-				 utf8_string[ string_index ],
-				 string_index );
+				 character_value,
+				 safe_utf8_string_index );
 
 				return( -1 );
 			}
-			character_value = (uint8_t) ( utf8_string[ string_index ] - (uint8_t) '0' );
+			character_value -= (uint8_t) '0';
 
 			value_64bit += character_value;
 
-			string_index++;
+			safe_utf8_string_index++;
 		}
-		if( sign == -1 )
+		if( ( sign == -1 )
+		 && ( value_64bit != 0 ) )
 		{
-			value_64bit |= (uint64_t) 1 << bit_shift;
+			value_64bit = ~( value_64bit - 1 );
 		}
 	}
-	*utf8_string_index = string_index;
+	*utf8_string_index = safe_utf8_string_index;
 	*integer_value     = value_64bit;
 
 	return( 1 );
@@ -1594,15 +1603,15 @@ int libfvalue_utf16_string_with_index_copy_from_integer(
      uint32_t string_format_flags,
      libcerror_error_t **error )
 {
-	static char *function        = "libfvalue_utf16_string_with_index_copy_from_integer";
-	size_t string_index          = 0;
-	uint64_t divider             = 0;
-	uint32_t string_format_type  = 0;
-	uint32_t supported_flags     = 0;
-	uint8_t byte_value           = 0;
-	uint8_t is_signed            = 0;
-	uint8_t number_of_characters = 0;
-	int8_t bit_shift             = 0;
+	static char *function          = "libfvalue_utf16_string_with_index_copy_from_integer";
+	size_t safe_utf16_string_index = 0;
+	uint64_t divider               = 0;
+	uint32_t string_format_type    = 0;
+	uint32_t supported_flags       = 0;
+	uint8_t byte_value             = 0;
+	uint8_t is_signed              = 0;
+	uint8_t number_of_characters   = 0;
+	int8_t bit_shift               = 0;
 
 	if( utf16_string == NULL )
 	{
@@ -1648,7 +1657,7 @@ int libfvalue_utf16_string_with_index_copy_from_integer(
 
 		return( -1 );
 	}
-	string_index = *utf16_string_index;
+	safe_utf16_string_index = *utf16_string_index;
 
 	if( ( integer_value_size != 8 )
 	 && ( integer_value_size != 16 )
@@ -1749,7 +1758,8 @@ int libfvalue_utf16_string_with_index_copy_from_integer(
 			number_of_characters += 1;
 		}
 	}
-	if( ( string_index + number_of_characters ) > utf16_string_size )
+	if( ( number_of_characters > utf16_string_size )
+	 || ( safe_utf16_string_index > ( utf16_string_size - number_of_characters ) ) )
 	{
 		libcerror_error_set(
 		 error,
@@ -1764,26 +1774,26 @@ int libfvalue_utf16_string_with_index_copy_from_integer(
 	{
 		if( integer_value == 0 )
 		{
-			utf16_string[ string_index++ ] = (uint16_t) 'f';
-			utf16_string[ string_index++ ] = (uint16_t) 'a';
-			utf16_string[ string_index++ ] = (uint16_t) 'l';
-			utf16_string[ string_index++ ] = (uint16_t) 's';
-			utf16_string[ string_index++ ] = (uint16_t) 'e';
+			utf16_string[ safe_utf16_string_index++ ] = (uint16_t) 'f';
+			utf16_string[ safe_utf16_string_index++ ] = (uint16_t) 'a';
+			utf16_string[ safe_utf16_string_index++ ] = (uint16_t) 'l';
+			utf16_string[ safe_utf16_string_index++ ] = (uint16_t) 's';
+			utf16_string[ safe_utf16_string_index++ ] = (uint16_t) 'e';
 		}
 		else
 		{
-			utf16_string[ string_index++ ] = (uint16_t) 't';
-			utf16_string[ string_index++ ] = (uint16_t) 'r';
-			utf16_string[ string_index++ ] = (uint16_t) 'u';
-			utf16_string[ string_index++ ] = (uint16_t) 'e';
+			utf16_string[ safe_utf16_string_index++ ] = (uint16_t) 't';
+			utf16_string[ safe_utf16_string_index++ ] = (uint16_t) 'r';
+			utf16_string[ safe_utf16_string_index++ ] = (uint16_t) 'u';
+			utf16_string[ safe_utf16_string_index++ ] = (uint16_t) 'e';
 		}
 	}
 	else if( string_format_type == LIBFVALUE_INTEGER_FORMAT_TYPE_HEXADECIMAL )
 	{
 		if( ( string_format_flags & LIBFVALUE_INTEGER_FORMAT_FLAG_NO_BASE_INDICATOR ) == 0 )
 		{
-			utf16_string[ string_index++ ] = (uint16_t) '0';
-			utf16_string[ string_index++ ] = (uint16_t) 'x';
+			utf16_string[ safe_utf16_string_index++ ] = (uint16_t) '0';
+			utf16_string[ safe_utf16_string_index++ ] = (uint16_t) 'x';
 		}
 		bit_shift = (uint8_t) ( integer_value_size - 4 );
 
@@ -1793,11 +1803,11 @@ int libfvalue_utf16_string_with_index_copy_from_integer(
 
 			if( byte_value <= 9 )
 			{
-				utf16_string[ string_index++ ] = (uint16_t) '0' + byte_value;
+				utf16_string[ safe_utf16_string_index++ ] = (uint16_t) '0' + byte_value;
 			}
 			else
 			{
-				utf16_string[ string_index++ ] = (uint16_t) 'a' + byte_value - 10;
+				utf16_string[ safe_utf16_string_index++ ] = (uint16_t) 'a' + byte_value - 10;
 			}
 			bit_shift -= 4;
 		}
@@ -1807,21 +1817,21 @@ int libfvalue_utf16_string_with_index_copy_from_integer(
 	{
 		if( is_signed != 0 )
 		{
-			utf16_string[ string_index++ ] = (uint16_t) '-';
+			utf16_string[ safe_utf16_string_index++ ] = (uint16_t) '-';
 		}
 		while( divider > 1 )
 		{
-			utf16_string[ string_index++ ] = (uint16_t) '0' + (uint16_t) ( integer_value / divider );
+			utf16_string[ safe_utf16_string_index++ ] = (uint16_t) '0' + (uint16_t) ( integer_value / divider );
 
 			integer_value %= divider;
 
 			divider /= 10;
 		}
-		utf16_string[ string_index++ ] = (uint16_t) '0' + (uint16_t) ( integer_value / divider );
+		utf16_string[ safe_utf16_string_index++ ] = (uint16_t) '0' + (uint16_t) ( integer_value / divider );
 	}
-	utf16_string[ string_index++ ] = 0;
+	utf16_string[ safe_utf16_string_index++ ] = 0;
 
-	*utf16_string_index = string_index;
+	*utf16_string_index = safe_utf16_string_index;
 
 	return( 1 );
 }
@@ -1875,17 +1885,17 @@ int libfvalue_utf16_string_with_index_copy_to_integer(
      uint32_t string_format_flags,
      libcerror_error_t **error )
 {
-	static char *function       = "libfvalue_utf16_string_with_index_copy_to_integer";
-	size_t maximum_string_index = 0;
-	size_t string_index         = 0;
-	uint64_t value_64bit        = 0;
-	uint64_t divider            = 0;
-	uint32_t string_format_type = 0;
-	uint32_t supported_flags    = 0;
-	uint8_t byte_value          = 0;
-	uint8_t character_value     = 0;
-	int8_t bit_shift            = 0;
-	int8_t sign                 = 1;
+	static char *function          = "libfvalue_utf16_string_with_index_copy_to_integer";
+	size_t maximum_string_index    = 0;
+	size_t safe_utf16_string_index = 0;
+	uint64_t divider               = 0;
+	uint64_t value_64bit           = 0;
+	uint32_t string_format_type    = 0;
+	uint32_t supported_flags       = 0;
+	uint8_t byte_value             = 0;
+	uint8_t character_value        = 0;
+	int8_t bit_shift               = 0;
+	int8_t sign                    = 1;
 
 	if( utf16_string == NULL )
 	{
@@ -1931,7 +1941,7 @@ int libfvalue_utf16_string_with_index_copy_to_integer(
 
 		return( -1 );
 	}
-	string_index = *utf16_string_index;
+	safe_utf16_string_index = *utf16_string_index;
 
 	if( integer_value == NULL )
 	{
@@ -2029,7 +2039,7 @@ int libfvalue_utf16_string_with_index_copy_to_integer(
 			maximum_string_index += 1;
 		}
 	}
-	maximum_string_index += string_index;
+	maximum_string_index += safe_utf16_string_index;
 
 	if( maximum_string_index > (size_t) SSIZE_MAX )
 	{
@@ -2052,7 +2062,9 @@ int libfvalue_utf16_string_with_index_copy_to_integer(
 	{
 		if( ( string_format_flags & LIBFVALUE_INTEGER_FORMAT_FLAG_NO_BASE_INDICATOR ) == 0 )
 		{
-			if( utf16_string[ string_index ] != (uint16_t) '0' )
+			character_value = utf16_string[ safe_utf16_string_index++ ];
+
+			if( character_value != (uint16_t) '0' )
 			{
 				libcerror_error_set(
 				 error,
@@ -2060,14 +2072,14 @@ int libfvalue_utf16_string_with_index_copy_to_integer(
 				 LIBCERROR_RUNTIME_ERROR_UNSUPPORTED_VALUE,
 				 "%s: unsupported character value: 0x04%" PRIx16 " at index: %d.",
 				 function,
-				 utf16_string[ string_index ],
-				 string_index );
+				 character_value,
+				 safe_utf16_string_index );
 
 				return( -1 );
 			}
-			string_index++;
+			character_value = utf16_string[ safe_utf16_string_index++ ];
 
-			if( utf16_string[ string_index ] != (uint16_t) 'x' )
+			if( character_value != (uint16_t) 'x' )
 			{
 				libcerror_error_set(
 				 error,
@@ -2075,20 +2087,21 @@ int libfvalue_utf16_string_with_index_copy_to_integer(
 				 LIBCERROR_RUNTIME_ERROR_UNSUPPORTED_VALUE,
 				 "%s: unsupported character value: 0x04%" PRIx16 " at index: %d.",
 				 function,
-				 utf16_string[ string_index ],
-				 string_index );
+				 character_value,
+				 safe_utf16_string_index );
 
 				return( -1 );
 			}
-			string_index++;
 		}
-		while( string_index < utf16_string_length )
+		while( safe_utf16_string_index < utf16_string_length )
 		{
-			if( utf16_string[ string_index ] == 0 )
+			character_value = utf16_string[ safe_utf16_string_index ];
+
+			if( character_value == 0 )
 			{
 				break;
 			}
-			if( string_index > (size_t) maximum_string_index )
+			if( safe_utf16_string_index > (size_t) maximum_string_index )
 			{
 				libcerror_error_set(
 				 error,
@@ -2101,20 +2114,20 @@ int libfvalue_utf16_string_with_index_copy_to_integer(
 			}
 			value_64bit <<= 4;
 
-			if( ( utf16_string[ string_index ] >= (uint16_t) '0' )
-			 && ( utf16_string[ string_index ] <= (uint16_t) '9' ) )
+			if( ( character_value >= (uint16_t) '0' )
+			 && ( character_value <= (uint16_t) '9' ) )
 			{
-				byte_value = (uint8_t) ( utf16_string[ string_index ] - (uint16_t) '0' );
+				byte_value = (uint8_t) ( character_value - (uint16_t) '0' );
 			}
-			else if( ( utf16_string[ string_index ] >= (uint16_t) 'A' )
-			      && ( utf16_string[ string_index ] <= (uint16_t) 'F' ) )
+			else if( ( character_value >= (uint16_t) 'A' )
+			      && ( character_value <= (uint16_t) 'F' ) )
 			{
-				byte_value = (uint8_t) ( utf16_string[ string_index ] - (uint16_t) 'A' + 10 );
+				byte_value = (uint8_t) ( character_value - (uint16_t) 'A' + 10 );
 			}
-			else if( ( utf16_string[ string_index ] >= (uint16_t) 'a' )
-			      && ( utf16_string[ string_index ] <= (uint16_t) 'f' ) )
+			else if( ( character_value >= (uint16_t) 'a' )
+			      && ( character_value <= (uint16_t) 'f' ) )
 			{
-				byte_value = (uint8_t) ( utf16_string[ string_index ] - (uint16_t) 'a' + 10 );
+				byte_value = (uint8_t) ( character_value - (uint16_t) 'a' + 10 );
 			}
 			else
 			{
@@ -2124,40 +2137,44 @@ int libfvalue_utf16_string_with_index_copy_to_integer(
 				 LIBCERROR_RUNTIME_ERROR_UNSUPPORTED_VALUE,
 				 "%s: unsupported character value: 0x04%" PRIx16 " at index: %d.",
 				 function,
-				 utf16_string[ string_index ],
-				 string_index );
+				 character_value,
+				 safe_utf16_string_index );
 
 				return( -1 );
 			}
 			value_64bit += byte_value;
 
-			string_index++;
+			safe_utf16_string_index++;
 		}
 	}
 	else
 	{
 		if( ( string_format_flags & LIBFVALUE_INTEGER_FORMAT_FLAG_SIGNED ) != 0 )
 		{
+			character_value = utf16_string[ safe_utf16_string_index ];
+
 			/* In the maximum possible string one character is substituted for the sign
 			 */
-			if( utf16_string[ string_index ] == (uint16_t) '-' )
+			if( character_value == (uint16_t) '-' )
 			{
-				string_index++;
+				safe_utf16_string_index++;
 
 				sign = -1;
 			}
-			else if( utf16_string[ string_index ] == (uint16_t) '+' )
+			else if( character_value == (uint16_t) '+' )
 			{
-				string_index++;
+				safe_utf16_string_index++;
 			}
 		}
-		while( string_index < utf16_string_length )
+		while( safe_utf16_string_index < utf16_string_length )
 		{
-			if( utf16_string[ string_index ] == 0 )
+			character_value = utf16_string[ safe_utf16_string_index ];
+
+			if( character_value == 0 )
 			{
 				break;
 			}
-			if( string_index > (size_t) maximum_string_index )
+			if( safe_utf16_string_index > (size_t) maximum_string_index )
 			{
 				libcerror_error_set(
 				 error,
@@ -2170,8 +2187,8 @@ int libfvalue_utf16_string_with_index_copy_to_integer(
 			}
 			value_64bit *= 10;
 
-			if( ( utf16_string[ string_index ] < (uint16_t) '0' )
-			 && ( utf16_string[ string_index ] > (uint16_t) '9' ) )
+			if( ( character_value < (uint16_t) '0' )
+			 || ( character_value > (uint16_t) '9' ) )
 			{
 				libcerror_error_set(
 				 error,
@@ -2179,23 +2196,24 @@ int libfvalue_utf16_string_with_index_copy_to_integer(
 				 LIBCERROR_RUNTIME_ERROR_UNSUPPORTED_VALUE,
 				 "%s: unsupported character value: 0x04%" PRIx16 " at index: %d.",
 				 function,
-				 utf16_string[ string_index ],
-				 string_index );
+				 character_value,
+				 safe_utf16_string_index );
 
 				return( -1 );
 			}
-			character_value = (uint8_t) ( utf16_string[ string_index ] - (uint16_t) '0' );
+			character_value = (uint8_t) ( character_value - (uint16_t) '0' );
 
 			value_64bit += character_value;
 
-			string_index++;
+			safe_utf16_string_index++;
 		}
-		if( sign == -1 )
+		if( ( sign == -1 )
+		 && ( value_64bit != 0 ) )
 		{
-			value_64bit |= (uint64_t) 1 << bit_shift;
+			value_64bit = ~( value_64bit - 1 );
 		}
 	}
-	*utf16_string_index = string_index;
+	*utf16_string_index = safe_utf16_string_index;
 	*integer_value      = value_64bit;
 
 	return( 1 );
@@ -2250,15 +2268,15 @@ int libfvalue_utf32_string_with_index_copy_from_integer(
      uint32_t string_format_flags,
      libcerror_error_t **error )
 {
-	static char *function        = "libfvalue_utf32_string_with_index_copy_from_integer";
-	size_t string_index          = 0;
-	uint64_t divider             = 0;
-	uint32_t string_format_type  = 0;
-	uint32_t supported_flags     = 0;
-	uint8_t byte_value           = 0;
-	uint8_t is_signed            = 0;
-	uint8_t number_of_characters = 0;
-	int8_t bit_shift             = 0;
+	static char *function          = "libfvalue_utf32_string_with_index_copy_from_integer";
+	size_t safe_utf32_string_index = 0;
+	uint64_t divider               = 0;
+	uint32_t string_format_type    = 0;
+	uint32_t supported_flags       = 0;
+	uint8_t byte_value             = 0;
+	uint8_t is_signed              = 0;
+	uint8_t number_of_characters   = 0;
+	int8_t bit_shift               = 0;
 
 	if( utf32_string == NULL )
 	{
@@ -2304,7 +2322,7 @@ int libfvalue_utf32_string_with_index_copy_from_integer(
 
 		return( -1 );
 	}
-	string_index = *utf32_string_index;
+	safe_utf32_string_index = *utf32_string_index;
 
 	if( ( integer_value_size != 8 )
 	 && ( integer_value_size != 16 )
@@ -2405,7 +2423,8 @@ int libfvalue_utf32_string_with_index_copy_from_integer(
 			number_of_characters += 1;
 		}
 	}
-	if( ( string_index + number_of_characters ) > utf32_string_size )
+	if( ( number_of_characters > utf32_string_size )
+	 || ( safe_utf32_string_index > ( utf32_string_size - number_of_characters ) ) )
 	{
 		libcerror_error_set(
 		 error,
@@ -2420,26 +2439,26 @@ int libfvalue_utf32_string_with_index_copy_from_integer(
 	{
 		if( integer_value == 0 )
 		{
-			utf32_string[ string_index++ ] = (uint32_t) 'f';
-			utf32_string[ string_index++ ] = (uint32_t) 'a';
-			utf32_string[ string_index++ ] = (uint32_t) 'l';
-			utf32_string[ string_index++ ] = (uint32_t) 's';
-			utf32_string[ string_index++ ] = (uint32_t) 'e';
+			utf32_string[ safe_utf32_string_index++ ] = (uint32_t) 'f';
+			utf32_string[ safe_utf32_string_index++ ] = (uint32_t) 'a';
+			utf32_string[ safe_utf32_string_index++ ] = (uint32_t) 'l';
+			utf32_string[ safe_utf32_string_index++ ] = (uint32_t) 's';
+			utf32_string[ safe_utf32_string_index++ ] = (uint32_t) 'e';
 		}
 		else
 		{
-			utf32_string[ string_index++ ] = (uint32_t) 't';
-			utf32_string[ string_index++ ] = (uint32_t) 'r';
-			utf32_string[ string_index++ ] = (uint32_t) 'u';
-			utf32_string[ string_index++ ] = (uint32_t) 'e';
+			utf32_string[ safe_utf32_string_index++ ] = (uint32_t) 't';
+			utf32_string[ safe_utf32_string_index++ ] = (uint32_t) 'r';
+			utf32_string[ safe_utf32_string_index++ ] = (uint32_t) 'u';
+			utf32_string[ safe_utf32_string_index++ ] = (uint32_t) 'e';
 		}
 	}
 	else if( string_format_type == LIBFVALUE_INTEGER_FORMAT_TYPE_HEXADECIMAL )
 	{
 		if( ( string_format_flags & LIBFVALUE_INTEGER_FORMAT_FLAG_NO_BASE_INDICATOR ) == 0 )
 		{
-			utf32_string[ string_index++ ] = (uint32_t) '0';
-			utf32_string[ string_index++ ] = (uint32_t) 'x';
+			utf32_string[ safe_utf32_string_index++ ] = (uint32_t) '0';
+			utf32_string[ safe_utf32_string_index++ ] = (uint32_t) 'x';
 		}
 		bit_shift = (uint8_t) ( integer_value_size - 4 );
 
@@ -2449,11 +2468,11 @@ int libfvalue_utf32_string_with_index_copy_from_integer(
 
 			if( byte_value <= 9 )
 			{
-				utf32_string[ string_index++ ] = (uint32_t) '0' + byte_value;
+				utf32_string[ safe_utf32_string_index++ ] = (uint32_t) '0' + byte_value;
 			}
 			else
 			{
-				utf32_string[ string_index++ ] = (uint32_t) 'a' + byte_value - 10;
+				utf32_string[ safe_utf32_string_index++ ] = (uint32_t) 'a' + byte_value - 10;
 			}
 			bit_shift -= 4;
 		}
@@ -2463,21 +2482,21 @@ int libfvalue_utf32_string_with_index_copy_from_integer(
 	{
 		if( is_signed != 0 )
 		{
-			utf32_string[ string_index++ ] = (uint32_t) '-';
+			utf32_string[ safe_utf32_string_index++ ] = (uint32_t) '-';
 		}
 		while( divider > 1 )
 		{
-			utf32_string[ string_index++ ] = (uint32_t) '0' + (uint32_t) ( integer_value / divider );
+			utf32_string[ safe_utf32_string_index++ ] = (uint32_t) '0' + (uint32_t) ( integer_value / divider );
 
 			integer_value %= divider;
 
 			divider /= 10;
 		}
-		utf32_string[ string_index++ ] = (uint32_t) '0' + (uint32_t) ( integer_value / divider );
+		utf32_string[ safe_utf32_string_index++ ] = (uint32_t) '0' + (uint32_t) ( integer_value / divider );
 	}
-	utf32_string[ string_index++ ] = 0;
+	utf32_string[ safe_utf32_string_index++ ] = 0;
 
-	*utf32_string_index = string_index;
+	*utf32_string_index = safe_utf32_string_index;
 
 	return( 1 );
 }
@@ -2531,17 +2550,17 @@ int libfvalue_utf32_string_with_index_copy_to_integer(
      uint32_t string_format_flags,
      libcerror_error_t **error )
 {
-	static char *function       = "libfvalue_utf32_string_with_index_copy_to_integer";
-	size_t maximum_string_index = 0;
-	size_t string_index         = 0;
-	uint64_t value_64bit        = 0;
-	uint64_t divider            = 0;
-	uint32_t string_format_type = 0;
-	uint32_t supported_flags    = 0;
-	uint8_t byte_value          = 0;
-	uint8_t character_value     = 0;
-	int8_t bit_shift            = 0;
-	int8_t sign                 = 1;
+	static char *function          = "libfvalue_utf32_string_with_index_copy_to_integer";
+	size_t maximum_string_index    = 0;
+	size_t safe_utf32_string_index = 0;
+	uint64_t divider               = 0;
+	uint64_t value_64bit           = 0;
+	uint32_t string_format_type    = 0;
+	uint32_t supported_flags       = 0;
+	uint8_t byte_value             = 0;
+	uint8_t character_value        = 0;
+	int8_t bit_shift               = 0;
+	int8_t sign                    = 1;
 
 	if( utf32_string == NULL )
 	{
@@ -2587,7 +2606,7 @@ int libfvalue_utf32_string_with_index_copy_to_integer(
 
 		return( -1 );
 	}
-	string_index = *utf32_string_index;
+	safe_utf32_string_index = *utf32_string_index;
 
 	if( integer_value == NULL )
 	{
@@ -2685,7 +2704,7 @@ int libfvalue_utf32_string_with_index_copy_to_integer(
 			maximum_string_index += 1;
 		}
 	}
-	maximum_string_index += string_index;
+	maximum_string_index += safe_utf32_string_index;
 
 	if( maximum_string_index > (size_t) SSIZE_MAX )
 	{
@@ -2708,7 +2727,9 @@ int libfvalue_utf32_string_with_index_copy_to_integer(
 	{
 		if( ( string_format_flags & LIBFVALUE_INTEGER_FORMAT_FLAG_NO_BASE_INDICATOR ) == 0 )
 		{
-			if( utf32_string[ string_index ] != (uint32_t) '0' )
+			character_value = utf32_string[ safe_utf32_string_index++ ];
+
+			if( character_value != (uint32_t) '0' )
 			{
 				libcerror_error_set(
 				 error,
@@ -2716,14 +2737,14 @@ int libfvalue_utf32_string_with_index_copy_to_integer(
 				 LIBCERROR_RUNTIME_ERROR_UNSUPPORTED_VALUE,
 				 "%s: unsupported character value: 0x08%" PRIx32 " at index: %d.",
 				 function,
-				 utf32_string[ string_index ],
-				 string_index );
+				 character_value,
+				 safe_utf32_string_index );
 
 				return( -1 );
 			}
-			string_index++;
+			character_value = utf32_string[ safe_utf32_string_index++ ];
 
-			if( utf32_string[ string_index ] != (uint32_t) 'x' )
+			if( character_value != (uint32_t) 'x' )
 			{
 				libcerror_error_set(
 				 error,
@@ -2731,20 +2752,21 @@ int libfvalue_utf32_string_with_index_copy_to_integer(
 				 LIBCERROR_RUNTIME_ERROR_UNSUPPORTED_VALUE,
 				 "%s: unsupported character value: 0x08%" PRIx32 " at index: %d.",
 				 function,
-				 utf32_string[ string_index ],
-				 string_index );
+				 character_value,
+				 safe_utf32_string_index );
 
 				return( -1 );
 			}
-			string_index++;
 		}
-		while( string_index < utf32_string_length )
+		while( safe_utf32_string_index < utf32_string_length )
 		{
-			if( utf32_string[ string_index ] == 0 )
+			character_value = utf32_string[ safe_utf32_string_index ];
+
+			if( character_value == 0 )
 			{
 				break;
 			}
-			if( string_index > (size_t) maximum_string_index )
+			if( safe_utf32_string_index > (size_t) maximum_string_index )
 			{
 				libcerror_error_set(
 				 error,
@@ -2757,20 +2779,20 @@ int libfvalue_utf32_string_with_index_copy_to_integer(
 			}
 			value_64bit <<= 4;
 
-			if( ( utf32_string[ string_index ] >= (uint32_t) '0' )
-			 && ( utf32_string[ string_index ] <= (uint32_t) '9' ) )
+			if( ( character_value >= (uint32_t) '0' )
+			 && ( character_value <= (uint32_t) '9' ) )
 			{
-				byte_value = (uint8_t) ( utf32_string[ string_index ] - (uint32_t) '0' );
+				byte_value = (uint8_t) ( character_value - (uint32_t) '0' );
 			}
-			else if( ( utf32_string[ string_index ] >= (uint32_t) 'A' )
-			      && ( utf32_string[ string_index ] <= (uint32_t) 'F' ) )
+			else if( ( character_value >= (uint32_t) 'A' )
+			      && ( character_value <= (uint32_t) 'F' ) )
 			{
-				byte_value = (uint8_t) ( utf32_string[ string_index ] - (uint32_t) 'A' + 10 );
+				byte_value = (uint8_t) ( character_value - (uint32_t) 'A' + 10 );
 			}
-			else if( ( utf32_string[ string_index ] >= (uint32_t) 'a' )
-			      && ( utf32_string[ string_index ] <= (uint32_t) 'f' ) )
+			else if( ( character_value >= (uint32_t) 'a' )
+			      && ( character_value <= (uint32_t) 'f' ) )
 			{
-				byte_value = (uint8_t) ( utf32_string[ string_index ] - (uint32_t) 'a' + 10 );
+				byte_value = (uint8_t) ( character_value - (uint32_t) 'a' + 10 );
 			}
 			else
 			{
@@ -2780,40 +2802,44 @@ int libfvalue_utf32_string_with_index_copy_to_integer(
 				 LIBCERROR_RUNTIME_ERROR_UNSUPPORTED_VALUE,
 				 "%s: unsupported character value: 0x08%" PRIx32 " at index: %d.",
 				 function,
-				 utf32_string[ string_index ],
-				 string_index );
+				 character_value,
+				 safe_utf32_string_index );
 
 				return( -1 );
 			}
 			value_64bit += byte_value;
 
-			string_index++;
+			safe_utf32_string_index++;
 		}
 	}
 	else
 	{
 		if( ( string_format_flags & LIBFVALUE_INTEGER_FORMAT_FLAG_SIGNED ) != 0 )
 		{
+			character_value = utf32_string[ safe_utf32_string_index ];
+
 			/* In the maximum possible string one character is substituted for the sign
 			 */
-			if( utf32_string[ string_index ] == (uint32_t) '-' )
+			if( character_value == (uint32_t) '-' )
 			{
-				string_index++;
+				safe_utf32_string_index++;
 
 				sign = -1;
 			}
-			else if( utf32_string[ string_index ] == (uint32_t) '+' )
+			else if( character_value == (uint32_t) '+' )
 			{
-				string_index++;
+				safe_utf32_string_index++;
 			}
 		}
-		while( string_index < utf32_string_length )
+		while( safe_utf32_string_index < utf32_string_length )
 		{
-			if( utf32_string[ string_index ] == 0 )
+			character_value = utf32_string[ safe_utf32_string_index ];
+
+			if( character_value == 0 )
 			{
 				break;
 			}
-			if( string_index > (size_t) maximum_string_index )
+			if( safe_utf32_string_index > (size_t) maximum_string_index )
 			{
 				libcerror_error_set(
 				 error,
@@ -2826,8 +2852,8 @@ int libfvalue_utf32_string_with_index_copy_to_integer(
 			}
 			value_64bit *= 10;
 
-			if( ( utf32_string[ string_index ] < (uint32_t) '0' )
-			 && ( utf32_string[ string_index ] > (uint32_t) '9' ) )
+			if( ( character_value < (uint32_t) '0' )
+			 || ( character_value > (uint32_t) '9' ) )
 			{
 				libcerror_error_set(
 				 error,
@@ -2835,23 +2861,24 @@ int libfvalue_utf32_string_with_index_copy_to_integer(
 				 LIBCERROR_RUNTIME_ERROR_UNSUPPORTED_VALUE,
 				 "%s: unsupported character value: 0x08%" PRIx32 " at index: %d.",
 				 function,
-				 utf32_string[ string_index ],
-				 string_index );
+				 character_value,
+				 safe_utf32_string_index );
 
 				return( -1 );
 			}
-			character_value = (uint8_t) ( utf32_string[ string_index ] - (uint32_t) '0' );
+			character_value = (uint8_t) ( character_value - (uint32_t) '0' );
 
 			value_64bit += character_value;
 
-			string_index++;
+			safe_utf32_string_index++;
 		}
-		if( sign == -1 )
+		if( ( sign == -1 )
+		 && ( value_64bit != 0 ) )
 		{
-			value_64bit |= (uint64_t) 1 << bit_shift;
+			value_64bit = ~( value_64bit - 1 );
 		}
 	}
-	*utf32_string_index = string_index;
+	*utf32_string_index = safe_utf32_string_index;
 	*integer_value      = value_64bit;
 
 	return( 1 );

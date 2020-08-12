@@ -1,22 +1,22 @@
 /*
  * Notification print functions
  *
- * Copyright (C) 2008-2016, Joachim Metz <joachim.metz@gmail.com>
+ * Copyright (C) 2008-2020, Joachim Metz <joachim.metz@gmail.com>
  *
  * Refer to AUTHORS for acknowledgements.
  *
- * This software is free software: you can redistribute it and/or modify
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This software is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
- * along with this software.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #include <common.h>
@@ -109,6 +109,147 @@ int VARARGS(
 #undef VASTART
 #undef VAEND
 
+/* Prints the data as a character on the notify stream
+ * Returns the number of printed characters if successful or -1 on error
+ */
+int libcnotify_print_data_as_character(
+     uint8_t data )
+{
+	int print_count = 0;
+
+	if( ( data >= 0x20 )
+	 && ( data <= 0x7e ) )
+	{
+		print_count = libcnotify_printf(
+		               "%c",
+		               (char) data );
+	}
+	else
+	{
+		print_count = libcnotify_printf(
+		               "." );
+	}
+	return( print_count );
+}
+
+/* Prints the first 16 bytes of data as a characters on the notify stream
+ * Returns the number of printed characters if successful or -1 on error
+ */
+int libcnotify_print_data_as_characters(
+     const uint8_t *data,
+     size_t data_size,
+     size_t data_offset )
+{
+	int print_count       = 0;
+	int total_print_count = 0;
+
+	if( data == NULL )
+	{
+		return( -1 );
+	}
+	while( data_offset < data_size )
+	{
+		print_count = libcnotify_print_data_as_character(
+		               data[ data_offset++ ] );
+
+		if( print_count <= -1 )
+		{
+			return( -1 );
+		}
+		total_print_count += print_count;
+
+		if( ( data_offset % 16 == 0 )
+		 || ( data_offset == data_size ) )
+		{
+			break;
+		}
+		if( data_offset % 8 == 0 )
+		{
+			print_count = libcnotify_printf(
+			               " " );
+
+			if( print_count <= -1 )
+			{
+				return( -1 );
+			}
+			total_print_count += print_count;
+		}
+	}
+	return( total_print_count );
+}
+
+/* Prints the first 16 bytes of data as a hexadecimal values on the notify stream
+ * Returns the number of printed characters if successful or -1 on error
+ */
+int libcnotify_print_data_as_hexadecimal(
+     const uint8_t *data,
+     size_t data_size,
+     size_t data_offset )
+{
+	int print_count       = 0;
+	int total_print_count = 0;
+
+	if( data == NULL )
+	{
+		return( -1 );
+	}
+	while( data_offset < data_size )
+	{
+		print_count = libcnotify_printf(
+		               "%.2" PRIx8 " ",
+		               data[ data_offset++ ] );
+
+		if( print_count <= -1 )
+		{
+			return( -1 );
+		}
+		total_print_count += print_count;
+
+		if( data_offset % 16 == 0 )
+		{
+			break;
+		}
+		else if( data_offset % 8 == 0 )
+		{
+			print_count = libcnotify_printf(
+			               " " );
+
+			if( print_count <= -1 )
+			{
+				return( -1 );
+			}
+			total_print_count += print_count;
+		}
+	}
+	while( data_offset % 16 != 0 )
+	{
+		data_offset++;
+
+		print_count = libcnotify_printf(
+		               "   " );
+
+		if( print_count <= -1 )
+		{
+			return( -1 );
+		}
+		total_print_count += print_count;
+
+		if( ( data_offset % 8 == 0 )
+		 && ( data_offset % 16 != 0 ) )
+		{
+			print_count = libcnotify_printf(
+			               " " );
+
+			if( print_count <= -1 )
+			{
+				return( -1 );
+			}
+			total_print_count += print_count;
+		}
+	}
+	return( total_print_count );
+}
+
 /* Prints the data on the notify stream
  * Returns the number of printed characters if successful or -1 on error
  */
@@ -117,34 +258,40 @@ int libcnotify_print_data(
      size_t data_size,
      uint8_t print_data_flags )
 {
-	size_t byte_iterator  = 0;
-	size_t data_iterator  = 0;
+	size_t data_offset    = 0;
 	int in_group          = 0;
 	int print_count       = 0;
 	int total_print_count = 0;
 
 	if( libcnotify_stream == NULL )
 	{
-		return( -1 );
+		return( 0 );
 	}
-	if( data == NULL )
+	if( data_size > 0 )
+	{
+		if( data == NULL )
+		{
+			return( -1 );
+		}
+	}
+	if( data_size > (size_t) SSIZE_MAX )
 	{
 		return( -1 );
 	}
-	while( data_iterator < data_size )
+	while( data_offset < data_size )
 	{
 		if( ( ( print_data_flags & LIBCNOTIFY_PRINT_DATA_FLAG_GROUP_DATA ) != 0 )
 		 && ( data_size >= 32 )
-		 && ( data_iterator >= 16 )
-		 && ( data_iterator <= ( data_size - 32 ) ) )
+		 && ( data_offset >= 16 )
+		 && ( data_offset <= ( data_size - 32 ) ) )
 		{
 			if( ( memory_compare(
-			       &( data[ data_iterator - 16 ] ),
-			       &( data[ data_iterator ] ),
+			       &( data[ data_offset - 16 ] ),
+			       &( data[ data_offset ] ),
 			       16 ) == 0 )
 			 && ( memory_compare(
-			       &( data[ data_iterator + 16 ] ),
-			       &( data[ data_iterator ] ),
+			       &( data[ data_offset + 16 ] ),
+			       &( data[ data_offset ] ),
 			       16 ) == 0 ) )
 			{
 				if( in_group == 0 )
@@ -160,79 +307,35 @@ int libcnotify_print_data(
 
 					in_group = 1;
 				}
-				byte_iterator += 16;
-				data_iterator += 16;
+				data_offset += 16;
 
 				continue;
 			}
 			in_group = 0;
 		}
-		while( byte_iterator < data_size )
+		if( data_offset % 16 == 0 )
 		{
-			if( byte_iterator % 16 == 0 )
-			{
-				print_count = libcnotify_printf(
-					       "%.8" PRIzx ": ",
-					       byte_iterator );
-
-				if( print_count <= -1 )
-				{
-					return( -1 );
-				}
-				total_print_count += print_count;
-			}
 			print_count = libcnotify_printf(
-				       "%.2" PRIx8 " ",
-				       data[ byte_iterator++ ] );
+				       "%.8" PRIzx ": ",
+				       data_offset );
 
 			if( print_count <= -1 )
 			{
 				return( -1 );
 			}
 			total_print_count += print_count;
-
-			if( byte_iterator % 16 == 0 )
-			{
-				break;
-			}
-			else if( byte_iterator % 8 == 0 )
-			{
-				print_count = libcnotify_printf(
-					       " " );
-
-				if( print_count <= -1 )
-				{
-					return( -1 );
-				}
-				total_print_count += print_count;
-			}
 		}
-		while( byte_iterator % 16 != 0 )
+		print_count = libcnotify_print_data_as_hexadecimal(
+		               data,
+		               data_size,
+		               data_offset );
+
+		if( print_count <= -1 )
 		{
-			byte_iterator++;
-
-			print_count = libcnotify_printf(
-				       "   " );
-
-			if( print_count <= -1 )
-			{
-				return( -1 );
-			}
-			total_print_count += print_count;
-
-			if( ( byte_iterator % 8 == 0 )
-			 && ( byte_iterator % 16 != 0 ) )
-			{
-				print_count = libcnotify_printf(
-					       " " );
-
-				if( print_count <= -1 )
-				{
-					return( -1 );
-				}
-				total_print_count += print_count;
-			}
+			return( -1 );
 		}
+		total_print_count += print_count;
+
 		print_count = libcnotify_printf(
 			       "  " );
 
@@ -242,48 +345,10 @@ int libcnotify_print_data(
 		}
 		total_print_count += print_count;
 
-		byte_iterator = data_iterator;
-
-		while( byte_iterator < data_size )
-		{
-			if( ( data[ byte_iterator ] >= 0x20 )
-			 && ( data[ byte_iterator ] <= 0x7e ) )
-			{
-				print_count = libcnotify_printf(
-					       "%c",
-					       (char) data[ byte_iterator ] );
-			}
-			else
-			{
-				print_count = libcnotify_printf(
-					       "." );
-			}
-			if( print_count <= -1 )
-			{
-				return( -1 );
-			}
-			total_print_count += print_count;
-
-			byte_iterator++;
-
-			if( byte_iterator % 16 == 0 )
-			{
-				break;
-			}
-			else if( byte_iterator % 8 == 0 )
-			{
-				print_count = libcnotify_printf(
-					       " " );
-
-				if( print_count <= -1 )
-				{
-					return( -1 );
-				}
-				total_print_count += print_count;
-			}
-		}
-		print_count = libcnotify_printf(
-			       "\n" );
+		print_count = libcnotify_print_data_as_characters(
+		               data,
+		               data_size,
+		               data_offset );
 
 		if( print_count <= -1 )
 		{
@@ -291,7 +356,16 @@ int libcnotify_print_data(
 		}
 		total_print_count += print_count;
 
-		data_iterator = byte_iterator;
+		print_count = libcnotify_printf(
+		               "\n" );
+
+		if( print_count <= -1 )
+		{
+			return( -1 );
+		}
+		total_print_count += print_count;
+
+		data_offset += 16;
 	}
 	print_count = libcnotify_printf(
 		       "\n" );
@@ -311,16 +385,16 @@ int libcnotify_print_data(
 int libcnotify_print_error_backtrace(
      libcerror_error_t *error )
 {
+	int print_count = 0;
+
 	if( libcnotify_stream == NULL )
 	{
-		return( -1 );
+		return( 0 );
 	}
-	if( libcerror_error_backtrace_fprint(
-	     error,
-	     libcnotify_stream ) != 1 )
-	{
-		return( -1 );
-	}
-	return( 1 );
+	print_count = libcerror_error_backtrace_fprint(
+	               error,
+	               libcnotify_stream );
+
+	return( print_count );
 }
 

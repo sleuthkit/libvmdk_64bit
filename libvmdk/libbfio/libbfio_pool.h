@@ -1,22 +1,22 @@
 /*
  * The internal pool functions
  *
- * Copyright (C) 2009-2016, Joachim Metz <joachim.metz@gmail.com>
+ * Copyright (C) 2009-2020, Joachim Metz <joachim.metz@gmail.com>
  *
  * Refer to AUTHORS for acknowledgements.
  *
- * This software is free software: you can redistribute it and/or modify
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This software is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
- * along with this software.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #if !defined( _LIBBFIO_POOL_H )
@@ -92,20 +92,25 @@ int libbfio_pool_resize(
      int number_of_handles,
      libcerror_error_t **error );
 
-int libbfio_pool_open_handle(
+int libbfio_internal_pool_open_handle(
      libbfio_internal_pool_t *internal_pool,
      libbfio_handle_t *handle,
      int access_flags,
      libcerror_error_t **error );
 
-int libbfio_pool_append_handle_to_last_used_list(
+int libbfio_internal_pool_append_handle_to_last_used_list(
+     libbfio_internal_pool_t *internal_pool,
+     const libbfio_handle_t *handle,
+     libcerror_error_t **error );
+
+int libbfio_internal_pool_move_handle_to_front_of_last_used_list(
      libbfio_internal_pool_t *internal_pool,
      libbfio_handle_t *handle,
      libcerror_error_t **error );
 
-int libbfio_pool_move_handle_to_front_of_last_used_list(
+int libbfio_internal_pool_remove_handle_from_last_used_list(
      libbfio_internal_pool_t *internal_pool,
-     libbfio_handle_t *handle,
+     const libbfio_handle_t *handle,
      libcerror_error_t **error );
 
 LIBBFIO_EXTERN \
@@ -170,6 +175,11 @@ int libbfio_pool_reopen(
      int access_flags,
      libcerror_error_t **error );
 
+int libbfio_internal_pool_close(
+     libbfio_internal_pool_t *internal_pool,
+     int entry,
+     libcerror_error_t **error );
+
 LIBBFIO_EXTERN \
 int libbfio_pool_close(
      libbfio_pool_t *pool,
@@ -223,5 +233,5 @@ int libbfio_pool_get_size(
 }
 #endif
 
-#endif
+#endif /* !defined( _LIBBFIO_POOL_H ) */
 

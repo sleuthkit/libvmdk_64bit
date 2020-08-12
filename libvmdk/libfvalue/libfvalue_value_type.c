@@ -1,22 +1,22 @@
 /*
  * Value functions
  *
- * Copyright (C) 2010-2016, Joachim Metz <joachim.metz@gmail.com>
+ * Copyright (C) 2010-2020, Joachim Metz <joachim.metz@gmail.com>
  *
  * Refer to AUTHORS for acknowledgements.
  *
- * This software is free software: you can redistribute it and/or modify
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This software is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
- * along with this software.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #include <common.h>
@@ -36,15 +36,15 @@
 #include "libfvalue_value.h"
 #include "libfvalue_value_type.h"
 
-#if defined( HAVE_LIBFDATETIME_H ) || defined( HAVE_LOCAL_LIBFDATETIME )
+#if defined( HAVE_LIBFDATETIME ) || defined( HAVE_LOCAL_LIBFDATETIME )
 #include "libfvalue_libfdatetime.h"
 #endif
 
-#if defined( HAVE_LIBFGUID_H ) || defined( HAVE_LOCAL_LIBFGUID )
+#if defined( HAVE_LIBFGUID ) || defined( HAVE_LOCAL_LIBFGUID )
 #include "libfvalue_libfguid.h"
 #endif
 
-#if defined( HAVE_LIBFWNT_H ) || defined( HAVE_LOCAL_LIBFWNT )
+#if defined( HAVE_LIBFWNT ) || defined( HAVE_LOCAL_LIBFWNT )
 #include "libfvalue_libfwnt.h"
 #endif
 
@@ -383,7 +383,7 @@ int libfvalue_value_type_initialize_with_data_handle(
 			          error );
 			break;
 
-#if defined( HAVE_LIBFDATETIME_H ) || defined( HAVE_LOCAL_LIBFDATETIME )
+#if defined( HAVE_LIBFDATETIME ) || defined( HAVE_LOCAL_LIBFDATETIME )
 		case LIBFVALUE_VALUE_TYPE_FAT_DATE_TIME:
 			result = libfvalue_value_initialize(
 			          value,
@@ -544,7 +544,7 @@ int libfvalue_value_type_initialize_with_data_handle(
 			          (int (*)(intptr_t **, libcerror_error_t **)) &libfdatetime_posix_time_free,
 			          NULL,
 
-			          (int (*)(intptr_t *, const uint8_t *, size_t, int, libcerror_error_t **)) &libfdatetime_posix_time_copy_from_byte_stream,
+			          (int (*)(intptr_t *, const uint8_t *, size_t, int, libcerror_error_t **)) &libfvalue_value_type_posix_time_copy_from_byte_stream,
 			          NULL,
 
 			          NULL,
@@ -605,8 +605,9 @@ int libfvalue_value_type_initialize_with_data_handle(
 			          flags,
 			          error );
 			break;
-#endif
-#if defined( HAVE_LIBFGUID_H ) || defined( HAVE_LOCAL_LIBFGUID )
+#endif /* defined( HAVE_LIBFDATETIME ) || defined( HAVE_LOCAL_LIBFDATETIME ) */
+
+#if defined( HAVE_LIBFGUID ) || defined( HAVE_LOCAL_LIBFGUID )
 		case LIBFVALUE_VALUE_TYPE_GUID:
 			result = libfvalue_value_initialize(
 			          value,
@@ -643,8 +644,9 @@ int libfvalue_value_type_initialize_with_data_handle(
 			          flags,
 			          error );
 			break;
-#endif
-#if defined( HAVE_LIBFWNT_H ) || defined( HAVE_LOCAL_LIBFWNT )
+#endif /* defined( HAVE_LIBFGUID ) || defined( HAVE_LOCAL_LIBFGUID ) */
+
+#if defined( HAVE_LIBFWNT ) || defined( HAVE_LOCAL_LIBFWNT )
 		case LIBFVALUE_VALUE_TYPE_NT_SECURITY_IDENTIFIER:
 			result = libfvalue_value_initialize(
 			          value,
@@ -681,7 +683,8 @@ int libfvalue_value_type_initialize_with_data_handle(
 			          flags,
 			          error );
 			break;
-#endif
+#endif /* defined( HAVE_LIBFWNT ) || defined( HAVE_LOCAL_LIBFWNT ) */
+
 		default:
 			libcerror_error_set(
 			 error,
@@ -1073,4 +1076,104 @@ ssize_t libfvalue_value_type_set_data_strings_array(
 	}
 	return( last_data_index );
 }
+
+#if defined( HAVE_LIBFDATETIME ) || defined( HAVE_LOCAL_LIBFDATETIME )
+
+/* Helper function for libfvalue value type to covert a byte stream into a POSIX time using libfdatetime
+ * Returns 1 if successful or -1 on error
+ */
+int libfvalue_value_type_posix_time_copy_from_byte_stream(
+     libfdatetime_posix_time_t *posix_time,
+     const uint8_t *byte_stream,
+     size_t byte_stream_size,
+     int encoding,
+     libcerror_error_t **error )
+{
+	static char *function = "libfvalue_value_type_posix_time_copy_from_byte_stream";
+	int byte_order        = 0;
+	uint8_t value_type    = 0;
+
+	byte_order = encoding & 0xff;
+
+	if( ( byte_order != LIBFVALUE_ENDIAN_BIG )
+	 && ( byte_order != LIBFVALUE_ENDIAN_LITTLE ) )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_UNSUPPORTED_VALUE,
+		 "%s: unsupported byte order: 0x%02x in encoding: 0x%08x.",
+		 function,
+		 byte_order,
+		 encoding );
+
+		return( -1 );
+	}
+	switch( encoding & 0xffffff00UL )
+	{
+		case LIBFVALUE_POSIX_TIME_ENCODING_SECONDS_32BIT_SIGNED:
+			value_type = LIBFDATETIME_POSIX_TIME_VALUE_TYPE_SECONDS_32BIT_SIGNED;
+			break;
+
+		case LIBFVALUE_POSIX_TIME_ENCODING_SECONDS_32BIT_UNSIGNED:
+			value_type = LIBFDATETIME_POSIX_TIME_VALUE_TYPE_SECONDS_32BIT_UNSIGNED;
+			break;
+
+		case LIBFVALUE_POSIX_TIME_ENCODING_SECONDS_64BIT_SIGNED:
+			value_type = LIBFDATETIME_POSIX_TIME_VALUE_TYPE_SECONDS_64BIT_SIGNED;
+			break;
+
+		case LIBFVALUE_POSIX_TIME_ENCODING_SECONDS_64BIT_UNSIGNED:
+			value_type = LIBFDATETIME_POSIX_TIME_VALUE_TYPE_SECONDS_64BIT_UNSIGNED;
+			break;
+
+		case LIBFVALUE_POSIX_TIME_ENCODING_MICRO_SECONDS_64BIT_SIGNED:
+			value_type = LIBFDATETIME_POSIX_TIME_VALUE_TYPE_MICRO_SECONDS_64BIT_SIGNED;
+			break;
+
+		case LIBFVALUE_POSIX_TIME_ENCODING_MICRO_SECONDS_64BIT_UNSIGNED:
+			value_type = LIBFDATETIME_POSIX_TIME_VALUE_TYPE_MICRO_SECONDS_64BIT_UNSIGNED;
+			break;
+
+		case LIBFVALUE_POSIX_TIME_ENCODING_NANO_SECONDS_64BIT_SIGNED:
+			value_type = LIBFDATETIME_POSIX_TIME_VALUE_TYPE_NANO_SECONDS_64BIT_SIGNED;
+			break;
+
+		case LIBFVALUE_POSIX_TIME_ENCODING_NANO_SECONDS_64BIT_UNSIGNED:
+			value_type = LIBFDATETIME_POSIX_TIME_VALUE_TYPE_NANO_SECONDS_64BIT_UNSIGNED;
+			break;
+
+		default:
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+			 LIBCERROR_ARGUMENT_ERROR_UNSUPPORTED_VALUE,
+			 "%s: unsupported value type: 0x%08x in encoding: 0x%08x.",
+			 function,
+			 encoding & 0xffffff00UL,
+			 encoding );
+
+			return( -1 );
+	}
+	if( libfdatetime_posix_time_copy_from_byte_stream(
+	     posix_time,
+	     byte_stream,
+	     byte_stream_size,
+	     byte_order,
+	     value_type,
+	     error ) != 1 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_COPY_FAILED,
+		 "%s: unable to copy POSIX time from byte stream.",
+		 function );
+
+		return( -1 );
+	}
+	return( 1 );
+}
+
+#endif /* defined( HAVE_LIBFDATETIME ) || defined( HAVE_LOCAL_LIBFDATETIME ) */
 

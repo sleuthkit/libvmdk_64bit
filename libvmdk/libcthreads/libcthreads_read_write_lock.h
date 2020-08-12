@@ -1,22 +1,22 @@
 /*
  * Read/Write lock functions
  *
- * Copyright (C) 2012-2016, Joachim Metz <joachim.metz@gmail.com>
+ * Copyright (C) 2012-2020, Joachim Metz <joachim.metz@gmail.com>
  *
  * Refer to AUTHORS for acknowledgements.
  *
- * This software is free software: you can redistribute it and/or modify
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This software is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
- * along with this software.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #if !defined( _LIBCTHREADS_INTERNAL_READ_WRITE_LOCK_H )
@@ -52,7 +52,7 @@ struct libcthreads_internal_read_write_lock
 	 */
 	SRWLOCK slim_read_write_lock;
 
-#elif defined( WINAPI ) && ( WINVER > 0x0500 )
+#elif defined( WINAPI )
 	/* The read critical section
 	 */
 	CRITICAL_SECTION read_critical_section;
@@ -68,11 +68,6 @@ struct libcthreads_internal_read_write_lock
 	/* The no read event handle
 	 */
 	HANDLE no_read_event_handle;
-
-#elif defined( WINAPI )
-
-/* TODO */
-#error WINAPI read/write lock for Windows 2000 or earlier NOT implemented yet
 
 #elif defined( HAVE_PTHREAD_H )
 	/* The read/write lock
@@ -120,5 +115,5 @@ int libcthreads_read_write_lock_release_for_write(
 }
 #endif
 
-#endif
+#endif /* !defined( _LIBCTHREADS_INTERNAL_READ_WRITE_LOCK_H ) */
 

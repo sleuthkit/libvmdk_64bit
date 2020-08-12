@@ -1,22 +1,22 @@
 /*
  * The vector functions
  *
- * Copyright (C) 2010-2016, Joachim Metz <joachim.metz@gmail.com>
+ * Copyright (C) 2010-2020, Joachim Metz <joachim.metz@gmail.com>
  *
  * Refer to AUTHORS for acknowledgements.
  *
- * This software is free software: you can redistribute it and/or modify
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This software is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
- * along with this software.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #if !defined( _LIBFDATA_INTERNAL_VECTOR_H )
@@ -55,23 +55,13 @@ struct libfdata_internal_vector
 	 */
 	libcdata_array_t *mapped_ranges_array;
 
-	/* The time stamp
+	/* The timestamp
 	 */
-	time_t timestamp;
+	int64_t timestamp;
 
 	/* The flags
 	 */
 	uint8_t flags;
-
-	/* The calculate cache entry index value
-	 */
-	int (*calculate_cache_entry_index)(
-	       int element_index,
-	       int element_data_file_index,
-	       off64_t element_data_offset,
-	       size64_t element_data_size,
-	       uint32_t element_data_flags,
-               int number_of_cache_entries );
 
 	/* The data handle
 	 */
@@ -96,7 +86,7 @@ struct libfdata_internal_vector
 	       intptr_t *data_handle,
 	       intptr_t *file_io_handle,
 	       libfdata_vector_t *vector,
-	       libfcache_cache_t *cache,
+	       libfdata_cache_t *cache,
 	       int element_index,
 	       int element_data_file_index,
 	       off64_t element_data_offset,
@@ -111,7 +101,7 @@ struct libfdata_internal_vector
 	       intptr_t *data_handle,
 	       intptr_t *file_io_handle,
 	       libfdata_vector_t *vector,
-	       libfcache_cache_t *cache,
+	       libfdata_cache_t *cache,
 	       int element_index,
 	       int element_data_file_index,
 	       off64_t element_data_offset,
@@ -137,7 +127,7 @@ int libfdata_vector_initialize(
             intptr_t *data_handle,
             intptr_t *file_io_handle,
             libfdata_vector_t *vector,
-            libfcache_cache_t *cache,
+            libfdata_cache_t *cache,
             int element_index,
             int element_data_file_index,
             off64_t element_data_offset,
@@ -149,7 +139,7 @@ int libfdata_vector_initialize(
             intptr_t *data_handle,
             intptr_t *file_io_handle,
             libfdata_vector_t *vector,
-            libfcache_cache_t *cache,
+            libfdata_cache_t *cache,
             int element_index,
             int element_data_file_index,
             off64_t element_data_offset,
@@ -171,8 +161,6 @@ int libfdata_vector_clone(
      libfdata_vector_t *source_vector,
      libcerror_error_t **error );
 
-/* Segment functions
- */
 LIBFDATA_EXTERN \
 int libfdata_vector_empty(
      libfdata_vector_t *vector,
@@ -184,6 +172,8 @@ int libfdata_vector_resize(
      int number_of_segments,
      libcerror_error_t **error );
 
+/* Segment functions
+ */
 LIBFDATA_EXTERN \
 int libfdata_vector_get_number_of_segments(
      libfdata_vector_t *vector,
@@ -259,7 +249,7 @@ LIBFDATA_EXTERN \
 int libfdata_vector_get_element_value_by_index(
      libfdata_vector_t *vector,
      intptr_t *file_io_handle,
-     libfcache_cache_t *cache,
+     libfdata_cache_t *cache,
      int element_index,
      intptr_t **element_value,
      uint8_t read_flags,
@@ -269,7 +259,7 @@ LIBFDATA_EXTERN \
 int libfdata_vector_get_element_value_at_offset(
      libfdata_vector_t *vector,
      intptr_t *file_io_handle,
-     libfcache_cache_t *cache,
+     libfdata_cache_t *cache,
      off64_t element_value_offset,
      off64_t *element_data_offset,
      intptr_t **element_value,
@@ -280,7 +270,7 @@ LIBFDATA_EXTERN \
 int libfdata_vector_set_element_value_by_index(
      libfdata_vector_t *vector,
      intptr_t *file_io_handle,
-     libfcache_cache_t *cache,
+     libfdata_cache_t *cache,
      int element_index,
      intptr_t *element_value,
      int (*free_element_value)(
@@ -301,5 +291,5 @@ int libfdata_vector_get_size(
 }
 #endif
 
-#endif
+#endif /* !defined( _LIBFDATA_INTERNAL_VECTOR_H ) */
 

@@ -1,33 +1,33 @@
 /*
  * Values table functions
  *
- * Copyright (C) 2010-2016, Joachim Metz <joachim.metz@gmail.com>
+ * Copyright (C) 2010-2020, Joachim Metz <joachim.metz@gmail.com>
  *
  * Refer to AUTHORS for acknowledgements.
  *
- * This software is free software: you can redistribute it and/or modify
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This software is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
- * along with this software.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #include <common.h>
 #include <memory.h>
+#include <narrow_string.h>
 #include <types.h>
 
 #include "libfvalue_codepage.h"
 #include "libfvalue_definitions.h"
 #include "libfvalue_libcdata.h"
 #include "libfvalue_libcerror.h"
-#include "libfvalue_libcstring.h"
 #include "libfvalue_table.h"
 #include "libfvalue_types.h"
 #include "libfvalue_value.h"
@@ -93,7 +93,10 @@ int libfvalue_table_initialize(
 		 "%s: unable to clear values table.",
 		 function );
 
-		goto on_error;
+		memory_free(
+		 internal_table );
+
+		return( -1 );
 	}
 	if( libcdata_array_initialize(
 	     &( internal_table->values ),
@@ -1076,7 +1079,7 @@ int libfvalue_table_copy_from_utf8_xml_string(
 		{
 			if( ( xml_tag_type == LIBFVALUE_XML_TAG_TYPE_OPEN )
 			 && ( xml_tag_name_length == table_name_length )
-			 && ( libcstring_narrow_string_compare(
+			 && ( narrow_string_compare(
 			       table_name,
 			       xml_tag_name,
 			       xml_tag_name_length ) == 0 ) )
@@ -1089,7 +1092,7 @@ int libfvalue_table_copy_from_utf8_xml_string(
 		{
 			if( ( xml_tag_type == LIBFVALUE_XML_TAG_TYPE_CLOSE )
 			 && ( xml_tag_name_length == xml_table_name_length )
-			 && ( libcstring_narrow_string_compare(
+			 && ( narrow_string_compare(
 			       xml_table_name,
 			       xml_tag_name,
 			       xml_tag_name_length ) == 0 ) )
@@ -1140,7 +1143,7 @@ int libfvalue_table_copy_from_utf8_xml_string(
 		{
 			if( ( xml_tag_type == LIBFVALUE_XML_TAG_TYPE_CLOSE )
 			 && ( xml_tag_name_length == value_identifier_length )
-			 && ( libcstring_narrow_string_compare(
+			 && ( narrow_string_compare(
 			       value_identifier,
 			       xml_tag_name,
 			       xml_tag_name_length ) == 0 ) )

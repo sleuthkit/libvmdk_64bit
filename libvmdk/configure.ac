@@ -2,7 +2,7 @@ AC_PREREQ( 2.59 )
 
 AC_INIT(
  [libvmdk],
- [20160119],
+ [20200810],
  [joachim.metz@gmail.com])
 
 AC_CONFIG_SRCDIR(
@@ -15,15 +15,13 @@ AC_CONFIG_MACRO_DIR([m4])
 dnl Check for host type
 AC_CANONICAL_HOST
 
-dnl Check for large file support
-AC_SYS_LARGEFILE
-
 dnl Check for libtool DLL support
 AC_LIBTOOL_WIN32_DLL
 
 dnl Checks for programs
 AC_PROG_CC
 AC_PROG_GCC_TRADITIONAL
+AC_PROG_CXX
 AC_PROG_MAKE_SET
 AC_PROG_INSTALL
 
@@ -42,141 +40,121 @@ dnl Check for compiler language support
 AC_C_CONST
 AC_C_VOLATILE
 
+dnl Check for large file support
+AC_SYS_LARGEFILE
+
+dnl Check if shared library support should be disabled
+AX_COMMON_CHECK_DISABLE_SHARED_LIBS
+
+dnl Check if tools should be build as static executables
+AX_COMMON_CHECK_ENABLE_STATIC_EXECUTABLES
+
 dnl Check if WINAPI support should be enabled
 AX_COMMON_CHECK_ENABLE_WINAPI
 
 dnl Check if wide character type should be enabled
 AX_COMMON_CHECK_ENABLE_WIDE_CHARACTER_TYPE
 
+dnl Check if verbose output should be enabled
+AX_COMMON_CHECK_ENABLE_VERBOSE_OUTPUT
+
+dnl Check if debug output should be enabled
+AX_COMMON_CHECK_ENABLE_DEBUG_OUTPUT
+
 dnl Check for type definitions
 AX_TYPES_CHECK_LOCAL
 
-dnl Checks for libraries and library functions
+dnl Check if common required headers and functions are available
 AX_COMMON_CHECK_LOCAL
 
-dnl Check for enabling libcstring for cross-platform C string functions
-AX_LIBCSTRING_CHECK_ENABLE
-
-dnl Check for enabling libcerror for cross-platform C error functions
+dnl Check if libcerror or required headers and functions are available
 AX_LIBCERROR_CHECK_ENABLE
 
-dnl Check for enabling libcthreads for cross-platform C threads functions
+dnl Check if libcthreads or required headers and functions are available
 AX_LIBCTHREADS_CHECK_ENABLE
 
-dnl Check for enabling libcdata for cross-platform C generic data functions
+dnl Check if libcdata or required headers and functions are available
 AX_LIBCDATA_CHECK_ENABLE
 
-dnl Check for enabling libclocale for cross-platform C locale functions
+dnl Check if libclocale or required headers and functions are available
 AX_LIBCLOCALE_CHECK_ENABLE
 
-dnl Check for enabling libcnotify for cross-platform C notification functions
+dnl Check if libcnotify or required headers and functions are available
 AX_LIBCNOTIFY_CHECK_ENABLE
 
-dnl Check for enabling libcsplit for cross-platform C split string functions
+dnl Check if libcsplit or required headers and functions are available
 AX_LIBCSPLIT_CHECK_ENABLE
 
-dnl Check for enabling libuna for Unicode string support
+dnl Check if libuna or required headers and functions are available
 AX_LIBUNA_CHECK_ENABLE
 
-dnl Check for enabling libcfile for cross-platform C file functions
+dnl Check if libcfile or required headers and functions are available
 AX_LIBCFILE_CHECK_ENABLE
 
-dnl Check for enabling libcpath for cross-platform C path functions
+dnl Check if libcpath or required headers and functions are available
 AX_LIBCPATH_CHECK_ENABLE
 
-dnl Check for enabling libbfio for basic file IO support
+dnl Check if libbfio or required headers and functions are available
 AX_LIBBFIO_CHECK_ENABLE
 
-dnl Check for enabling libfcache for file value cache support
+dnl Check if libfcache or required headers and functions are available
 AX_LIBFCACHE_CHECK_ENABLE
 
-dnl Check for enabling libfdata for file and memory data block support
+dnl Check if libfdata or required headers and functions are available
 AX_LIBFDATA_CHECK_ENABLE
 
-dnl Check for enabling libfvalue for file value support
+dnl Check if libfvalue or required headers and functions are available
 AX_LIBFVALUE_CHECK_ENABLE
 
-dnl Check for zlib compression support
+dnl Check if zlib or required headers and functions are available
 AX_ZLIB_CHECK_ENABLE
 AX_ZLIB_CHECK_UNCOMPRESS
 
-dnl Check for library function support
+dnl Check if libvmdk required headers and functions are available
 AX_LIBVMDK_CHECK_LOCAL
 
-dnl Check for enabling libcsystem for cross-platform C generic system functions
-AX_LIBCSYSTEM_CHECK_ENABLE
-
-dnl Check for libfuse Filesystem in Userspace (FUSE) support
-AX_LIBFUSE_CHECK_ENABLE
-
-dnl Check for functions
-AS_IF(
- [test "x$ac_cv_enable_winapi" = xno],
- [AC_HEADER_TIME
- AC_CHECK_FUNCS([getegid geteuid time])
- ])
-
-dnl Check if vmdktools should be build as static executables
-AX_COMMON_CHECK_ENABLE_STATIC_EXECUTABLES
-
-dnl Check if libvmdk should be build with verbose output
-AX_COMMON_CHECK_ENABLE_VERBOSE_OUTPUT
-
-dnl Check if libvmdk should be build with debug output
-AX_COMMON_CHECK_ENABLE_DEBUG_OUTPUT
-
-dnl Check if libvmdk python bindings (pyvmdk) should be build
-AX_PYTHON_CHECK_PYPREFIX
+dnl Check if libvmdk Python bindings (pyvmdk) required headers and functions are available
 AX_PYTHON_CHECK_ENABLE
-AX_PYTHON2_CHECK_ENABLE
-AX_PYTHON3_CHECK_ENABLE
-
-dnl Headers included in various places
-AC_CHECK_HEADERS([stdarg.h varargs.h])
 
 AS_IF(
- [test "x$ac_cv_header_stdarg_h" != xyes && test "x$ac_cv_header_varargs_h" != xyes],
- [AC_MSG_FAILURE(
-  [Missing headers: stdarg.h and varargs.h],
-  [1])
- ])
-
-dnl Check if DLL support is needed
-AS_IF(
- [test "x$enable_shared" = xyes],
- [AS_CASE(
-  [$host],
-  [*cygwin* | *mingw*],
-  [AC_DEFINE(
-   [HAVE_DLLMAIN],
-   [1],
-   [Define to 1 to enable the DllMain function.])
-  AC_SUBST(
-   [HAVE_DLLMAIN],
-   [1])
+  [test "x${ac_cv_enable_python}" != xno || test "x${ac_cv_enable_python2}" != xno || test "x${ac_cv_enable_python3}" != xno],
+  [dnl Headers included in pyvmdk/pyvmdk_error.c
+  AC_CHECK_HEADERS([stdarg.h varargs.h])
 
   AS_IF(
-   [test "x$ac_cv_enable_static_executables" = xno],
-   [AC_SUBST(
-    [LIBVMDK_DLL_IMPORT],
-    ["-DLIBVMDK_DLL_IMPORT"])
-   ])
+    [test "x$ac_cv_header_stdarg_h" != xyes && test "x$ac_cv_header_varargs_h" != xyes],
+    [AC_MSG_FAILURE(
+      [Missing headers: stdarg.h and varargs.h],
+      [1])
+    ])
   ])
- ])
+
+dnl Check if libfuse or required headers and functions are available
+AX_LIBFUSE_CHECK_ENABLE
+
+dnl Check if vmdktools required headers and functions are available
+AX_VMDKTOOLS_CHECK_LOCAL
+
+dnl Check if DLL support is needed
+AX_LIBVMDK_CHECK_DLL_SUPPORT
+
+dnl Check if tests required headers and functions are available
+AX_TESTS_CHECK_LOCAL
+AX_TESTS_CHECK_OSSFUZZ
+
+dnl Set additional compiler flags
+CFLAGS="$CFLAGS -Wall";
 
 dnl Check if requires and build requires should be set in spec file
 AS_IF(
- [test "x$ac_cv_libcstring" = xyes || test "x$ac_cv_libcerror" = xyes || test "x$ac_cv_libcthreads" = xyes || test "x$ac_cv_libcdata" = xyes ||  test "x$ac_cv_libclocale" = xyes || test "x$ac_cv_libcnotify" = xyes || test "x$ac_cv_libcsplit" = xyes || test "x$ac_cv_libuna" = xyes || test "x$ac_cv_libcfile" = xyes || test "x$ac_cv_libcpath" = xyes || test "x$ac_cv_libbfio" = xyes || test "x$ac_cv_libfcache" = xyes || test "x$ac_cv_libfdata" = xyes || test "x$ac_cv_libfvalue" = xyes || test "x$ac_cv_zlib" != xno],
+ [test "x$ac_cv_libcerror" = xyes || test "x$ac_cv_libcthreads" = xyes || test "x$ac_cv_libcdata" = xyes || test "x$ac_cv_libclocale" = xyes || test "x$ac_cv_libcnotify" = xyes || test "x$ac_cv_libcsplit" = xyes || test "x$ac_cv_libuna" = xyes || test "x$ac_cv_libcfile" = xyes || test "x$ac_cv_libcpath" = xyes || test "x$ac_cv_libbfio" = xyes || test "x$ac_cv_libfcache" = xyes || test "x$ac_cv_libfdata" = xyes || test "x$ac_cv_libfvalue" = xyes || test "x$ac_cv_zlib" != xno],
  [AC_SUBST(
   [libvmdk_spec_requires],
   [Requires:])
- AC_SUBST(
-  [libvmdk_spec_build_requires],
-  [BuildRequires:])
  ])
 
 AS_IF(
- [test "x$ac_cv_libcsystem" = xyes || test "x$ac_cv_libfuse" != xno],
+ [test "x$ac_cv_libfuse" != xno],
  [AC_SUBST(
   [libvmdk_spec_tools_build_requires],
   [BuildRequires:])
@@ -192,16 +170,10 @@ AC_SUBST(
  [SPEC_DATE],
  [`date +"%a %b %e %Y" 2> /dev/null`])
 
-dnl Set the current working directory for PackageMaker files
-AC_SUBST(
- [PWD],
- [`pwd`])
-
-dnl Have configure make the Makefiles
+dnl Generate Makefiles
 AC_CONFIG_FILES([Makefile])
 AC_CONFIG_FILES([include/Makefile])
 AC_CONFIG_FILES([common/Makefile])
-AC_CONFIG_FILES([libcstring/Makefile])
 AC_CONFIG_FILES([libcerror/Makefile])
 AC_CONFIG_FILES([libcthreads/Makefile])
 AC_CONFIG_FILES([libcdata/Makefile])
@@ -216,30 +188,29 @@ AC_CONFIG_FILES([libfcache/Makefile])
 AC_CONFIG_FILES([libfdata/Makefile])
 AC_CONFIG_FILES([libfvalue/Makefile])
 AC_CONFIG_FILES([libvmdk/Makefile])
-AC_CONFIG_FILES([libcsystem/Makefile])
-AC_CONFIG_FILES([vmdktools/Makefile])
 AC_CONFIG_FILES([pyvmdk/Makefile])
 AC_CONFIG_FILES([pyvmdk-python2/Makefile])
 AC_CONFIG_FILES([pyvmdk-python3/Makefile])
+AC_CONFIG_FILES([vmdktools/Makefile])
 AC_CONFIG_FILES([po/Makefile.in])
 AC_CONFIG_FILES([po/Makevars])
 AC_CONFIG_FILES([manuals/Makefile])
 AC_CONFIG_FILES([tests/Makefile])
+AC_CONFIG_FILES([ossfuzz/Makefile])
 AC_CONFIG_FILES([msvscpp/Makefile])
-dnl Have configure make the include files
+dnl Generate header files
 AC_CONFIG_FILES([include/libvmdk.h])
 AC_CONFIG_FILES([include/libvmdk/definitions.h])
 AC_CONFIG_FILES([include/libvmdk/features.h])
 AC_CONFIG_FILES([include/libvmdk/types.h])
 AC_CONFIG_FILES([libvmdk/libvmdk_definitions.h])
-dnl Have configure make distribution specific files
+dnl Generate distribution specific files
 AC_CONFIG_FILES([common/types.h])
 AC_CONFIG_FILES([dpkg/changelog])
-AC_CONFIG_FILES([dpkg/copyright])
 AC_CONFIG_FILES([libvmdk/libvmdk.rc])
 AC_CONFIG_FILES([libvmdk.pc])
 AC_CONFIG_FILES([libvmdk.spec])
-dnl Have configure write its configuration
+dnl Generate a source configuration file
 AC_CONFIG_HEADERS([common/config.h])
 
 AC_OUTPUT
@@ -247,7 +218,6 @@ AC_OUTPUT
 dnl Print a summary
 AC_MSG_NOTICE([
 Building:
-   libcstring support:                        $ac_cv_libcstring
    libcerror support:                         $ac_cv_libcerror
    libcthreads support:                       $ac_cv_libcthreads
    libcdata support:                          $ac_cv_libcdata
@@ -262,7 +232,6 @@ Building:
    libfdata support:                          $ac_cv_libfdata
    libfvalue support:                         $ac_cv_libfvalue
    DEFLATE compression support:               $ac_cv_uncompress
-   libcsystem support:                        $ac_cv_libcsystem
    FUSE support:                              $ac_cv_libfuse
 
 Features:
@@ -270,10 +239,7 @@ Features:
    Wide character type support:               $ac_cv_enable_wide_character_type
    vmdktools are build as static executables: $ac_cv_enable_static_executables
    Python (pyvmdk) support:                   $ac_cv_enable_python
-   Python version 2 (pyvmdk) support:         $ac_cv_enable_python2
-   Python version 3 (pyvmdk) support:         $ac_cv_enable_python3
    Verbose output:                            $ac_cv_enable_verbose_output
    Debug output:                              $ac_cv_enable_debug_output
 ]);
-
 

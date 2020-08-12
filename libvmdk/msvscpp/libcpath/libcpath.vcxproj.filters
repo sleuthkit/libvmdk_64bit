@@ -24,6 +24,9 @@
     <ClCompile Include="..\..\libcpath\libcpath_support.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\libcpath\libcpath_system_string.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\libcpath\libcpath_definitions.h">
@@ -44,9 +47,6 @@
     <ClInclude Include="..\..\libcpath\libcpath_libcsplit.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\libcpath\libcpath_libcstring.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\libcpath\libcpath_libuna.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -54,6 +54,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\libcpath\libcpath_support.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libcpath\libcpath_system_string.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\libcpath\libcpath_unused.h">

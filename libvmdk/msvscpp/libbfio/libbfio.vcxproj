@@ -21,28 +21,27 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{41CFAFBF-A1C8-4704-AFEF-31979E6452B9}</ProjectGuid>
     <RootNamespace>libbfio</RootNamespace>
-    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='VSDebug|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v140</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v140_xp</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='VSDebug|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v140</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v140_xp</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v140</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v140_xp</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v140</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v140_xp</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -61,35 +60,35 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
-    <_ProjectFileVersion>10.0.40219.1</_ProjectFileVersion>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)$(Configuration)\</OutDir>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(Configuration)\</IntDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(Platform)\$(Configuration)\</IntDir>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='VSDebug|Win32'">$(SolutionDir)$(Configuration)\</OutDir>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='VSDebug|x64'">$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='VSDebug|Win32'">$(Configuration)\</IntDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='VSDebug|x64'">$(Configuration)\</IntDir>
+    <_ProjectFileVersion>14.0.25431.1</_ProjectFileVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
+    <IntDir>$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='VSDebug|Win32'">
+    <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
+    <IntDir>$(Configuration)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <AdditionalIncludeDirectories>..\..\include;..\..\common;..\..\libcstring;..\..\libcerror;..\..\libcthreads;..\..\libclocale;..\..\libcnotify;..\..\libcdata;..\..\libcsplit;..\..\libcfile;..\..\libcpath;..\..\libuna;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_DEPRECATE;HAVE_LOCAL_LIBCSTRING;HAVE_LOCAL_LIBCERROR;HAVE_LOCAL_LIBCTHREADS;HAVE_LOCAL_LIBCLOCALE;HAVE_LOCAL_LIBCNOTIFY;HAVE_LOCAL_LIBCDATA;HAVE_LOCAL_LIBCSPLIT;HAVE_LOCAL_LIBCFILE;HAVE_LOCAL_LIBCPATH;HAVE_LOCAL_LIBUNA;HAVE_LOCAL_LIBBFIO;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\include;..\..\common;..\..\libcerror;..\..\libcthreads;..\..\libclocale;..\..\libcnotify;..\..\libcdata;..\..\libcsplit;..\..\libcfile;..\..\libcpath;..\..\libuna;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_DEPRECATE;HAVE_LOCAL_LIBCERROR;HAVE_LOCAL_LIBCTHREADS;HAVE_LOCAL_LIBCLOCALE;HAVE_LOCAL_LIBCNOTIFY;HAVE_LOCAL_LIBCDATA;HAVE_LOCAL_LIBCSPLIT;HAVE_LOCAL_LIBCFILE;HAVE_LOCAL_LIBCPATH;HAVE_LOCAL_LIBUNA;HAVE_LOCAL_LIBBFIO;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <WarningLevel>Level4</WarningLevel>
       <CompileAs>CompileAsC</CompileAs>
     </ClCompile>
     <Lib>
       <OutputFile>$(OutDir)$(ProjectName).lib</OutputFile>
-      <ModuleDefinitionFile>
-      </ModuleDefinitionFile>
+      <ModuleDefinitionFile />
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
     </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>..\..\include;..\..\common;..\..\libcstring;..\..\libcerror;..\..\libcthreads;..\..\libclocale;..\..\libcnotify;..\..\libcdata;..\..\libcsplit;..\..\libcfile;..\..\libcpath;..\..\libuna;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_DEPRECATE;HAVE_LOCAL_LIBCSTRING;HAVE_LOCAL_LIBCERROR;HAVE_LOCAL_LIBCTHREADS;HAVE_LOCAL_LIBCLOCALE;HAVE_LOCAL_LIBCNOTIFY;HAVE_LOCAL_LIBCDATA;HAVE_LOCAL_LIBCSPLIT;HAVE_LOCAL_LIBCFILE;HAVE_LOCAL_LIBCPATH;HAVE_LOCAL_LIBUNA;HAVE_LOCAL_LIBBFIO;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\include;..\..\common;..\..\libcerror;..\..\libcthreads;..\..\libclocale;..\..\libcnotify;..\..\libcdata;..\..\libcsplit;..\..\libcfile;..\..\libcpath;..\..\libuna;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_DEPRECATE;HAVE_LOCAL_LIBCERROR;HAVE_LOCAL_LIBCTHREADS;HAVE_LOCAL_LIBCLOCALE;HAVE_LOCAL_LIBCNOTIFY;HAVE_LOCAL_LIBCDATA;HAVE_LOCAL_LIBCSPLIT;HAVE_LOCAL_LIBCFILE;HAVE_LOCAL_LIBCPATH;HAVE_LOCAL_LIBUNA;HAVE_LOCAL_LIBBFIO;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <WarningLevel>Level4</WarningLevel>
       <CompileAs>CompileAsC</CompileAs>
@@ -104,8 +103,8 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='VSDebug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\..\include;..\..\common;..\..\libcstring;..\..\libcerror;..\..\libcthreads;..\..\libclocale;..\..\libcnotify;..\..\libcdata;..\..\libcsplit;..\..\libcfile;..\..\libcpath;..\..\libuna;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_DEPRECATE;HAVE_LOCAL_LIBCSTRING;HAVE_LOCAL_LIBCERROR;HAVE_LOCAL_LIBCTHREADS;HAVE_LOCAL_LIBCLOCALE;HAVE_LOCAL_LIBCNOTIFY;HAVE_LOCAL_LIBCDATA;HAVE_LOCAL_LIBCSPLIT;HAVE_LOCAL_LIBCFILE;HAVE_LOCAL_LIBCPATH;HAVE_LOCAL_LIBUNA;HAVE_LOCAL_LIBBFIO;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\include;..\..\common;..\..\libcerror;..\..\libcthreads;..\..\libclocale;..\..\libcnotify;..\..\libcdata;..\..\libcsplit;..\..\libcfile;..\..\libcpath;..\..\libuna;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_DEPRECATE;HAVE_LOCAL_LIBCERROR;HAVE_LOCAL_LIBCTHREADS;HAVE_LOCAL_LIBCLOCALE;HAVE_LOCAL_LIBCNOTIFY;HAVE_LOCAL_LIBCDATA;HAVE_LOCAL_LIBCSPLIT;HAVE_LOCAL_LIBCFILE;HAVE_LOCAL_LIBCPATH;HAVE_LOCAL_LIBUNA;HAVE_LOCAL_LIBBFIO;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <SmallerTypeCheck>true</SmallerTypeCheck>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -115,16 +114,15 @@
     </ClCompile>
     <Lib>
       <OutputFile>$(OutDir)$(ProjectName).lib</OutputFile>
-      <ModuleDefinitionFile>
-      </ModuleDefinitionFile>
+      <ModuleDefinitionFile />
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
     </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='VSDebug|x64'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\..\include;..\..\common;..\..\libcstring;..\..\libcerror;..\..\libcthreads;..\..\libclocale;..\..\libcnotify;..\..\libcdata;..\..\libcsplit;..\..\libcfile;..\..\libcpath;..\..\libuna;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_DEPRECATE;HAVE_LOCAL_LIBCSTRING;HAVE_LOCAL_LIBCERROR;HAVE_LOCAL_LIBCTHREADS;HAVE_LOCAL_LIBCLOCALE;HAVE_LOCAL_LIBCNOTIFY;HAVE_LOCAL_LIBCDATA;HAVE_LOCAL_LIBCSPLIT;HAVE_LOCAL_LIBCFILE;HAVE_LOCAL_LIBCPATH;HAVE_LOCAL_LIBUNA;HAVE_LOCAL_LIBBFIO;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\include;..\..\common;..\..\libcerror;..\..\libcthreads;..\..\libclocale;..\..\libcnotify;..\..\libcdata;..\..\libcsplit;..\..\libcfile;..\..\libcpath;..\..\libuna;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_DEPRECATE;HAVE_LOCAL_LIBCERROR;HAVE_LOCAL_LIBCTHREADS;HAVE_LOCAL_LIBCLOCALE;HAVE_LOCAL_LIBCNOTIFY;HAVE_LOCAL_LIBCDATA;HAVE_LOCAL_LIBCSPLIT;HAVE_LOCAL_LIBCFILE;HAVE_LOCAL_LIBCPATH;HAVE_LOCAL_LIBUNA;HAVE_LOCAL_LIBBFIO;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <SmallerTypeCheck>true</SmallerTypeCheck>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -142,12 +140,16 @@
   <ItemGroup>
     <ClCompile Include="..\..\libbfio\libbfio_error.c" />
     <ClCompile Include="..\..\libbfio\libbfio_file.c" />
+    <ClCompile Include="..\..\libbfio\libbfio_file_io_handle.c" />
     <ClCompile Include="..\..\libbfio\libbfio_file_pool.c" />
     <ClCompile Include="..\..\libbfio\libbfio_file_range.c" />
+    <ClCompile Include="..\..\libbfio\libbfio_file_range_io_handle.c" />
     <ClCompile Include="..\..\libbfio\libbfio_handle.c" />
     <ClCompile Include="..\..\libbfio\libbfio_memory_range.c" />
+    <ClCompile Include="..\..\libbfio\libbfio_memory_range_io_handle.c" />
     <ClCompile Include="..\..\libbfio\libbfio_pool.c" />
     <ClCompile Include="..\..\libbfio\libbfio_support.c" />
+    <ClCompile Include="..\..\libbfio\libbfio_system_string.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\libbfio\libbfio_codepage.h" />
@@ -155,20 +157,23 @@
     <ClInclude Include="..\..\libbfio\libbfio_error.h" />
     <ClInclude Include="..\..\libbfio\libbfio_extern.h" />
     <ClInclude Include="..\..\libbfio\libbfio_file.h" />
+    <ClInclude Include="..\..\libbfio\libbfio_file_io_handle.h" />
     <ClInclude Include="..\..\libbfio\libbfio_file_pool.h" />
     <ClInclude Include="..\..\libbfio\libbfio_file_range.h" />
+    <ClInclude Include="..\..\libbfio\libbfio_file_range_io_handle.h" />
     <ClInclude Include="..\..\libbfio\libbfio_handle.h" />
     <ClInclude Include="..\..\libbfio\libbfio_libcdata.h" />
     <ClInclude Include="..\..\libbfio\libbfio_libcerror.h" />
     <ClInclude Include="..\..\libbfio\libbfio_libcfile.h" />
     <ClInclude Include="..\..\libbfio\libbfio_libclocale.h" />
     <ClInclude Include="..\..\libbfio\libbfio_libcpath.h" />
-    <ClInclude Include="..\..\libbfio\libbfio_libcstring.h" />
     <ClInclude Include="..\..\libbfio\libbfio_libcthreads.h" />
     <ClInclude Include="..\..\libbfio\libbfio_libuna.h" />
     <ClInclude Include="..\..\libbfio\libbfio_memory_range.h" />
+    <ClInclude Include="..\..\libbfio\libbfio_memory_range_io_handle.h" />
     <ClInclude Include="..\..\libbfio\libbfio_pool.h" />
     <ClInclude Include="..\..\libbfio\libbfio_support.h" />
+    <ClInclude Include="..\..\libbfio\libbfio_system_string.h" />
     <ClInclude Include="..\..\libbfio\libbfio_types.h" />
     <ClInclude Include="..\..\libbfio\libbfio_unused.h" />
   </ItemGroup>
@@ -199,10 +204,6 @@
     </ProjectReference>
     <ProjectReference Include="..\libcsplit\libcsplit.vcxproj">
       <Project>{b86fb73a-4acc-42de-9545-586d93955b06}</Project>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
-    <ProjectReference Include="..\libcstring\libcstring.vcxproj">
-      <Project>{20ffc4c9-f44c-45f6-a827-4819b4df3c9f}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
     <ProjectReference Include="..\libcthreads\libcthreads.vcxproj">

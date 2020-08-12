@@ -15,21 +15,36 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\vmdktools\byte_size_string.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\vmdktools\info_handle.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\vmdktools\vmdkinfo.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\vmdktools\vmdkoutput.c">
+    <ClCompile Include="..\..\vmdktools\vmdktools_getopt.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vmdktools\vmdktools_output.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vmdktools\vmdktools_signal.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\vmdktools\byte_size_string.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\vmdktools\info_handle.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\vmdktools\vmdkoutput.h">
+    <ClInclude Include="..\..\vmdktools\vmdktools_getopt.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vmdktools\vmdktools_i18n.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\vmdktools\vmdktools_libbfio.h">
@@ -44,12 +59,6 @@
     <ClInclude Include="..\..\vmdktools\vmdktools_libcnotify.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\vmdktools\vmdktools_libcstring.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\vmdktools\vmdktools_libcsystem.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\vmdktools\vmdktools_libfvalue.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -57,6 +66,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\vmdktools\vmdktools_libvmdk.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vmdktools\vmdktools_output.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vmdktools\vmdktools_signal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vmdktools\vmdktools_unused.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

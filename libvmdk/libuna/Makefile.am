@@ -2,8 +2,7 @@ if HAVE_LOCAL_LIBUNA
 AM_CPPFLAGS = \
 	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/common \
-	@LIBCSTRING_CPPFLAGS@ \
-	@LIBCERROR_CPPFLAGS@
+	@LIBCERROR_CPPFLAGS@ 
 
 noinst_LTLIBRARIES = libuna.la
 
@@ -44,8 +43,8 @@ libuna_la_SOURCES = \
 	libuna_definitions.h \
 	libuna_error.c libuna_error.h \
 	libuna_extern.h \
-	libuna_inline.h \
 	libuna_libcerror.h \
+	libuna_scsu.c libuna_scsu.h \
 	libuna_support.c libuna_support.h \
 	libuna_types.h \
 	libuna_unicode_character.c libuna_unicode_character.h \
@@ -59,7 +58,6 @@ libuna_la_SOURCES = \
 	libuna_utf8_stream.c libuna_utf8_stream.h \
 	libuna_utf8_string.c libuna_utf8_string.h
 endif
-
 
 MAINTAINERCLEANFILES = \
 	Makefile.in

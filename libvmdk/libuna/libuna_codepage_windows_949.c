@@ -1,29 +1,28 @@
 /*
  * Windows 949 codepage (Korean) functions
  *
- * Copyright (C) 2008-2016, Joachim Metz <joachim.metz@gmail.com>
+ * Copyright (C) 2008-2020, Joachim Metz <joachim.metz@gmail.com>
  *
  * Refer to AUTHORS for acknowledgements.
  *
- * This software is free software: you can redistribute it and/or modify
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This software is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
- * along with this software.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #include <common.h>
 #include <types.h>
 
 #include "libuna_codepage_windows_949.h"
-#include "libuna_inline.h"
 #include "libuna_libcerror.h"
 #include "libuna_types.h"
 
@@ -7215,7 +7214,6 @@ const uint16_t libuna_codepage_windows_949_unicode_to_byte_stream_base_0xff00[ 2
  * Adds the size to the byte stream character size value
  * Returns 1 if successful or -1 on error
  */
-LIBUNA_INLINE \
 int libuna_codepage_windows_949_unicode_character_size_to_byte_stream(
      libuna_unicode_character_t unicode_character,
      size_t *byte_stream_character_size,
@@ -7276,7 +7274,7 @@ int libuna_codepage_windows_949_unicode_character_size_to_byte_stream(
 		byte_stream_value  = libuna_codepage_windows_949_unicode_to_byte_stream_base_0xac00[ unicode_character ];
 	}
 	else if( ( unicode_character >= 0xf900 )
-	      && ( unicode_character < 0xfa14 ) )
+	      && ( unicode_character < 0xfa0c ) )
 	{
 		unicode_character -= 0xf900;
 		byte_stream_value  = libuna_codepage_windows_949_unicode_to_byte_stream_base_0xf900[ unicode_character ];
@@ -7300,10 +7298,9 @@ int libuna_codepage_windows_949_unicode_character_size_to_byte_stream(
 	return( 1 );
 }
 
-/* Copies a Unicode character from a byte stream
+/* Copies an Unicode character from a byte stream
  * Returns 1 if successful or -1 on error
  */
-LIBUNA_INLINE \
 int libuna_codepage_windows_949_copy_from_byte_stream(
      libuna_unicode_character_t *unicode_character,
      const uint8_t *byte_stream,
@@ -8112,10 +8109,9 @@ int libuna_codepage_windows_949_copy_from_byte_stream(
 	return( 1 );
 }
 
-/* Copies a Unicode character to a byte stream
+/* Copies an Unicode character to a byte stream
  * Returns 1 if successful or -1 on error
  */
-LIBUNA_INLINE \
 int libuna_codepage_windows_949_copy_to_byte_stream(
      libuna_unicode_character_t unicode_character,
      uint8_t *byte_stream,
@@ -8211,7 +8207,7 @@ int libuna_codepage_windows_949_copy_to_byte_stream(
 		byte_stream_value  = libuna_codepage_windows_949_unicode_to_byte_stream_base_0xac00[ unicode_character ];
 	}
 	else if( ( unicode_character >= 0xf900 )
-	      && ( unicode_character < 0xfa14 ) )
+	      && ( unicode_character < 0xfa0c ) )
 	{
 		unicode_character -= 0xf900;
 		byte_stream_value  = libuna_codepage_windows_949_unicode_to_byte_stream_base_0xf900[ unicode_character ];

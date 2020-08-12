@@ -24,10 +24,13 @@
     <ClCompile Include="..\..\libcfile\libcfile_notify.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\libcfile\libcfile_stream.c">
+    <ClCompile Include="..\..\libcfile\libcfile_support.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\libcfile\libcfile_support.c">
+    <ClCompile Include="..\..\libcfile\libcfile_system_string.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libcfile\libcfile_winapi.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -53,25 +56,25 @@
     <ClInclude Include="..\..\libcfile\libcfile_libcnotify.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\libcfile\libcfile_libcstring.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\libcfile\libcfile_libuna.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\libcfile\libcfile_notify.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\libcfile\libcfile_stream.h">
+    <ClInclude Include="..\..\libcfile\libcfile_support.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\libcfile\libcfile_support.h">
+    <ClInclude Include="..\..\libcfile\libcfile_system_string.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\libcfile\libcfile_types.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\libcfile\libcfile_unused.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libcfile\libcfile_winapi.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

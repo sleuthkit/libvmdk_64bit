@@ -21,6 +21,12 @@
     <ClCompile Include="..\..\libcdata\libcdata_btree.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\libcdata\libcdata_btree_node.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\libcdata\libcdata_btree_values_list.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\libcdata\libcdata_error.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -50,6 +56,12 @@
     <ClInclude Include="..\..\libcdata\libcdata_btree.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\libcdata\libcdata_btree_node.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libcdata\libcdata_btree_values_list.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\libcdata\libcdata_definitions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -60,9 +72,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\libcdata\libcdata_libcerror.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\libcdata\libcdata_libcstring.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\libcdata\libcdata_libcthreads.h">

@@ -1,22 +1,22 @@
 /*
  * Narrow character string functions
  *
- * Copyright (C) 2008-2016, Joachim Metz <joachim.metz@gmail.com>
+ * Copyright (C) 2008-2020, Joachim Metz <joachim.metz@gmail.com>
  *
  * Refer to AUTHORS for acknowledgements.
  *
- * This software is free software: you can redistribute it and/or modify
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This software is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
- * along with this software.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #include <common.h>
@@ -41,6 +41,7 @@ int libcsplit_narrow_string_split(
 	char *segment_start    = NULL;
 	char *segment_end      = NULL;
 	char *string_end       = NULL;
+	char *string_start     = NULL;
 	static char *function  = "libcsplit_narrow_string_split";
 	ssize_t segment_length = 0;
 	int number_of_segments = 0;
@@ -155,23 +156,12 @@ int libcsplit_narrow_string_split(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 		 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
-		 "%s: unable to intialize split string.",
+		 "%s: unable to initialize split string.",
 		 function );
 
 		goto on_error;
 	}
-	if( *split_string == NULL )
-	{
-		libcerror_error_set(
-		 error,
-		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-		 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
-		 "%s: missing split string.",
-		 function );
-
-		goto on_error;
-	}
-	/* Do not bother splitting empty strings
+	/* Do not bother with strings that do not need splitting
 	 */
 	if( number_of_segments == 0 )
 	{
@@ -182,7 +172,7 @@ int libcsplit_narrow_string_split(
 	 */
 	if( libcsplit_narrow_split_string_get_string(
 	     *split_string,
-	     &segment_start,
+	     &string_start,
 	     &string_size,
 	     error ) != 1 )
 	{
@@ -195,13 +185,13 @@ int libcsplit_narrow_string_split(
 
 		goto on_error;
 	}
-	if( segment_start == NULL )
+	if( string_start == NULL )
 	{
 		libcerror_error_set(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
 		 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
-		 "%s: missing segment start.",
+		 "%s: missing string start.",
 		 function );
 
 		goto on_error;
@@ -217,7 +207,8 @@ int libcsplit_narrow_string_split(
 
 		goto on_error;
 	}
-	string_end = &( segment_start[ string_size - 1 ] );
+	segment_start = string_start;
+	string_end    = &( string_start[ string_size - 1 ] );
 
 	for( segment_index = 0;
 	     segment_index < number_of_segments;
@@ -274,11 +265,11 @@ int libcsplit_narrow_string_split(
 		{
 			break;
 		}
-		if( segment_end == ( (libcsplit_internal_narrow_split_string_t *) *split_string )->string )
+		if( segment_end == string_start )
 		{
 			segment_start++;
 		}
-		if( segment_end != ( (libcsplit_internal_narrow_split_string_t *) *split_string )->string )
+		else
 		{
 			segment_start = segment_end + 1;
 		}

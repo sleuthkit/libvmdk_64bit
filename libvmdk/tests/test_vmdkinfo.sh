@@ -1,172 +1,108 @@
 #!/bin/bash
+# Info tool testing script
 #
-# vmdkinfo tool testing script
-#
-# Copyright (C) 2009-2016, Joachim Metz <joachim.metz@gmail.com>
-#
-# Refer to AUTHORS for acknowledgements.
-#
-# This software is free software: you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This software is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with this software.  If not, see <http://www.gnu.org/licenses/>.
-#
+# Version: 20200705
 
 EXIT_SUCCESS=0;
 EXIT_FAILURE=1;
 EXIT_IGNORE=77;
 
-list_contains()
-{
-	LIST=$1;
-	SEARCH=$2;
+PROFILES=("vmdkinfo");
+OPTIONS_PER_PROFILE=("");
+OPTION_SETS="";
 
-	for LINE in $LIST;
-	do
-		if test $LINE = $SEARCH;
-		then
-			return ${EXIT_SUCCESS};
-		fi
-	done
+INPUT_GLOB="*";
 
-	return ${EXIT_FAILURE};
-}
-
-test_info()
-{ 
-	DIRNAME=$1;
-	INPUT_FILE=$2;
-	BASENAME=`basename ${INPUT_FILE}`;
-
-	rm -rf tmp;
-	mkdir tmp;
-
-	${TEST_RUNNER} ${VMDKINFO} ${INPUT_FILE} | sed '1,2d' > tmp/${BASENAME}.log;
-
-	RESULT=$?;
-
-	if test -f "input/.vmdkinfo/${DIRNAME}/${BASENAME}.log.gz";
-	then
-		zdiff "input/.vmdkinfo/${DIRNAME}/${BASENAME}.log.gz" "tmp/${BASENAME}.log";
-
-		RESULT=$?;
-	else
-		mv "tmp/${BASENAME}.log" "input/.vmdkinfo/${DIRNAME}";
-
-		gzip "input/.vmdkinfo/${DIRNAME}/${BASENAME}.log";
-	fi
-
-	rm -rf tmp;
-
-	echo -n "Testing vmdkinfo of input: ${INPUT_FILE} ";
-
-	if test ${RESULT} -ne ${EXIT_SUCCESS};
-	then
-		echo " (FAIL)";
-	else
-		echo " (PASS)";
-	fi
-	return ${RESULT};
-}
-
-VMDKINFO="../vmdktools/vmdkinfo";
-
-if ! test -x ${VMDKINFO};
+if test -n "${SKIP_TOOLS_TESTS}" || test -n "${SKIP_TOOLS_END_TO_END_TESTS}";
 then
-	VMDKINFO="../vmdktools/vmdkinfo.exe";
+	exit ${EXIT_IGNORE};
 fi
 
-if ! test -x ${VMDKINFO};
+TEST_EXECUTABLE="../vmdktools/vmdkinfo";
+
+if ! test -x "${TEST_EXECUTABLE}";
 then
-	echo "Missing executable: ${VMDKINFO}";
+	TEST_EXECUTABLE="../vmdktools/vmdkinfo.exe";
+fi
+
+if ! test -x "${TEST_EXECUTABLE}";
+then
+	echo "Missing test executable: ${TEST_EXECUTABLE}";
 
 	exit ${EXIT_FAILURE};
 fi
 
 TEST_RUNNER="tests/test_runner.sh";
 
-if ! test -x ${TEST_RUNNER};
+if ! test -f "${TEST_RUNNER}";
 then
 	TEST_RUNNER="./test_runner.sh";
 fi
 
-if ! test -x ${TEST_RUNNER};
+if ! test -f "${TEST_RUNNER}";
 then
 	echo "Missing test runner: ${TEST_RUNNER}";
 
 	exit ${EXIT_FAILURE};
 fi
 
+source ${TEST_RUNNER};
+
 if ! test -d "input";
 then
-	echo "No input directory found.";
+	echo "Test input directory not found.";
+
+	exit ${EXIT_IGNORE};
+fi
+RESULT=`ls input/* | tr ' ' '\n' | wc -l`;
+
+if test ${RESULT} -eq ${EXIT_SUCCESS};
+then
+	echo "No files or directories found in the test input directory";
 
 	exit ${EXIT_IGNORE};
 fi
 
-OLDIFS=${IFS};
-IFS="
-";
+for PROFILE_INDEX in ${!PROFILES[*]};
+do
+	TEST_PROFILE=${PROFILES[${PROFILE_INDEX}]};
 
-RESULT=`ls input/* | tr ' ' '\n' | wc -l`;
+	TEST_PROFILE_DIRECTORY=$(get_test_profile_directory "input" "${TEST_PROFILE}");
 
-if test ${RESULT} -eq 0;
-then
-	echo "No files or directories found in the input directory.";
+	IGNORE_LIST=$(read_ignore_list "${TEST_PROFILE_DIRECTORY}");
 
-	EXIT_RESULT=${EXIT_IGNORE};
-else
-	IGNORELIST="";
+	IFS=" " read -a OPTIONS <<< ${OPTIONS_PER_PROFILE[${PROFILE_INDEX}]};
 
-	if ! test -d "input/.vmdkinfo";
-	then
-		mkdir "input/.vmdkinfo";
-	fi
-	if test -f "input/.vmdkinfo/ignore";
-	then
-		IGNORELIST=`cat input/.vmdkinfo/ignore | sed '/^#/d'`;
-	fi
-	for TESTDIR in input/*;
+	RESULT=${EXIT_SUCCESS};
+
+	for TEST_SET_INPUT_DIRECTORY in input/*;
 	do
-		if test -d "${TESTDIR}";
+		if ! test -d "${TEST_SET_INPUT_DIRECTORY}";
 		then
-			DIRNAME=`basename ${TESTDIR}`;
+			continue;
+		fi
+		TEST_SET=`basename ${TEST_SET_INPUT_DIRECTORY}`;
 
-			if ! list_contains "${IGNORELIST}" "${DIRNAME}";
-			then
-				if ! test -d "input/.vmdkinfo/${DIRNAME}";
-				then
-					mkdir "input/.vmdkinfo/${DIRNAME}";
-				fi
-				if test -f "input/.vmdkinfo/${DIRNAME}/files";
-				then
-					TESTFILES=`cat input/.vmdkinfo/${DIRNAME}/files | sed "s?^?${TESTDIR}/?"`;
-				else
-					TESTFILES=`ls ${TESTDIR}/*`;
-				fi
-				for TESTFILE in ${TESTFILES};
-				do
-					if ! test_info "${DIRNAME}" "${TESTFILE}";
-					then
-						exit ${EXIT_FAILURE};
-					fi
-				done
-			fi
+		if check_for_test_set_in_ignore_list "${TEST_SET}" "${IGNORE_LIST}";
+		then
+			continue;
+		fi
+		TEST_SET_DIRECTORY=$(get_test_set_directory "${TEST_PROFILE_DIRECTORY}" "${TEST_SET_INPUT_DIRECTORY}");
+
+		run_test_on_test_set_with_options "${TEST_SET_DIRECTORY}" "vmdkinfo" "with_stdout_reference" "${OPTION_SETS}" "${TEST_EXECUTABLE}" "${OPTIONS[@]}";
+		RESULT=$?;
+
+		# Ignore failures due to corrupted data.
+		if test "${TEST_SET}" = "corrupted";
+		then
+			RESULT=${EXIT_SUCCESS};
+		fi
+		if test ${RESULT} -ne ${EXIT_SUCCESS};
+		then
+			break;
 		fi
 	done
+done
 
-	EXIT_RESULT=${EXIT_SUCCESS};
-fi
-
-IFS=${OLDIFS};
-
-exit ${EXIT_RESULT};
+exit ${RESULT};
 

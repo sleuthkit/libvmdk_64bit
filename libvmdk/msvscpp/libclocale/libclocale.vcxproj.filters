@@ -24,6 +24,9 @@
     <ClCompile Include="..\..\libclocale\libclocale_support.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\libclocale\libclocale_wide_string.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\libclocale\libclocale_codepage.h">
@@ -38,9 +41,6 @@
     <ClInclude Include="..\..\libclocale\libclocale_libcerror.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\libclocale\libclocale_libcstring.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\libclocale\libclocale_locale.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -48,6 +48,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\libclocale\libclocale_unused.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libclocale\libclocale_wide_string.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

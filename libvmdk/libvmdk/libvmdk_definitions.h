@@ -1,22 +1,22 @@
 /*
  * The internal definitions
  *
- * Copyright (C) 2009-2016, Joachim Metz <joachim.metz@gmail.com>
+ * Copyright (C) 2009-2020, Joachim Metz <joachim.metz@gmail.com>
  *
  * Refer to AUTHORS for acknowledgements.
  *
- * This software is free software: you can redistribute it and/or modify
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This software is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
- * along with this software.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #if !defined( _LIBVMDK_INTERNAL_DEFINITIONS_H )
@@ -37,11 +37,11 @@
  * for local use of libvmdk
  */
 #else
-#define LIBVMDK_VERSION						20160119
+#define LIBVMDK_VERSION						20200810
 
 /* The libvmdk version string
  */
-#define LIBVMDK_VERSION_STRING					"20160119"
+#define LIBVMDK_VERSION_STRING					"20200810"
 
 /* The access flags definitions
  * bit 1        set to 1 for read access
@@ -75,7 +75,7 @@ enum LIBVMDK_FILE_TYPES
 
 /* The (virtual) disk types
  */
-enum LIBVMDK_DISK_TYPE
+enum LIBVMDK_DISK_TYPES
 {
 	LIBVMDK_DISK_TYPE_UNDEFINED,
 	LIBVMDK_DISK_TYPE_2GB_EXTENT_FLAT,
@@ -126,7 +126,7 @@ enum LIBVMDK_EXTENT_TYPES
 	LIBVMDK_EXTENT_TYPE_ZERO				= 7,
 };
 
-#endif
+#endif /* !defined( HAVE_LOCAL_LIBVMDK ) */
 
 /* The flags
  */
@@ -173,5 +173,5 @@ enum LIBVMDK_MARKERS
 #define LIBVMDK_MAXIMUM_CACHE_ENTRIES_GRAIN_GROUPS		32
 #define LIBVMDK_MAXIMUM_CACHE_ENTRIES_GRAINS			8
 
-#endif
+#endif /* !defined( _LIBVMDK_INTERNAL_DEFINITIONS_H ) */
 

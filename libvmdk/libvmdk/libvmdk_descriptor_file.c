@@ -1,27 +1,28 @@
 /*
  * Descriptor file functions
  *
- * Copyright (C) 2009-2016, Joachim Metz <joachim.metz@gmail.com>
+ * Copyright (C) 2009-2020, Joachim Metz <joachim.metz@gmail.com>
  *
  * Refer to AUTHORS for acknowledgements.
  *
- * This software is free software: you can redistribute it and/or modify
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This software is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
- * along with this software.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #include <common.h>
 #include <file_stream.h>
 #include <memory.h>
+#include <narrow_string.h>
 #include <types.h>
 
 #include "libvmdk_definitions.h"
@@ -32,7 +33,6 @@
 #include "libvmdk_libclocale.h"
 #include "libvmdk_libcnotify.h"
 #include "libvmdk_libcsplit.h"
-#include "libvmdk_libcstring.h"
 #include "libvmdk_libfvalue.h"
 #include "libvmdk_libuna.h"
 
@@ -216,13 +216,14 @@ int libvmdk_descriptor_file_read(
 
 		goto on_error;
 	}
-	if( file_size > (size64_t) SSIZE_MAX )
+	if( ( file_size == 0 )
+	 || ( file_size > (size64_t) MEMORY_MAXIMUM_ALLOCATION_SIZE ) )
 	{
 		libcerror_error_set(
 		 error,
 		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-		 LIBCERROR_RUNTIME_ERROR_VALUE_EXCEEDS_MAXIMUM,
-		 "%s: invalid file size value exceeds maximum.",
+		 LIBCERROR_RUNTIME_ERROR_VALUE_OUT_OF_BOUNDS,
+		 "%s: invalid file size value out of bounds.",
 		 function );
 
 		goto on_error;
@@ -475,11 +476,12 @@ int libvmdk_descriptor_file_read_signature(
      int *line_index,
      libcerror_error_t **error )
 {
-	char *line_string_segment        = NULL;
 	static char *function            = "libvmdk_descriptor_file_read_signature";
+	char *line_string_segment        = NULL;
 	size_t line_string_segment_index = 0;
 	size_t line_string_segment_size  = 0;
 	int result                       = 0;
+	int safe_line_index              = 0;
 
 	if( line_index == NULL )
 	{
@@ -503,13 +505,11 @@ int libvmdk_descriptor_file_read_signature(
 
 		return( -1 );
 	}
-	*line_index = 0;
-
-	while( *line_index < number_of_lines )
+	while( safe_line_index < number_of_lines )
 	{
 		if( libcsplit_narrow_split_string_get_segment_by_index(
 		     lines,
-		     *line_index,
+		     safe_line_index,
 		     &line_string_segment,
 		     &line_string_segment_size,
 		     error ) != 1 )
@@ -520,7 +520,7 @@ int libvmdk_descriptor_file_read_signature(
 			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
 			 "%s: unable to retrieve line: %d.",
 			 function,
-			 *line_index );
+			 safe_line_index );
 
 			return( -1 );
 		}
@@ -532,9 +532,15 @@ int libvmdk_descriptor_file_read_signature(
 			 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
 			 "%s: missing line string segment: %d.",
 			 function,
-			 *line_index );
+			 safe_line_index );
 
 			return( -1 );
+		}
+		if( line_string_segment_size < 2 )
+		{
+			safe_line_index++;
+
+			continue;
 		}
 		/* Ignore trailing white space
 		 */
@@ -579,7 +585,7 @@ int libvmdk_descriptor_file_read_signature(
 			if( line_string_segment[ line_string_segment_index ] == '#' )
 			{
 				if( ( line_string_segment_size == 22 )
-				 && ( libcstring_narrow_string_compare(
+				 && ( narrow_string_compare_no_case(
 				       &( line_string_segment[ line_string_segment_index ] ),
 				       vmdk_descriptor_file_signature,
 				       21 ) == 0 ) )
@@ -594,8 +600,10 @@ int libvmdk_descriptor_file_read_signature(
 				break;
 			}
 		}
-		*line_index += 1;
+		safe_line_index++;
 	}
+	*line_index = safe_line_index;
+
 	return( result );
 }
 
@@ -618,6 +626,7 @@ int libvmdk_descriptor_file_read_header(
 	size_t value_identifier_length   = 0;
 	size_t value_length              = 0;
 	uint64_t value_64bit             = 0;
+	int safe_line_index              = 0;
 
 	if( descriptor_file == NULL )
 	{
@@ -652,8 +661,10 @@ int libvmdk_descriptor_file_read_header(
 
 		return( -1 );
 	}
-	if( ( *line_index < 0 )
-	 || ( *line_index >= number_of_lines ) )
+	safe_line_index = *line_index;
+
+	if( ( safe_line_index < 0 )
+	 || ( safe_line_index >= number_of_lines ) )
 	{
 		libcerror_error_set(
 		 error,
@@ -664,11 +675,11 @@ int libvmdk_descriptor_file_read_header(
 
 		return( -1 );
 	}
-	while( *line_index < number_of_lines )
+	while( safe_line_index < number_of_lines )
 	{
 		if( libcsplit_narrow_split_string_get_segment_by_index(
 		     lines,
-		     *line_index,
+		     safe_line_index,
 		     &line_string_segment,
 		     &line_string_segment_size,
 		     error ) != 1 )
@@ -679,7 +690,7 @@ int libvmdk_descriptor_file_read_header(
 			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
 			 "%s: unable to retrieve line: %d.",
 			 function,
-			 *line_index );
+			 safe_line_index );
 
 			goto on_error;
 		}
@@ -691,9 +702,15 @@ int libvmdk_descriptor_file_read_header(
 			 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
 			 "%s: missing line string segment: %d.",
 			 function,
-			 *line_index );
+			 safe_line_index );
 
 			goto on_error;
+		}
+		if( line_string_segment_size < 2 )
+		{
+			safe_line_index++;
+
+			continue;
 		}
 		/* Ignore trailing white space
 		 */
@@ -735,7 +752,7 @@ int libvmdk_descriptor_file_read_header(
 		if( ( line_string_segment_index >= line_string_segment_size )
 		 || ( line_string_segment[ line_string_segment_index ] == 0 ) )
 		{
-			*line_index += 1;
+			safe_line_index++;
 
 			continue;
 		}
@@ -743,7 +760,7 @@ int libvmdk_descriptor_file_read_header(
 		{
 			/* Check for the end of the header
 			 */
-			if( libcstring_narrow_string_compare(
+			if( narrow_string_compare_no_case(
 			     &( line_string_segment[ line_string_segment_index ] ),
 			     vmdk_descriptor_file_extent_section_signature,
 			     20 ) == 0 )
@@ -777,7 +794,7 @@ int libvmdk_descriptor_file_read_header(
 		if( ( line_string_segment_index >= line_string_segment_size )
 		 || ( line_string_segment[ line_string_segment_index ] == 0 ) )
 		{
-			*line_index += 1;
+			safe_line_index++;
 
 			continue;
 		}
@@ -825,7 +842,7 @@ int libvmdk_descriptor_file_read_header(
 		if( ( line_string_segment_index >= line_string_segment_size )
 		 || ( line_string_segment[ line_string_segment_index ] == 0 ) )
 		{
-			*line_index += 1;
+			safe_line_index++;
 
 			continue;
 		}
@@ -858,7 +875,7 @@ int libvmdk_descriptor_file_read_header(
 
 		if( value_identifier_length == 3 )
 		{
-			if( libcstring_narrow_string_compare(
+			if( narrow_string_compare_no_case(
 			     value_identifier,
 			     "CID",
 			     3 ) == 0 )
@@ -905,7 +922,7 @@ int libvmdk_descriptor_file_read_header(
 		}
 		else if( value_identifier_length == 7 )
 		{
-			if( libcstring_narrow_string_compare(
+			if( narrow_string_compare_no_case(
 			     value_identifier,
 			     "version",
 			     7 ) == 0 )
@@ -952,7 +969,7 @@ int libvmdk_descriptor_file_read_header(
 		}
 		else if( value_identifier_length == 8 )
 		{
-			if( libcstring_narrow_string_compare(
+			if( narrow_string_compare_no_case(
 			     value_identifier,
 			     "encoding",
 			     8 ) == 0 )
@@ -966,12 +983,27 @@ int libvmdk_descriptor_file_read_header(
 					 value );
 				}
 #endif
-				if( ( value_length == 5 )
-				 && ( value[ 0 ] == 'U' )
-				 && ( value[ 1 ] == 'T' )
-				 && ( value[ 2 ] == 'F' )
-				 && ( value[ 3 ] == '-' )
-				 && ( value[ 4 ] == '8' ) )
+				if( ( value_length == 3 )
+				 && ( value[ 0 ] == 'G' )
+				 && ( value[ 1 ] == 'B' )
+				 && ( value[ 2 ] == 'K' ) )
+				{
+					descriptor_file->encoding = LIBUNA_CODEPAGE_WINDOWS_936;
+				}
+				else if( ( value_length == 4 )
+				      && ( value[ 0 ] == 'B' )
+				      && ( value[ 1 ] == 'i' )
+				      && ( value[ 2 ] == 'g' )
+				      && ( value[ 3 ] == '5' ) )
+				{
+					descriptor_file->encoding = LIBUNA_CODEPAGE_WINDOWS_950;
+				}
+				else if( ( value_length == 5 )
+				      && ( value[ 0 ] == 'U' )
+				      && ( value[ 1 ] == 'T' )
+				      && ( value[ 2 ] == 'F' )
+				      && ( value[ 3 ] == '-' )
+				      && ( value[ 4 ] == '8' ) )
 				{
 					descriptor_file->encoding = 0;
 				}
@@ -995,7 +1027,7 @@ int libvmdk_descriptor_file_read_header(
 		}
 		else if( value_identifier_length == 9 )
 		{
-			if( libcstring_narrow_string_compare(
+			if( narrow_string_compare_no_case(
 			     value_identifier,
 			     "parentCID",
 			     9 ) == 0 )
@@ -1043,7 +1075,7 @@ int libvmdk_descriptor_file_read_header(
 		}
 		else if( value_identifier_length == 10 )
 		{
-			if( libcstring_narrow_string_compare(
+			if( narrow_string_compare_no_case(
 			     value_identifier,
 			     "createType",
 			     10 ) == 0 )
@@ -1059,7 +1091,7 @@ int libvmdk_descriptor_file_read_header(
 #endif
 				if( value_length == 4 )
 				{
-					if( libcstring_narrow_string_compare(
+					if( narrow_string_compare_no_case(
 					     value,
 					     "vmfs",
 					     4 ) == 0 )
@@ -1069,7 +1101,7 @@ int libvmdk_descriptor_file_read_header(
 				}
 				else if( value_length == 6 )
 				{
-					if( libcstring_narrow_string_compare(
+					if( narrow_string_compare_no_case(
 					     value,
 					     "custom",
 					     6 ) == 0 )
@@ -1079,14 +1111,14 @@ int libvmdk_descriptor_file_read_header(
 				}
 				else if( value_length == 7 )
 				{
-					if( libcstring_narrow_string_compare(
+					if( narrow_string_compare_no_case(
 					     value,
 					     "vmfsRaw",
 					     7 ) == 0 )
 					{
 						descriptor_file->disk_type = LIBVMDK_DISK_TYPE_VMFS_RAW;
 					}
-					else if( libcstring_narrow_string_compare(
+					else if( narrow_string_compare_no_case(
 					          value,
 					          "vmfsRDM",
 					          7 ) == 0 )
@@ -1096,14 +1128,14 @@ int libvmdk_descriptor_file_read_header(
 				}
 				else if( value_length == 8 )
 				{
-					if( libcstring_narrow_string_compare(
+					if( narrow_string_compare_no_case(
 					     value,
 					     "vmfsRDMP",
 					     8 ) == 0 )
 					{
 						descriptor_file->disk_type = LIBVMDK_DISK_TYPE_VMFS_RDMP;
 					}
-					else if( libcstring_narrow_string_compare(
+					else if( narrow_string_compare_no_case(
 					          value,
 					          "vmfsThin",
 					          8 ) == 0 )
@@ -1113,14 +1145,14 @@ int libvmdk_descriptor_file_read_header(
 				}
 				else if( value_length == 10 )
 				{
-					if( libcstring_narrow_string_compare(
+					if( narrow_string_compare_no_case(
 					     value,
 					     "fullDevice",
 					     10 ) == 0 )
 					{
 						descriptor_file->disk_type = LIBVMDK_DISK_TYPE_DEVICE;
 					}
-					else if( libcstring_narrow_string_compare(
+					else if( narrow_string_compare_no_case(
 					          value,
 					          "vmfsSparse",
 					          10 ) == 0 )
@@ -1130,7 +1162,7 @@ int libvmdk_descriptor_file_read_header(
 				}
 				else if( value_length == 14 )
 				{
-					if( libcstring_narrow_string_compare(
+					if( narrow_string_compare_no_case(
 					     value,
 					     "monolithicFlat",
 					     14 ) == 0 )
@@ -1140,7 +1172,7 @@ int libvmdk_descriptor_file_read_header(
 				}
 				else if( value_length == 15 )
 				{
-					if( libcstring_narrow_string_compare(
+					if( narrow_string_compare_no_case(
 					     value,
 					     "streamOptimized",
 					     15 ) == 0 )
@@ -1150,28 +1182,28 @@ int libvmdk_descriptor_file_read_header(
 				}
 				else if( value_length == 16 )
 				{
-					if( libcstring_narrow_string_compare(
+					if( narrow_string_compare_no_case(
 					     value,
 					     "2GbMaxExtentFlat",
 					     16 ) == 0 )
 					{
 						descriptor_file->disk_type = LIBVMDK_DISK_TYPE_2GB_EXTENT_FLAT;
 					}
-					else if( libcstring_narrow_string_compare(
+					else if( narrow_string_compare_no_case(
 					          value,
 					          "monolithicSparse",
 					          16 ) == 0 )
 					{
 						descriptor_file->disk_type = LIBVMDK_DISK_TYPE_MONOLITHIC_SPARSE;
 					}
-					else if( libcstring_narrow_string_compare(
+					else if( narrow_string_compare_no_case(
 					          value,
 					          "vmfsPreallocated",
 					          16 ) == 0 )
 					{
 						descriptor_file->disk_type = LIBVMDK_DISK_TYPE_VMFS_FLAT_PRE_ALLOCATED;
 					}
-					else if( libcstring_narrow_string_compare(
+					else if( narrow_string_compare_no_case(
 					          value,
 					          "vmfsRawDeviceMap",
 					          16 ) == 0 )
@@ -1181,7 +1213,7 @@ int libvmdk_descriptor_file_read_header(
 				}
 				else if( value_length == 17 )
 				{
-					if( libcstring_narrow_string_compare(
+					if( narrow_string_compare_no_case(
 					     value,
 					     "partitionedDevice",
 					     17 ) == 0 )
@@ -1191,14 +1223,14 @@ int libvmdk_descriptor_file_read_header(
 				}
 				else if( value_length == 18 )
 				{
-					if( libcstring_narrow_string_compare(
+					if( narrow_string_compare_no_case(
 					     value,
 					     "2GbMaxExtentSparse",
 					     18 ) == 0 )
 					{
 						descriptor_file->disk_type = LIBVMDK_DISK_TYPE_2GB_EXTENT_SPARSE;
 					}
-					else if( libcstring_narrow_string_compare(
+					else if( narrow_string_compare_no_case(
 					          value,
 					          "twoGbMaxExtentFlat",
 					          18 ) == 0 )
@@ -1208,14 +1240,14 @@ int libvmdk_descriptor_file_read_header(
 				}
 				else if( value_length == 20 )
 				{
-					if( libcstring_narrow_string_compare(
+					if( narrow_string_compare_no_case(
 					     value,
 					     "twoGbMaxExtentSparse",
 					     20 ) == 0 )
 					{
 						descriptor_file->disk_type = LIBVMDK_DISK_TYPE_2GB_EXTENT_SPARSE;
 					}
-					else if( libcstring_narrow_string_compare(
+					else if( narrow_string_compare_no_case(
 					          value,
 					          "vmfsEagerZeroedThick",
 					          20 ) == 0 )
@@ -1225,7 +1257,7 @@ int libvmdk_descriptor_file_read_header(
 				}
 				else if( value_length == 27 )
 				{
-					if( libcstring_narrow_string_compare(
+					if( narrow_string_compare_no_case(
 					     value,
 					     "vmfsPassthroughRawDeviceMap",
 					     27 ) == 0 )
@@ -1237,7 +1269,7 @@ int libvmdk_descriptor_file_read_header(
 		}
 		else if( value_identifier_length == 18 )
 		{
-			if( libcstring_narrow_string_compare(
+			if( narrow_string_compare_no_case(
 			     value_identifier,
 			     "parentFileNameHint",
 			     18 ) == 0 )
@@ -1249,6 +1281,17 @@ int libvmdk_descriptor_file_read_header(
 
 					descriptor_file->parent_filename      = NULL;
 					descriptor_file->parent_filename_size = 0;
+				}
+				if( value_length > (size_t) ( MEMORY_MAXIMUM_ALLOCATION_SIZE - 1 ) )
+				{
+					libcerror_error_set(
+					 error,
+					 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+					 LIBCERROR_RUNTIME_ERROR_VALUE_EXCEEDS_MAXIMUM,
+					 "%s: invalid parent filename length exceeds maximum allocation size.",
+					 function );
+
+					goto on_error;
 				}
 				descriptor_file->parent_filename = (uint8_t *) memory_allocate(
 				                                                sizeof( uint8_t ) * ( value_length + 1 ) );
@@ -1299,12 +1342,12 @@ int libvmdk_descriptor_file_read_header(
 			libcnotify_printf(
 			 "%s: value: %d\t\t\t\t: %s = %s\n",
 			 function,
-			 *line_index,
+			 safe_line_index,
 			 value_identifier,
 			 value );
 		}
 #endif
-		*line_index += 1;
+		safe_line_index++;
 	}
 #if defined( HAVE_DEBUG_OUTPUT )
 	if( libcnotify_verbose != 0 )
@@ -1313,6 +1356,8 @@ int libvmdk_descriptor_file_read_header(
 		 "\n" );
 	}
 #endif
+	*line_index = safe_line_index;
+
 	return( 1 );
 
 on_error:
@@ -1338,12 +1383,13 @@ int libvmdk_descriptor_file_read_extents(
      int *line_index,
      libcerror_error_t **error )
 {
-	libvmdk_internal_extent_descriptor_t *extent_descriptor = NULL;
-	char *line_string_segment                               = NULL;
-	static char *function                                   = "libvmdk_descriptor_file_read_extents";
-	size_t line_string_segment_index                        = 0;
-	size_t line_string_segment_size                         = 0;
-	int entry_index                                         = 0;
+	libvmdk_extent_descriptor_t *extent_descriptor = NULL;
+	static char *function                          = "libvmdk_descriptor_file_read_extents";
+	char *line_string_segment                      = NULL;
+	size_t line_string_segment_index               = 0;
+	size_t line_string_segment_size                = 0;
+	int entry_index                                = 0;
+	int safe_line_index                            = 0;
 
 	if( descriptor_file == NULL )
 	{
@@ -1378,8 +1424,10 @@ int libvmdk_descriptor_file_read_extents(
 
 		return( -1 );
 	}
-	if( ( *line_index < 0 )
-	 || ( *line_index >= number_of_lines ) )
+	safe_line_index = *line_index;
+
+	if( ( safe_line_index < 0 )
+	 || ( safe_line_index >= number_of_lines ) )
 	{
 		libcerror_error_set(
 		 error,
@@ -1392,7 +1440,7 @@ int libvmdk_descriptor_file_read_extents(
 	}
 	if( libcsplit_narrow_split_string_get_segment_by_index(
 	     lines,
-	     *line_index,
+	     safe_line_index,
 	     &line_string_segment,
 	     &line_string_segment_size,
 	     error ) != 1 )
@@ -1403,7 +1451,7 @@ int libvmdk_descriptor_file_read_extents(
 		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
 		 "%s: unable to retrieve line: %d.",
 		 function,
-		 *line_index );
+		 safe_line_index );
 
 		goto on_error;
 	}
@@ -1415,7 +1463,19 @@ int libvmdk_descriptor_file_read_extents(
 		 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
 		 "%s: missing line string segment: %d.",
 		 function,
-		 *line_index );
+		 safe_line_index );
+
+		goto on_error;
+	}
+	if( line_string_segment_size < 2 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_VALUE_OUT_OF_BOUNDS,
+		 "%s: invalid line string segment: %d size value out of bounds.",
+		 function,
+		 safe_line_index );
 
 		goto on_error;
 	}
@@ -1455,7 +1515,7 @@ int libvmdk_descriptor_file_read_extents(
 		line_string_segment_index++;
 	}
 	if( ( ( line_string_segment_size - line_string_segment_index ) != 21 )
-	 || ( libcstring_narrow_string_compare(
+	 || ( narrow_string_compare_no_case(
 	       &( line_string_segment[ line_string_segment_index ] ),
 	       vmdk_descriptor_file_extent_section_signature,
 	       20 ) != 0 ) )
@@ -1469,7 +1529,7 @@ int libvmdk_descriptor_file_read_extents(
 
 		goto on_error;
 	}
-	*line_index += 1;
+	safe_line_index++;
 
 	if( libcdata_array_empty(
 	     descriptor_file->extents_array,
@@ -1487,11 +1547,11 @@ int libvmdk_descriptor_file_read_extents(
 	}
 	descriptor_file->media_size = 0;
 
-	while( *line_index < number_of_lines )
+	while( safe_line_index < number_of_lines )
 	{
 		if( libcsplit_narrow_split_string_get_segment_by_index(
 		     lines,
-		     *line_index,
+		     safe_line_index,
 		     &line_string_segment,
 		     &line_string_segment_size,
 		     error ) != 1 )
@@ -1502,7 +1562,7 @@ int libvmdk_descriptor_file_read_extents(
 			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
 			 "%s: unable to retrieve line: %d.",
 			 function,
-			 *line_index );
+			 safe_line_index );
 
 			goto on_error;
 		}
@@ -1514,9 +1574,15 @@ int libvmdk_descriptor_file_read_extents(
 			 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
 			 "%s: missing line string segment: %d.",
 			 function,
-			 *line_index );
+			 safe_line_index );
 
 			goto on_error;
+		}
+		if( line_string_segment_size < 2 )
+		{
+			safe_line_index++;
+
+			continue;
 		}
 		/* Ignore trailing white space
 		 */
@@ -1558,7 +1624,7 @@ int libvmdk_descriptor_file_read_extents(
 		if( ( line_string_segment_index >= line_string_segment_size )
 		 || ( line_string_segment[ line_string_segment_index ] == 0 ) )
 		{
-			*line_index += 1;
+			safe_line_index++;
 
 			continue;
 		}
@@ -1566,7 +1632,7 @@ int libvmdk_descriptor_file_read_extents(
 		{
 			/* Check for the end of the section
 			 */
-			if( libcstring_narrow_string_compare(
+			if( narrow_string_compare_no_case(
 			     &( line_string_segment[ line_string_segment_index ] ),
 			     vmdk_descriptor_file_disk_database_section_signature,
 			     20 ) == 0 )
@@ -1576,7 +1642,7 @@ int libvmdk_descriptor_file_read_extents(
 		}
 		else if( ( line_string_segment_size - line_string_segment_index ) == 23 )
 		{
-			if( libcstring_narrow_string_compare(
+			if( narrow_string_compare_no_case(
 			     &( line_string_segment[ line_string_segment_index ] ),
 			     vmdk_descriptor_file_change_tracking_file_signature,
 			     22 ) == 0 )
@@ -1614,11 +1680,12 @@ int libvmdk_descriptor_file_read_extents(
 			 LIBCERROR_IO_ERROR_READ_FAILED,
 			 "%s: unable to read extent descriptor from line: %d.",
 			 function,
-			 *line_index );
+			 safe_line_index );
 
 			goto on_error;
 		}
-		descriptor_file->media_size += extent_descriptor->size;
+/* TODO refactor by get_size function */
+		descriptor_file->media_size += ( (libvmdk_internal_extent_descriptor_t *) extent_descriptor )->size;
 
 		if( libcdata_array_append_entry(
 		     descriptor_file->extents_array,
@@ -1637,15 +1704,17 @@ int libvmdk_descriptor_file_read_extents(
 		}
 		extent_descriptor = NULL;
 
-		*line_index += 1;
+		safe_line_index++;
 	}
+	*line_index = safe_line_index;
+
 	return( 1 );
 
 on_error:
 	if( extent_descriptor != NULL )
 	{
 		libvmdk_internal_extent_descriptor_free(
-		 &extent_descriptor,
+		 (libvmdk_internal_extent_descriptor_t **) &extent_descriptor,
 		 NULL );
 	}
 	libcdata_array_empty(
@@ -1674,6 +1743,7 @@ int libvmdk_descriptor_file_read_change_tracking_file(
 	size_t line_string_segment_size  = 0;
 	size_t value_identifier_length   = 0;
 	size_t value_length              = 0;
+	int safe_line_index              = 0;
 
 	if( descriptor_file == NULL )
 	{
@@ -1708,8 +1778,10 @@ int libvmdk_descriptor_file_read_change_tracking_file(
 
 		return( -1 );
 	}
-	if( ( *line_index < 0 )
-	 || ( *line_index >= number_of_lines ) )
+	safe_line_index = *line_index;
+
+	if( ( safe_line_index < 0 )
+	 || ( safe_line_index >= number_of_lines ) )
 	{
 		libcerror_error_set(
 		 error,
@@ -1722,7 +1794,7 @@ int libvmdk_descriptor_file_read_change_tracking_file(
 	}
 	if( libcsplit_narrow_split_string_get_segment_by_index(
 	     lines,
-	     *line_index,
+	     safe_line_index,
 	     &line_string_segment,
 	     &line_string_segment_size,
 	     error ) != 1 )
@@ -1733,7 +1805,7 @@ int libvmdk_descriptor_file_read_change_tracking_file(
 		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
 		 "%s: unable to retrieve line: %d.",
 		 function,
-		 *line_index );
+		 safe_line_index );
 
 		return( -1 );
 	}
@@ -1745,7 +1817,19 @@ int libvmdk_descriptor_file_read_change_tracking_file(
 		 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
 		 "%s: missing line string segment: %d.",
 		 function,
-		 *line_index );
+		 safe_line_index );
+
+		return( -1 );
+	}
+	if( line_string_segment_size < 2 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_VALUE_OUT_OF_BOUNDS,
+		 "%s: invalid line string segment: %d size value out of bounds.",
+		 function,
+		 safe_line_index );
 
 		return( -1 );
 	}
@@ -1785,20 +1869,20 @@ int libvmdk_descriptor_file_read_change_tracking_file(
 		line_string_segment_index++;
 	}
 	if( ( ( line_string_segment_size - line_string_segment_index ) != 23 )
-	 || ( libcstring_narrow_string_compare(
+	 || ( narrow_string_compare_no_case(
 	       &( line_string_segment[ line_string_segment_index ] ),
 	       vmdk_descriptor_file_change_tracking_file_signature,
 	       22 ) != 0 ) )
 	{
 		return( 0 );
 	}
-	*line_index += 1;
+	safe_line_index++;
 
-	while( *line_index < number_of_lines )
+	while( safe_line_index < number_of_lines )
 	{
 		if( libcsplit_narrow_split_string_get_segment_by_index(
 		     lines,
-		     *line_index,
+		     safe_line_index,
 		     &line_string_segment,
 		     &line_string_segment_size,
 		     error ) != 1 )
@@ -1809,7 +1893,7 @@ int libvmdk_descriptor_file_read_change_tracking_file(
 			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
 			 "%s: unable to retrieve line: %d.",
 			 function,
-			 *line_index );
+			 safe_line_index );
 
 			return( -1 );
 		}
@@ -1821,9 +1905,15 @@ int libvmdk_descriptor_file_read_change_tracking_file(
 			 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
 			 "%s: missing line string segment: %d.",
 			 function,
-			 *line_index );
+			 safe_line_index );
 
 			return( -1 );
+		}
+		if( line_string_segment_size < 2 )
+		{
+			safe_line_index++;
+
+			continue;
 		}
 		/* Ignore trailing white space
 		 */
@@ -1865,7 +1955,7 @@ int libvmdk_descriptor_file_read_change_tracking_file(
 		if( ( line_string_segment_index >= line_string_segment_size )
 		 || ( line_string_segment[ line_string_segment_index ] == 0 ) )
 		{
-			*line_index += 1;
+			safe_line_index++;
 
 			continue;
 		}
@@ -1873,7 +1963,7 @@ int libvmdk_descriptor_file_read_change_tracking_file(
 		{
 			/* Check for the end of the section
 			 */
-			if( libcstring_narrow_string_compare(
+			if( narrow_string_compare_no_case(
 			     &( line_string_segment[ line_string_segment_index ] ),
 			     vmdk_descriptor_file_disk_database_section_signature,
 			     20 ) == 0 )
@@ -1907,7 +1997,7 @@ int libvmdk_descriptor_file_read_change_tracking_file(
 		if( ( line_string_segment_index >= line_string_segment_size )
 		 || ( line_string_segment[ line_string_segment_index ] == 0 ) )
 		{
-			*line_index += 1;
+			safe_line_index++;
 
 			continue;
 		}
@@ -1955,7 +2045,7 @@ int libvmdk_descriptor_file_read_change_tracking_file(
 		if( ( line_string_segment_index >= line_string_segment_size )
 		 || ( line_string_segment[ line_string_segment_index ] == 0 ) )
 		{
-			*line_index += 1;
+			safe_line_index++;
 
 			continue;
 		}
@@ -1988,7 +2078,7 @@ int libvmdk_descriptor_file_read_change_tracking_file(
 
 		if( value_identifier_length == 15 )
 		{
-			if( libcstring_narrow_string_compare(
+			if( narrow_string_compare_no_case(
 			     value_identifier,
 			     "changeTrackPath",
 			     15 ) == 0 )
@@ -2002,12 +2092,12 @@ int libvmdk_descriptor_file_read_change_tracking_file(
 			libcnotify_printf(
 			 "%s: value: %d\t\t\t\t: %s = %s\n",
 			 function,
-			 *line_index,
+			 safe_line_index,
 			 value_identifier,
 			 value );
 		}
 #endif
-		*line_index += 1;
+		safe_line_index++;
 	}
 #if defined( HAVE_DEBUG_OUTPUT )
 	if( libcnotify_verbose != 0 )
@@ -2016,6 +2106,8 @@ int libvmdk_descriptor_file_read_change_tracking_file(
 		 "\n" );
 	}
 #endif
+	*line_index = safe_line_index;
+
 	return( 1 );
 }
 
@@ -2037,6 +2129,7 @@ int libvmdk_descriptor_file_read_disk_database(
 	size_t line_string_segment_size  = 0;
 	size_t value_identifier_length   = 0;
 	size_t value_length              = 0;
+	int safe_line_index              = 0;
 
 	if( descriptor_file == NULL )
 	{
@@ -2071,8 +2164,10 @@ int libvmdk_descriptor_file_read_disk_database(
 
 		return( -1 );
 	}
-	if( ( *line_index < 0 )
-	 || ( *line_index >= number_of_lines ) )
+	safe_line_index = *line_index;
+
+	if( ( safe_line_index < 0 )
+	 || ( safe_line_index >= number_of_lines ) )
 	{
 		libcerror_error_set(
 		 error,
@@ -2085,7 +2180,7 @@ int libvmdk_descriptor_file_read_disk_database(
 	}
 	if( libcsplit_narrow_split_string_get_segment_by_index(
 	     lines,
-	     *line_index,
+	     safe_line_index,
 	     &line_string_segment,
 	     &line_string_segment_size,
 	     error ) != 1 )
@@ -2096,7 +2191,7 @@ int libvmdk_descriptor_file_read_disk_database(
 		 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
 		 "%s: unable to retrieve line: %d.",
 		 function,
-		 *line_index );
+		 safe_line_index );
 
 		return( -1 );
 	}
@@ -2108,7 +2203,19 @@ int libvmdk_descriptor_file_read_disk_database(
 		 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
 		 "%s: missing line string segment: %d.",
 		 function,
-		 *line_index );
+		 safe_line_index );
+
+		return( -1 );
+	}
+	if( line_string_segment_size < 2 )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_ARGUMENTS,
+		 LIBCERROR_ARGUMENT_ERROR_VALUE_OUT_OF_BOUNDS,
+		 "%s: invalid line string segment: %d size value out of bounds.",
+		 function,
+		 safe_line_index );
 
 		return( -1 );
 	}
@@ -2148,7 +2255,7 @@ int libvmdk_descriptor_file_read_disk_database(
 		line_string_segment_index++;
 	}
 	if( ( ( line_string_segment_size - line_string_segment_index ) != 21 )
-	 || ( libcstring_narrow_string_compare(
+	 || ( narrow_string_compare_no_case(
 	       &( line_string_segment[ line_string_segment_index ] ),
 	       vmdk_descriptor_file_disk_database_section_signature,
 	       20 ) != 0 ) )
@@ -2162,13 +2269,13 @@ int libvmdk_descriptor_file_read_disk_database(
 
 		return( -1 );
 	}
-	*line_index += 1;
+	safe_line_index++;
 
-	while( *line_index < number_of_lines )
+	while( safe_line_index < number_of_lines )
 	{
 		if( libcsplit_narrow_split_string_get_segment_by_index(
 		     lines,
-		     *line_index,
+		     safe_line_index,
 		     &line_string_segment,
 		     &line_string_segment_size,
 		     error ) != 1 )
@@ -2179,7 +2286,7 @@ int libvmdk_descriptor_file_read_disk_database(
 			 LIBCERROR_RUNTIME_ERROR_GET_FAILED,
 			 "%s: unable to retrieve line: %d.",
 			 function,
-			 *line_index );
+			 safe_line_index );
 
 			return( -1 );
 		}
@@ -2191,9 +2298,15 @@ int libvmdk_descriptor_file_read_disk_database(
 			 LIBCERROR_RUNTIME_ERROR_VALUE_MISSING,
 			 "%s: missing line string segment: %d.",
 			 function,
-			 *line_index );
+			 safe_line_index );
 
 			return( -1 );
+		}
+		if( line_string_segment_size < 2 )
+		{
+			safe_line_index++;
+
+			continue;
 		}
 		/* Ignore trailing white space
 		 */
@@ -2235,7 +2348,7 @@ int libvmdk_descriptor_file_read_disk_database(
 		if( ( line_string_segment_index >= line_string_segment_size )
 		 || ( line_string_segment[ line_string_segment_index ] == 0 ) )
 		{
-			*line_index += 1;
+			safe_line_index++;
 
 			continue;
 		}
@@ -2265,7 +2378,7 @@ int libvmdk_descriptor_file_read_disk_database(
 		if( ( line_string_segment_index >= line_string_segment_size )
 		 || ( line_string_segment[ line_string_segment_index ] == 0 ) )
 		{
-			*line_index += 1;
+			safe_line_index++;
 
 			continue;
 		}
@@ -2313,7 +2426,7 @@ int libvmdk_descriptor_file_read_disk_database(
 		if( ( line_string_segment_index >= line_string_segment_size )
 		 || ( line_string_segment[ line_string_segment_index ] == 0 ) )
 		{
-			*line_index += 1;
+			safe_line_index++;
 
 			continue;
 		}
@@ -2346,7 +2459,7 @@ int libvmdk_descriptor_file_read_disk_database(
 
 		if( value_identifier_length == 15 )
 		{
-			if( libcstring_narrow_string_compare(
+			if( narrow_string_compare_no_case(
 			     value_identifier,
 			     "ddb.adapterType",
 			     15 ) == 0 )
@@ -2356,7 +2469,7 @@ int libvmdk_descriptor_file_read_disk_database(
 		}
 		else if( value_identifier_length == 16 )
 		{
-			if( libcstring_narrow_string_compare(
+			if( narrow_string_compare_no_case(
 			     value_identifier,
 			     "ddb.toolsVersion",
 			     16 ) == 0 )
@@ -2366,7 +2479,7 @@ int libvmdk_descriptor_file_read_disk_database(
 		}
 		else if( value_identifier_length == 18 )
 		{
-			if( libcstring_narrow_string_compare(
+			if( narrow_string_compare_no_case(
 			     value_identifier,
 			     "ddb.geometry.heads",
 			     18 ) == 0 )
@@ -2376,14 +2489,14 @@ int libvmdk_descriptor_file_read_disk_database(
 		}
 		else if( value_identifier_length == 20 )
 		{
-			if( libcstring_narrow_string_compare(
+			if( narrow_string_compare_no_case(
 			     value_identifier,
 			     "ddb.geometry.sectors",
 			     20 ) == 0 )
 			{
 /* TODO */
 			}
-			else if( libcstring_narrow_string_compare(
+			else if( narrow_string_compare_no_case(
 			          value_identifier,
 			          "ddb.virtualHWVersion",
 			          20 ) == 0 )
@@ -2393,7 +2506,7 @@ int libvmdk_descriptor_file_read_disk_database(
 		}
 		else if( value_identifier_length == 22 )
 		{
-			if( libcstring_narrow_string_compare(
+			if( narrow_string_compare_no_case(
 			     value_identifier,
 			     "ddb.geometry.cylinders",
 			     22 ) == 0 )
@@ -2407,12 +2520,12 @@ int libvmdk_descriptor_file_read_disk_database(
 			libcnotify_printf(
 			 "%s: value: %d\t\t\t: %s = %s\n",
 			 function,
-			 *line_index,
+			 safe_line_index,
 			 value_identifier,
 			 value );
 		}
 #endif
-		*line_index += 1;
+		safe_line_index++;
 	}
 #if defined( HAVE_DEBUG_OUTPUT )
 	if( libcnotify_verbose != 0 )
@@ -2421,6 +2534,8 @@ int libvmdk_descriptor_file_read_disk_database(
 		 "\n" );
 	}
 #endif
+	*line_index = safe_line_index;
+
 	return( 1 );
 }
 

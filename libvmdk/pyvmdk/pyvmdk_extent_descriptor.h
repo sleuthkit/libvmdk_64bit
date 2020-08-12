@@ -1,22 +1,22 @@
 /*
- * Python object definition of the libvmdk extent descriptor
+ * Python object wrapper of libvmdk_extent_descriptor_t
  *
- * Copyright (C) 2009-2016, Joachim Metz <joachim.metz@gmail.com>
+ * Copyright (C) 2009-2020, Joachim Metz <joachim.metz@gmail.com>
  *
  * Refer to AUTHORS for acknowledgements.
  *
- * This software is free software: you can redistribute it and/or modify
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This software is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
- * along with this software.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #if !defined( _PYVMDK_EXTENT_DESCRIPTOR_H )
@@ -45,9 +45,9 @@ struct pyvmdk_extent_descriptor
 	 */
 	libvmdk_extent_descriptor_t *extent_descriptor;
 
-	/* The handle object
+	/* The parent object
 	 */
-	pyvmdk_handle_t *handle_object;
+	PyObject *parent_object;
 };
 
 extern PyMethodDef pyvmdk_extent_descriptor_object_methods[];
@@ -55,7 +55,7 @@ extern PyTypeObject pyvmdk_extent_descriptor_type_object;
 
 PyObject *pyvmdk_extent_descriptor_new(
            libvmdk_extent_descriptor_t *extent_descriptor,
-           pyvmdk_handle_t *handle_object );
+           PyObject *parent_object );
 
 int pyvmdk_extent_descriptor_init(
      pyvmdk_extent_descriptor_t *pyvmdk_extent_descriptor );
@@ -83,5 +83,5 @@ PyObject *pyvmdk_extent_descriptor_get_filename(
 }
 #endif
 
-#endif
+#endif /* !defined( _PYVMDK_EXTENT_DESCRIPTOR_H ) */
 

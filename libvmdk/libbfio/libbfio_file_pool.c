@@ -1,33 +1,34 @@
 /*
  * File pool functions
  *
- * Copyright (C) 2009-2016, Joachim Metz <joachim.metz@gmail.com>
+ * Copyright (C) 2009-2020, Joachim Metz <joachim.metz@gmail.com>
  *
  * Refer to AUTHORS for acknowledgements.
  *
- * This software is free software: you can redistribute it and/or modify
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This software is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
- * along with this software.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #include <common.h>
+#include <narrow_string.h>
 #include <types.h>
+#include <wide_string.h>
 
 #include "libbfio_definitions.h"
 #include "libbfio_file.h"
 #include "libbfio_file_pool.h"
 #include "libbfio_handle.h"
 #include "libbfio_libcerror.h"
-#include "libbfio_libcstring.h"
 #include "libbfio_pool.h"
 #include "libbfio_types.h"
 
@@ -84,7 +85,7 @@ int libbfio_file_pool_append_handles_for_names(
 	     name_iterator < number_of_names;
 	     name_iterator++ )
 	{
-		name_length = libcstring_narrow_string_length(
+		name_length = narrow_string_length(
 		               names[ name_iterator ] );
 
 		if( libbfio_file_initialize(
@@ -202,7 +203,7 @@ int libbfio_file_pool_append_handles_for_names_wide(
 	     name_iterator < number_of_names;
 	     name_iterator++ )
 	{
-		name_length = libcstring_wide_string_length(
+		name_length = wide_string_length(
 		               names[ name_iterator ] );
 
 		if( libbfio_file_initialize(

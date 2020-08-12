@@ -1,29 +1,31 @@
 /*
  * Thread functions
  *
- * Copyright (C) 2012-2016, Joachim Metz <joachim.metz@gmail.com>
+ * Copyright (C) 2012-2020, Joachim Metz <joachim.metz@gmail.com>
  *
  * Refer to AUTHORS for acknowledgements.
  *
- * This software is free software: you can redistribute it and/or modify
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This software is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
- * along with this software.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #include <common.h>
 #include <memory.h>
 #include <types.h>
 
-#if defined( WINAPI ) && ( WINVER >= 0x0602 ) && !defined( USE_CRT_FUNCTIONS )
+#include <errno.h>
+
+#if defined( WINAPI ) && ( WINVER >= 0x0602 )
 #include <Processthreadsapi.h>
 #include <Synchapi.h>
 #endif
@@ -40,6 +42,7 @@
 #if !defined( HAVE_LOCAL_LIBCTHREADS ) || defined( HAVE_MULTI_THREAD_SUPPORT )
 
 #if defined( WINAPI )
+
 /* Start function helper function for WINAPI
  * Returns 0 if successful or 1 on error
  */
@@ -67,6 +70,7 @@ DWORD WINAPI libcthreads_thread_callback_function_helper(
 }
 
 #elif defined( HAVE_PTHREAD_H )
+
 /* Start function helper function for pthread
  * Returns a pointer to a newly allocated int containing 1 if successful or -1 on error
  * NULL is return if the helper function was unable to run the callback
@@ -82,7 +86,7 @@ void *libcthreads_thread_callback_function_helper(
 		internal_thread = (libcthreads_internal_thread_t *) arguments;
 
 		if( ( internal_thread != NULL )
-  		 && ( internal_thread->callback_function != NULL ) )
+		 && ( internal_thread->callback_function != NULL ) )
 		{
 			result = (int *) memory_allocate(
 			                  sizeof( int ) );
@@ -186,7 +190,10 @@ int libcthreads_thread_create(
 		 "%s: unable to clear thread.",
 		 function );
 
-		goto on_error;
+		memory_free(
+		 internal_thread );
+
+		return( -1 );
 	}
 	internal_thread->callback_function           = callback_function;
 	internal_thread->callback_function_arguments = callback_function_arguments;
@@ -226,22 +233,36 @@ int libcthreads_thread_create(
 		attributes = &( ( (libcthreads_internal_thread_attributes_t *) thread_attributes )->attributes );
 	}
 	pthread_result = pthread_create(
-		          &( internal_thread->thread ),
+	                  &( internal_thread->thread ),
 	                  attributes,
 	                  &libcthreads_thread_callback_function_helper,
 	                  (void *) internal_thread );
 
-	if( pthread_result != 0 )
+	switch( pthread_result )
 	{
-		libcerror_system_set_error(
-		 error,
-		 pthread_result,
-		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
-		 LIBCERROR_RUNTIME_ERROR_INITIALIZE_FAILED,
-		 "%s: unable to create thread.",
-		 function );
+		case 0:
+			break;
 
-		goto on_error;
+		case EAGAIN:
+			libcerror_error_set(
+			 error,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_FINALIZE_FAILED,
+			 "%s: unable to create thread with error: Insufficient resources.",
+			 function );
+
+			goto on_error;
+
+		default:
+			libcerror_system_set_error(
+			 error,
+			 pthread_result,
+			 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+			 LIBCERROR_RUNTIME_ERROR_FINALIZE_FAILED,
+			 "%s: unable to create thread.",
+			 function );
+
+			goto on_error;
 	}
 #endif
 	*thread = (libcthreads_thread_t *) internal_thread;
@@ -328,7 +349,18 @@ int libcthreads_thread_join(
 	                  internal_thread->thread,
 	                  (void **) &thread_return_value );
 
-	if( pthread_result != 0 )
+	if( pthread_result == EDEADLK )
+	{
+		libcerror_error_set(
+		 error,
+		 LIBCERROR_ERROR_DOMAIN_RUNTIME,
+		 LIBCERROR_RUNTIME_ERROR_FINALIZE_FAILED,
+		 "%s: unable to join thread with error: Deadlock condition detected.",
+		 function );
+
+		result = -1;
+	}
+	else if( pthread_result != 0 )
 	{
 		libcerror_system_set_error(
 		 error,

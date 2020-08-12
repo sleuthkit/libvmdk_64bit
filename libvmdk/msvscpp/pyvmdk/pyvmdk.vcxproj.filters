@@ -18,6 +18,9 @@
     <ClCompile Include="..\..\pyvmdk\pyvmdk.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\pyvmdk\pyvmdk_disk_types.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\pyvmdk\pyvmdk_error.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -25,6 +28,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\pyvmdk\pyvmdk_extent_descriptors.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\pyvmdk\pyvmdk_extent_types.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\pyvmdk\pyvmdk_file_object_io_handle.c">
@@ -39,12 +45,12 @@
     <ClCompile Include="..\..\pyvmdk\pyvmdk_integer.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\pyvmdk\pyvmdk_metadata.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\pyvmdk\pyvmdk.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\pyvmdk\pyvmdk_disk_types.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\pyvmdk\pyvmdk_error.h">
@@ -54,6 +60,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\pyvmdk\pyvmdk_extent_descriptors.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\pyvmdk\pyvmdk_extent_types.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\pyvmdk\pyvmdk_file_object_io_handle.h">
@@ -77,13 +86,7 @@
     <ClInclude Include="..\..\pyvmdk\pyvmdk_libclocale.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\pyvmdk\pyvmdk_libcstring.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\pyvmdk\pyvmdk_libvmdk.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\pyvmdk\pyvmdk_metadata.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\pyvmdk\pyvmdk_python.h">
